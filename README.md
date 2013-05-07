@@ -8,8 +8,9 @@ most recent version: 0.4 (25-03-2013)
 
 IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
 
-Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (in prep.). PyGaze: an open-source,
-cross-platform toolbox for minimal-effort programming of eye tracking experiments
+Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (in prep.). PyGaze: an
+open-source, cross-platform toolbox for minimal-effort programming of eye
+tracking experiments
 
 
 This module is developed by Edwin Dalmaijer at Utrecht University, but would
