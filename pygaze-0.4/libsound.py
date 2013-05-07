@@ -1,6 +1,6 @@
-## This file is part of the Gaze Contingent Extension for Python
+## This file is part of PyGaze - the open-source toolbox for eye tracking
 ##
-##    PyGACE is a Python module for easily creating gaze contingent experiments
+##    PyGaze is a Python module for easily creating gaze contingent experiments
 ##    or other software (as well as non-gaze contingent experiments/software)
 ##    Copyright (C) 2012-2013  Edwin S. Dalmaijer
 ##
