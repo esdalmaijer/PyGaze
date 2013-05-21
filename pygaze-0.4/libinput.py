@@ -428,7 +428,7 @@ class PsychoPyKeyboard:
         while timeout == None or time - starttime <= timeout:
             keys = psychopy.event.getKeys(keyList=keylist,timeStamped=True)
             for key, time in keys:
-                time = time * 1000.0
+                time = (time*1000) - libtime.expbegintime
                 if keylist == None or key in keylist:
                     return key, time
             time = libtime.get_time()
