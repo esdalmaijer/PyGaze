@@ -31,7 +31,7 @@ TRIALS = 5
 # but not the constant's names
 SCREENNR = 0 # number of the screen used for displaying experiment
 DISPTYPE = 'psychopy' # either 'psycho' or 'pygame'
-DISPSIZE = (1024,768) # canvas size
+DISPSIZE = (1280,1024) # canvas size
 MOUSEVISIBLE = False # mouse visibility
 BGC = (125,125,125,255) # backgroundcolour
 FGC = (0,0,0,255) # foregroundcolour

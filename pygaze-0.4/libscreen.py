@@ -25,9 +25,11 @@ try:
 except:
     import defaults as constants
 
+import pygaze
 import libtime
 
 import copy
+import os.path
 import random
 
 try:
@@ -38,6 +40,7 @@ try:
     from psychopy.visual import Line
     from psychopy.visual import ShapeStim
     from psychopy.visual import TextStim
+    from psychopy.visual import SimpleImageStim
 except:
     if constants.DISPTYPE == 'psychopy':
         print("Error in libscreen: PsychoPy could not be loaded!")
@@ -46,6 +49,7 @@ try:
     import pygame
     import pygame.display
     import pygame.draw
+    import pygame.image
 except:
     if constants.DISPTYPE == 'pygame':
         print("Error in libscreen: PyGame could not be loaded!")
@@ -339,7 +343,7 @@ class PyGameScreen:
             pygame.draw.circle(self.screen, colour, pos, diameter/2, 0)
 
 
-    def draw_text(self, text='', colour=None, pos=None):
+    def draw_text(self, text='', colour=None, pos=None, center=True, font='mono', fontsize=12, antialias=True):
 
         """Draws a text on the screen"""
 
@@ -348,7 +352,37 @@ class PyGameScreen:
         if pos == None:
             pos = (self.dispsize[0]/2, self.dispsize[1]/2)
 
-        print("Error in libscreen.Screen.draw_text: function not supported yet")
+        if not pygame.font.get_init():
+            pygame.font.init()
+        
+        fontname = os.path.join(pygaze.FONTDIR, font) + '.ttf'
+        font = pygame.font.Font(fontname, fontsize)
+        
+        lines = text.split("\n")
+        lineh = font.get_linesize()
+        
+        for lnr in range(0,len(lines)):
+            txtsurf = font.render(lines[lnr], antialias, self.fgc)
+            if center and len(lines) == 1:
+                linepos = (pos[0] - font.size(lines[lnr])[0]/2, pos[1] - font.size(lines[lnr])[1]/2)
+            elif center:
+                linepos = (pos[0] - font.size(lines[lnr])[0]/2, pos[1] + lineh * (2 * (lnr - (len(lines)/2.0) + 0.5)))
+            else:
+                linepos = (pos[0], pos[1] + 2 * lnr)
+            self.screen.blit(txtsurf, linepos)
+    
+    
+    def draw_image(self, image, pos=None):
+        
+        """Draws an image on the screen"""
+        
+        if pos == None:
+            pos = (self.dispsize[0]/2, self.dispsize[1]/2)
+        
+        img = pygame.image.load(image)
+        imgpos = (pos[0] - img.get_width()/2, pos[1] - img.get_height()/2)
+        
+        self.screen.blit(img, imgpos)
 
 
     def set_background_colour(self, colour=None):
@@ -521,6 +555,18 @@ class PsychoPyScreen:
         pos = pos2psychopos(pos,dispsize=self.dispsize)
 
         self.screen.append(TextStim(expdisplay, text=str(text), pos=pos, color=colour))
+    
+    
+    def draw_image(self, image, pos=None):
+        
+        """Draws an image on the screen"""
+        
+        if pos == None:
+            pos = (self.dispsize[0]/2, self.dispsize[1]/2)
+        
+        pos = pos2psychopos(pos,dispsize=self.dispsize)
+        
+        self.screen.append(SimpleImageStim(expdisplay, image=image, pos=pos))
 
 
     def set_background_colour(self, colour=None):

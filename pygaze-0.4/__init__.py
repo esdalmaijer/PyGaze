@@ -18,3 +18,11 @@
 ##    along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 # version: 0.4 (25-03-2013)
+
+import os.path
+
+# directory stuff
+DIR = os.path.split(os.path.abspath(__file__))[0]
+RESDIR = os.path.join(DIR, 'resources')
+FONTDIR = os.path.join(RESDIR, 'fonts')
+SOUNDDIR = os.path.join(RESDIR, 'sounds')
