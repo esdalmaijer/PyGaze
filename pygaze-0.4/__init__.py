@@ -26,3 +26,8 @@ DIR = os.path.split(os.path.abspath(__file__))[0]
 RESDIR = os.path.join(DIR, 'resources')
 FONTDIR = os.path.join(RESDIR, 'fonts')
 SOUNDDIR = os.path.join(RESDIR, 'sounds')
+
+# fontfiles
+FONTFILES = []
+for fontfile in os.listdir(FONTDIR):
+    FONTFILES.append(os.path.join(FONTDIR, fontfile))

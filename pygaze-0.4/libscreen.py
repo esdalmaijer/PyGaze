@@ -343,7 +343,7 @@ class PyGameScreen:
             pygame.draw.circle(self.screen, colour, pos, diameter/2, 0)
 
 
-    def draw_text(self, text='', colour=None, pos=None, center=True, font='mono', fontsize=12, antialias=True):
+    def draw_text(self, text='text', colour=None, pos=None, center=True, font='mono', fontsize=12, antialias=True):
 
         """Draws a text on the screen"""
 
@@ -441,7 +441,6 @@ class PsychoPyScreen:
         if fill:
             self.screen.append(Circle(expdisplay, radius=r, edges=32, pos=pos, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb'))
         else:
-#            self.screen.append(Circle(expdisplay, radius=r-pw, edges=32, pos=pos, lineColor=colour, lineColorSpace='rgb', fillColor=rgb2psychorgb(self.bgc), fillColorSpace='rgb'))
             self.screen.append(Circle(expdisplay, radius=r-pw, edges=32, pos=pos, lineColor=colour, lineColorSpace='rgb'))
         
 
@@ -542,7 +541,7 @@ class PsychoPyScreen:
             self.draw_circle(colour=colour, pos=pos, r=diameter/2, pw=0, fill=True)
 
 
-    def draw_text(self, text='text', colour=None, pos=None):
+    def draw_text(self, text='text', colour=None, pos=None, center=True, font='mono', fontsize=12, antialias=True):
 
         """Draws a text on the screen"""
 
@@ -551,10 +550,15 @@ class PsychoPyScreen:
         if pos == None:
             pos = (self.dispsize[0]/2, self.dispsize[1]/2)
 
+        if center:
+            align = 'center'
+        else:
+            align = 'left'
+
         colour = rgb2psychorgb(colour)
         pos = pos2psychopos(pos,dispsize=self.dispsize)
 
-        self.screen.append(TextStim(expdisplay, text=str(text), pos=pos, color=colour))
+        self.screen.append(TextStim(expdisplay, text=str(text), font=font, pos=pos, color=colour, height=fontsize, antialias=antialias, alignHoriz=align, fontFiles=pygaze.FONTFILES, wrapWidth=None))
     
     
     def draw_image(self, image, pos=None):
