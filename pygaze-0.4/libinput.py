@@ -309,7 +309,7 @@ class PyGameKeyboard:
         else:
             self.klist = []
             for key in keylist:
-                self.klist.append(self.to_int(key))
+                self.klist.append(key)
 
 
     def set_timeout(self, timeout=None):
