@@ -39,7 +39,14 @@ if constants.DISPTYPE == 'psychopy':
 
     def expstart():
 
-        """Time is set to 0 when calling this"""
+        """Time is set to 0 when calling this
+		
+		arguments
+		None
+
+		returns
+		Nothing
+		"""
 
         global expbegintime
 
@@ -48,14 +55,29 @@ if constants.DISPTYPE == 'psychopy':
 
     def get_time():
 
-        """Returns current time in milliseconds"""
+        """Returns current time in milliseconds
+		
+		arguments
+		None
+		
+		returns
+		time		-- current time in milliseconds, as measured since
+				   expbegintime
+		"""
 
         return psychopy.core.getTime() * 1000 - expbegintime
 
 
     def pause(pausetime):
 
-        """Pauses the experiment for given number of milliseconds (returns actual number of ms used)"""
+        """Pauses the experiment for given number of milliseconds
+		
+		arguments
+		pausetime	-- time to pause in milliseconds
+		
+		returns
+		pausetime	-- actual time the system paused (in milliseconds)
+		"""
 
         t0 = psychopy.core.getTime()
         psychopy.core.wait(pausetime/1000.0)
@@ -66,7 +88,15 @@ if constants.DISPTYPE == 'psychopy':
 
     def expend():
 
-        """Ends the experiment and returns ending time (only call this at the end!)"""
+        """Completely ends the experiment (only call this at the end!)
+		
+		arguments
+		None
+		
+		returns
+		endtime	-- ending time of the experiment (in milliseconds since
+				   expbegintime
+		"""
 
         endtime = get_time() * 1000
 
@@ -80,7 +110,14 @@ else:
     
     def expstart():
 
-        """Time is set to 0 when calling this"""
+        """Time is set to 0 when calling this
+		
+		arguments
+		None
+
+		returns
+		Nothing
+		"""
 
         global expbegintime
 
@@ -91,7 +128,15 @@ else:
 
     def get_time():
 
-        """Returns current time in milliseconds"""
+        """Returns current time in milliseconds
+		
+		arguments
+		None
+		
+		returns
+		time		-- current time in milliseconds, as measured since
+				   expbegintime
+		"""
 
         ctime = pygame.time.get_ticks() - expbegintime
 
@@ -100,7 +145,14 @@ else:
 
     def pause(pausetime):
 
-        """Pauses the experiment for given number of milliseconds (returns actual number of ms used)"""
+        """Pauses the experiment for given number of milliseconds
+		
+		arguments
+		pausetime	-- time to pause in milliseconds
+		
+		returns
+		pausetime	-- actual time the system paused (in milliseconds)
+		"""
 
         realpause = pygame.time.delay(pausetime)
 
@@ -109,7 +161,15 @@ else:
 
     def expend():
 
-        """Ends the experiment and returns ending time (only call this at the end!)"""
+        """Completely ends the experiment (only call this at the end!)
+		
+		arguments
+		None
+		
+		returns
+		endtime	-- ending time of the experiment (in milliseconds since
+				   expbegintime
+		"""
 
         endtime = get_time()
 
