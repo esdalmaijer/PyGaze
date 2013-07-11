@@ -74,8 +74,8 @@ class EyeTracker:
             # morph class
             self.__class__ = Dummy
             # initialize
-            self.__class__.__init__(self)
+            self.__class__.__init__(self, display)
 
         else:
-            print("Error in eyetracker.EyeTracker: trackertype not recognized, this should not happen!")
+            print("Error in eyetracker.EyeTracker.__init__: trackertype not recognized, this should not happen!")
 
