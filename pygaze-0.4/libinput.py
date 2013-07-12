@@ -28,7 +28,7 @@ try:
 	from constants import *
 except:
 	pass
-	
+
 import libtime
 from libscreen import pos2psychopos, psychopos2pos
 

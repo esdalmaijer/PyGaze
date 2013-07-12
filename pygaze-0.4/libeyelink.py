@@ -79,8 +79,11 @@ class libeyelink:
 			file_name = "default.edf"
 			print("The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
 
+		# properties
 		self.data_file = data_file
 		self.screen = display
+		self.scr = libscreen.Screen(mousevisible=False)
+		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
 		self.recording = False
 		self.saccade_velocity_treshold = saccade_velocity_threshold
@@ -203,6 +206,13 @@ class libeyelink:
 		if pos == None:
 			pos = self.resolution[0] / 2, self.resolution[1] / 2
 
+		# show fixation
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, diameter=12)
+		self.screen.fill(self.scr)
+		self.screen.show()
+		self.scr.clear()
+
+		# perform drift check
 		while True:
 			if not self.connected():
 				print("Error in libeyelink.libeyelink.drift_correction(): The eyelink is not connected!")
@@ -248,7 +258,12 @@ class libeyelink:
 			pos = self.resolution[0] / 2, self.resolution[1] / 2
 
 		self.prepare_drift_correction(pos)
-		my_keyboard = Keyboard(keylist=["escape", "q"], timeout=1)
+
+		# show fixation
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, diameter=12)
+		self.screen.fill(self.scr)
+		self.screen.show()
+		self.scr.clear()
 
 		# loop until we have sufficient samples
 		lx = []
@@ -256,7 +271,7 @@ class libeyelink:
 		while len(lx) < min_samples:
 
 			# pressing escape enters the calibration screen
-			if my_keyboard.get_key()[0] != None:
+			if self.kb.get_key(keylist=["escape", "q"], timeout=1)[0] != None:
 				self.recording = False
 				print("libeyelink.libeyelink.fix_triggered_drift_correction(): 'q' pressed")
 				return False
@@ -476,14 +491,34 @@ class eyelink_graphics(custom_display):
 
 		pylink.EyeLinkCustomDisplay.__init__(self)
 
+		# objects
 		self.display = display
 		self.screen = libscreen.Screen(mousevisible=False)
-		self.my_keyboard = Keyboard(keylist=None, timeout=0)
+		self.kb = Keyboard(keylist=None, timeout=1)
+		if display.disptype == 'pygame':
+			self.kb.set_timeout(timeout=0)
 
+		# drawing properties
+		self.xc = self.display.dispsize[0]/2
+		self.yc = self.display.dispsize[1]/2
+		self.ld = 40 # line distance
+
+		# menu
+		self.menuscreen = libscreen.Screen(mousevisible=False)
+		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos=(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press C to calibrate", pos=(self.xc,self.yc-3*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press V to validate", pos=(self.xc,self.yc-2*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press A to auto-threshold", pos=(self.xc,self.yc-1*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press Enter to show camera image", pos=(self.xc,self.yc+1*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="(then change between images using the arrow keys)", pos=(self.xc,self.yc+2*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press Q to exit menu", pos=(self.xc,self.yc+5*self.ld), center=True, font='mono', fontsize=12, antialias=True)
+
+		# beeps
 		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, attack=0, decay=0, soundfile=None)
 		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200, attack=0, decay=0, soundfile=None)
 		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200, attack=0, decay=0, soundfile=None)
 
+		# further properties
 		self.state = None
 
 		self.imagebuffer = array.array('l')
@@ -511,23 +546,10 @@ class eyelink_graphics(custom_display):
 	def setup_cal_display(self):
 
 		"""Setup the calibration display, which contains some instructions"""
-
-		xc = self.display.dispsize[0]/2
-		yc = self.display.dispsize[1]/2
-		ld = 40 # line distance
 		
 		# show instructions
-		self.screen.draw_text(text="== Eyelink calibration menu ==", pos(xc,yc-5*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.screen.draw_text(text="Press C to calibrate", pos(xc,yc-3*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.screen.draw_text(text="Press V to validate", pos(xc,yc-2*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.screen.draw_text(text="Press A to auto-threshold", pos(xc,yc-1*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.screen.draw_text(text="Press Enter to show camera image", pos(xc,yc+1*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.screen.draw_text(text="(then change between images using the arrow keys)", pos(xc,yc+2*ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.display.fill(self.screen)
+		self.display.fill(self.menuscreen)
 		self.display.show()
-		
-		# clear screen again
-		self.screen.clear()
 
 
 	def exit_cal_display(self):
@@ -576,16 +598,12 @@ class eyelink_graphics(custom_display):
 	def play_beep(self, beepid):
 
 		"""Play a sound"""
-		
-		xc = self.display.dispsize[0]/2
-		yc = self.display.dispsize[1]/2
-		ld = 40 # line distance
 
 		if beepid == pylink.CAL_TARG_BEEP:
 			self.__target_beep__.play()
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
-			self.screen.draw_text(text="calibration unsuccesfull, press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
+			self.screen.draw_text(text="calibration unsuccesfull, press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
 			self.display.fill(self.screen)
 			self.display.show()
 			self.screen.clear()
@@ -593,13 +611,13 @@ class eyelink_graphics(custom_display):
 			self.__target_beep__error__.play()
 		elif beepid == pylink.CAL_GOOD_BEEP:
 			if self.state == "calibration":
-				self.screen.draw_text(text="calibration succesfull, press 'v' to validate", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
+				self.screen.draw_text(text="calibration succesfull, press 'v' to validate", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
 			elif self.state == "validation":
-				self.screen.draw_text(text="calibration succesfull, press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
+				self.screen.draw_text(text="calibration succesfull, press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
 			else:
-				self.screen.draw_text(text="press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
+				self.screen.draw_text(text="press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
 			# show screen
 			self.display.fill(self.screen)
@@ -643,10 +661,8 @@ class eyelink_graphics(custom_display):
 
 		"""Get an input key"""
 
-		print "get_input_key"
-
 		try:
-			key, time = self.my_keyboard.get_key(keylist=None,timeout=1)
+			key, time = self.kb.get_key(keylist=None,timeout='default')
 		except:
 			return None
 
@@ -718,7 +734,8 @@ class eyelink_graphics(custom_display):
 
 	def draw_image_line(self, width, line, totlines, buff):
 
-		"""Draw a single eye video frame (keyword arguments: with=width of the video; line=line nr of current line, totlines=total lines in video; buff=frame buffer"""
+		"""Draw a single eye video frame (keyword arguments: with=width of the video; line=line nr of current line, totlines=total lines in video; buff=frame buffer
+		imagesize: 192x160 px"""
 
 		i = 0
 		while i < width:
@@ -732,7 +749,7 @@ class eyelink_graphics(custom_display):
 
 			bufferv = self.imagebuffer.tostring()
 			img =Image.new("RGBX",self.size)
-			imgsz = DISPSIZE[0]/2, DISPSIZE[1]/2
+			imgsz = self.xc, self.yc
 			img.fromstring(bufferv)
 			img = img.resize(imgsz)
 
