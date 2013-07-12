@@ -19,11 +19,11 @@
 #
 # version: 0.4 (25-03-2013)
 
-
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 
 import pygaze
 import libtime
@@ -32,7 +32,7 @@ import copy
 import math
 import os.path
 
-if constants.DISPTYPE == 'psychopy':
+if DISPTYPE == 'psychopy':
 	try:
 		import psychopy
 		from psychopy.visual import Window
@@ -61,7 +61,7 @@ class Display:
 
 	"""A class for Display objects, to present Screen objects on a monitor"""
 
-	def __init__(self, disptype=constants.DISPTYPE, dispsize=constants.DISPSIZE, fgc=constants.FGC, bgc=constants.BGC, screennr=constants.SCREENNR, screen=None):
+	def __init__(self, disptype=DISPTYPE, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, screen=None):
 
 		"""Initializes the Display object
 		
@@ -70,17 +70,17 @@ class Display:
 
 		keyword arguments
 		disptype	-- type of display: either 'pygame' or 'psychopy'
-				   (default = constants.DISPTYPE)
+				   (default = DISPTYPE)
 		dispsize	-- size of the display in pixels: a (width, height)
-				   tuple (default = constants.DISPSIZE)
+				   tuple (default = DISPSIZE)
 		fgc		-- the foreground colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = constants.FGC)
+				   (default = FGC)
 		bgc		-- the background colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = constants.BGC)
+				   (default = BGC)
 		screennr	-- the screen number: 0, 1 etc. (default =
-				   constants.SCREENNR)
+				   SCREENNR)
 		screen	-- a Screen object to be presented on the new Display
 				   (default=None)
 		"""
@@ -246,7 +246,7 @@ class Screen:
 
 	"""A class for Screen objects, for visual stimuli (to be displayed via a Display object)"""
 
-	def __init__(self, disptype=constants.DISPTYPE, dispsize=constants.DISPSIZE, fgc=constants.FGC, bgc=constants.BGC, screennr=constants.SCREENNR, mousevisible=constants.MOUSEVISIBLE, screen=None):
+	def __init__(self, disptype=DISPTYPE, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, mousevisible=MOUSEVISIBLE, screen=None):
 
 		"""Initializes the Screen object
 		
@@ -255,19 +255,19 @@ class Screen:
 		
 		keyword arguments
 		disptype	-- type of display: either 'pygame' or 'psychopy'
-				   (default = constants.DISPTYPE)
+				   (default = DISPTYPE)
 		dispsize	-- size of the display in pixels: a (width, height)
-				   tuple (default = constants.DISPSIZE)
+				   tuple (default = DISPSIZE)
 		fgc		-- the foreground colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = constants.FGC)
+				   (default = FGC)
 		bgc		-- the background colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = constants.BGC)
+				   (default = BGC)
 		screennr	-- the screen number: 0, 1 etc. (default =
-				   constants.SCREENNR)
+				   SCREENNR)
 		mousevisible	-- Boolean indicating mouse visibility (default = 
-					   constants.MOUSEVISIBLE)
+					   MOUSEVISIBLE)
 		screen	-- a Screen object to be presented on the new Display
 				   (default=None)
 		"""
@@ -1134,7 +1134,7 @@ def pos2psychopos(pos, dispsize=None):
 	"""
 
 	if dispsize == None:
-		dispsize = tuple(psychopy.visual.openWindows[constants.SCREENNR].size)
+		dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
 
 	x = pos[0] - dispsize[0]/2
 	y = (pos[1] - dispsize[1]/2) * -1
@@ -1161,7 +1161,7 @@ def psychopos2pos(pos, dispsize=None):
 	"""
 
 	if dispsize == None:
-		dispsize = tuple(psychopy.visual.openWindows[constants.SCREENNR].size)
+		dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
 
 	x = pos[0] + dispsize[0]/2
 	y = (pos[1] * -1) + dispsize[1]/2

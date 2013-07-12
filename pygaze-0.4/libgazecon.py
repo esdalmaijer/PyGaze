@@ -19,13 +19,13 @@
 #
 # version: 0.4 (20-03-2013)
 
-
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 
-if constants.DISPTYPE == 'psychopy':
+if DISPTYPE == 'psychopy':
 	try:
 		import psychopy
 		from psychopy.visual import Aperture
@@ -47,7 +47,7 @@ class FRL:
 	
 	"""Gaze contingent FRL"""
 	
-	def __init__(self, disptype=constants.DISPTYPE, pos=constants.FRLPOS, dist=constants.FRLDIST, size=constants.FRLSIZE):
+	def __init__(self, disptype=DISPTYPE, pos=FRLPOS, dist=FRLDIST, size=FRLSIZE):
 
 		"""Initializes FRL object
 		
@@ -56,14 +56,14 @@ class FRL:
 		
 		keyword arguments
 		disptype	-- display type, either 'psychopy' or 'pygame' (default
-				   = constants.DISPTYPE)
+				   = DISPTYPE)
 		pos		-- a string indicating the FRL position in relation to
 				   gaze position; allowed are 'center', 'top',
 				   'topright', 'right', 'bottomright', 'bottom',
 				   'bottomleft', 'left', 'topleft' (default =
-				   constants.FRLPOS)
+				   FRLPOS)
 		dist		-- distance between gaze position and FRL center in
-				   pixels (default = constants.FRLDIST)
+				   pixels (default = FRLDIST)
 		size		-- FRL diameter in pixels
 		"""
 
@@ -73,25 +73,25 @@ class FRL:
 		self.size = size
 
 		# FRL distance
-		self.frlxdis = ((constants.FRLDIST**2)/2)**0.5 # horizontal distance between gaze position and FRL-centre
-		self.frlydis = ((constants.FRLDIST**2)/2)**0.5 # vertical distance between gaze position and FRL-centre
+		self.frlxdis = ((FRLDIST**2)/2)**0.5 # horizontal distance between gaze position and FRL-centre
+		self.frlydis = ((FRLDIST**2)/2)**0.5 # vertical distance between gaze position and FRL-centre
 		# FRL position
 		if pos == 'center':
 			self.frlcor = (0, 0)
 		elif pos == 'top':
-			self.frlcor = (0, -constants.FRLDIST)
+			self.frlcor = (0, -FRLDIST)
 		elif pos == 'topright':
 			self.frlcor = (-self.frlxdis, self.frlydis)
 		elif pos == 'right':
-			self.frlcor = (constants.FRLDIST, 0)
+			self.frlcor = (FRLDIST, 0)
 		elif pos == 'bottomright':
 			self.frlcor = (-self.frlxdis, -self.frlydis)
 		elif pos == 'bottom':
-			self.frlcor = (0, constants.FRLDIST)
+			self.frlcor = (0, FRLDIST)
 		elif pos == 'bottomleft':
 			self.frlcor = (self.frlxdis, -self.frlydis)
 		elif pos == 'left':
-			self.frlcor = (-constants.FRLDIST, 0)
+			self.frlcor = (-FRLDIST, 0)
 		elif pos == 'topleft':
 			self.frlcor = (self.frlxdis, self.frlydis)
 		else:
@@ -109,7 +109,7 @@ class FRL:
 			self.__class__ = PyGameFRL
 		elif self.disptype == 'psychopy':
 			self.__class__ = PsychoPyFRL
-			self.frl = Aperture(psychopy.visual.openWindows[constants.SCREENNR], self.size, pos=pos2psychopos(self.frlcor), shape='circle', units='pix')
+			self.frl = Aperture(psychopy.visual.openWindows[SCREENNR], self.size, pos=pos2psychopos(self.frlcor), shape='circle', units='pix')
 		else:
 			self.__class__ = PyGameFRL
 			print("Error in libgazecon.FRL.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameFRL is used")
@@ -246,7 +246,7 @@ class Cursor:
 	
 	"""Gaze contingent cursor"""
 
-	def __init__(self, disptype=constants.DISPTYPE, ctype=constants.CURSORTYPE, size=constants.CURSORSIZE, colour=constants.CURSORCOLOUR, pw=constants.CURSORPENWIDTH, fill=constants.CURSORFILL):
+	def __init__(self, disptype=DISPTYPE, ctype=CURSORTYPE, size=CURSORSIZE, colour=CURSORCOLOUR, pw=CURSORPENWIDTH, fill=CURSORFILL):
 
 		"""Initializes cursor object
 		
@@ -256,20 +256,20 @@ class Cursor:
 		keyword arguments
 		disptype	-- string indicating which display type is used; should
 				   be either 'pygame' or 'psychopy' (default =
-				   constants.DISPTYPE)
+				   DISPTYPE)
 		ctype		-- string indicating the cursor type; should be one of
 				   the following: 'rectangle', 'ellipse', 'plus',
-				   'cross' or 'arrow' (default = constants.CURSORTYPE)
+				   'cross' or 'arrow' (default = CURSORTYPE)
 		size		-- cursor size in pixels (default =
-				   constants.CURSORSIZE)
+				   CURSORSIZE)
 		colour	-- colour for the cursor (a colour name (e.g. 'red') or
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255)))
-				   (default = constants.CURSORCOLOUR)
+				   (default = CURSORCOLOUR)
 		pw		-- cursor line thickness in pixels (default =
-				   constants.CURSORPENWIDTH)
+				   CURSORPENWIDTH)
 		fill		-- Boolean indicating if cursor should be filled or not;
 				   only applies for cursortypes with a body, e.g.
-				   'rectangle' (default = constants.CURSORFILL)
+				   'rectangle' (default = CURSORFILL)
 		"""
 
 		# cursor characteristics

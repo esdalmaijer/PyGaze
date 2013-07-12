@@ -26,22 +26,23 @@
 # OpenSesame is free software, redistributable under the terms of the GNU Public
 # License as published by the Free Software Foundation.
 
+from defaults import *
 try:
-    import constants
+	from constants import *
 except:
-    import defaults as constants
+	pass
 
 
 class EyeTracker:
 
     """EyeTracker class, which morphes into either an Eyelink, SMItracker or DummyTracker object"""
 
-    def __init__(self, display, trackertype=constants.TRACKERTYPE, resolution=constants.DISPSIZE, eyedatafile=constants.LOGFILENAME, logfile=constants.LOGFILE, fgc=constants.FGC, bgc=constants.BGC, saccvelthresh=constants.SACCVELTHRESH, saccaccthresh=constants.SACCACCTHRESH, ip=constants.SMIIP, sendport=constants.SMISENDPORT, receiveport=constants.SMIRECEIVEPORT):
+    def __init__(self, display, trackertype=TRACKERTYPE, resolution=DISPSIZE, eyedatafile=LOGFILENAME, logfile=LOGFILE, fgc=FGC, bgc=BGC, saccvelthresh=SACCVELTHRESH, saccaccthresh=SACCACCTHRESH, ip=SMIIP, sendport=SMISENDPORT, receiveport=SMIRECEIVEPORT):
 
         """Initializes an EyeTracker object"""
 
         # set trackertype to dummy in dummymode
-        if constants.DUMMYMODE:
+        if DUMMYMODE:
             trackertype = 'dummy'
     
         # correct wrong input

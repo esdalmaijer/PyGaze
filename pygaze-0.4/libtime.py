@@ -1,45 +1,46 @@
 ## This file is part of PyGaze - the open-source toolbox for eye tracking
 ##
-##    PyGaze is a Python module for easily creating gaze contingent experiments
-##    or other software (as well as non-gaze contingent experiments/software)
-##    Copyright (C) 2012-2013  Edwin S. Dalmaijer
+##	PyGaze is a Python module for easily creating gaze contingent experiments
+##	or other software (as well as non-gaze contingent experiments/software)
+##	Copyright (C) 2012-2013  Edwin S. Dalmaijer
 ##
-##    This program is free software: you can redistribute it and/or modify
-##    it under the terms of the GNU General Public License as published by
-##    the Free Software Foundation, either version 3 of the License, or
-##    (at your option) any later version.
+##	This program is free software: you can redistribute it and/or modify
+##	it under the terms of the GNU General Public License as published by
+##	the Free Software Foundation, either version 3 of the License, or
+##	(at your option) any later version.
 ##
-##    This program is distributed in the hope that it will be useful,
-##    but WITHOUT ANY WARRANTY; without even the implied warranty of
-##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-##    GNU General Public License for more details.
+##	This program is distributed in the hope that it will be useful,
+##	but WITHOUT ANY WARRANTY; without even the implied warranty of
+##	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##	GNU General Public License for more details.
 ##
-##    You should have received a copy of the GNU General Public License
-##    along with this program.  If not, see <http://www.gnu.org/licenses/>
+##	You should have received a copy of the GNU General Public License
+##	along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 # version: 0.4 (25-03-2013)
 
 
+from defaults import *
 try:
-    import constants
+	from constants import *
 except:
-    import defaults as constants
+	pass
 
-if constants.DISPTYPE == 'psychopy':
-    import psychopy.core
+if DISPTYPE == 'psychopy':
+	import psychopy.core
 else:
-    import pygame.time
+	import pygame.time
 
 # check disptype
-if constants.DISPTYPE not in ['pygame','psychopy']:
-    print("Error in libtime: disptype not recognized; set to default ('pygame')")
+if DISPTYPE not in ['pygame','psychopy']:
+	print("Error in libtime: disptype not recognized; set to default ('pygame')")
 
 # PsychoPy functions
-if constants.DISPTYPE == 'psychopy':
+if DISPTYPE == 'psychopy':
 
-    def expstart():
+	def expstart():
 
-        """Time is set to 0 when calling this
+		"""Time is set to 0 when calling this
 		
 		arguments
 		None
@@ -48,14 +49,14 @@ if constants.DISPTYPE == 'psychopy':
 		Nothing
 		"""
 
-        global expbegintime
+		global expbegintime
 
-        expbegintime = psychopy.core.getTime() * 1000
+		expbegintime = psychopy.core.getTime() * 1000
 
 
-    def get_time():
+	def get_time():
 
-        """Returns current time in milliseconds
+		"""Returns current time in milliseconds
 		
 		arguments
 		None
@@ -65,12 +66,12 @@ if constants.DISPTYPE == 'psychopy':
 				   expbegintime
 		"""
 
-        return psychopy.core.getTime() * 1000 - expbegintime
+		return psychopy.core.getTime() * 1000 - expbegintime
 
 
-    def pause(pausetime):
+	def pause(pausetime):
 
-        """Pauses the experiment for given number of milliseconds
+		"""Pauses the experiment for given number of milliseconds
 		
 		arguments
 		pausetime	-- time to pause in milliseconds
@@ -79,16 +80,16 @@ if constants.DISPTYPE == 'psychopy':
 		pausetime	-- actual time the system paused (in milliseconds)
 		"""
 
-        t0 = psychopy.core.getTime()
-        psychopy.core.wait(pausetime/1000.0)
-        t1 = psychopy.core.getTime()
+		t0 = psychopy.core.getTime()
+		psychopy.core.wait(pausetime/1000.0)
+		t1 = psychopy.core.getTime()
 
-        return t1-t0
+		return t1-t0
 
 
-    def expend():
+	def expend():
 
-        """Completely ends the experiment (only call this at the end!)
+		"""Completely ends the experiment (only call this at the end!)
 		
 		arguments
 		None
@@ -98,19 +99,19 @@ if constants.DISPTYPE == 'psychopy':
 				   expbegintime
 		"""
 
-        endtime = get_time() * 1000
+		endtime = get_time() * 1000
 
-        psychopy.core.quit()
+		psychopy.core.quit()
 
-        return endtime
+		return endtime
 
 
 # PyGame functions
 else:
-    
-    def expstart():
+	
+	def expstart():
 
-        """Time is set to 0 when calling this
+		"""Time is set to 0 when calling this
 		
 		arguments
 		None
@@ -119,16 +120,16 @@ else:
 		Nothing
 		"""
 
-        global expbegintime
+		global expbegintime
 
-        pygame.init()
+		pygame.init()
 
-        expbegintime = pygame.time.get_ticks()
+		expbegintime = pygame.time.get_ticks()
 
 
-    def get_time():
+	def get_time():
 
-        """Returns current time in milliseconds
+		"""Returns current time in milliseconds
 		
 		arguments
 		None
@@ -138,14 +139,14 @@ else:
 				   expbegintime
 		"""
 
-        ctime = pygame.time.get_ticks() - expbegintime
+		ctime = pygame.time.get_ticks() - expbegintime
 
-        return ctime
+		return ctime
 
 
-    def pause(pausetime):
+	def pause(pausetime):
 
-        """Pauses the experiment for given number of milliseconds
+		"""Pauses the experiment for given number of milliseconds
 		
 		arguments
 		pausetime	-- time to pause in milliseconds
@@ -154,14 +155,14 @@ else:
 		pausetime	-- actual time the system paused (in milliseconds)
 		"""
 
-        realpause = pygame.time.delay(pausetime)
+		realpause = pygame.time.delay(pausetime)
 
-        return realpause
+		return realpause
 
 
-    def expend():
+	def expend():
 
-        """Completely ends the experiment (only call this at the end!)
+		"""Completely ends the experiment (only call this at the end!)
 		
 		arguments
 		None
@@ -171,8 +172,8 @@ else:
 				   expbegintime
 		"""
 
-        endtime = get_time()
+		endtime = get_time()
 
-        pygame.quit()
+		pygame.quit()
 
-        return endtime
+		return endtime

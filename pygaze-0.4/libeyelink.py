@@ -26,10 +26,11 @@
 # OpenSesame is free software, redistributable under the terms of the GNU Public
 # License as published by the Free Software Foundation.
 
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 	
 import libtime
 import libscreen
@@ -37,7 +38,7 @@ from libinput import Mouse
 from libinput import Keyboard
 from libsound import Sound
 
-if not constants.DUMMYMODE:
+if not DUMMYMODE:
 	import pylink
 	import Image
 	custom_display = pylink.EyeLinkCustomDisplay
@@ -47,13 +48,13 @@ else:
 try:
 	import psychopy.visual
 except:
-	if constants.DISPYPE == 'psychopy':
+	if DISPYPE == 'psychopy':
 		print("Error in libeyelink: PsychoPy could not be loaded!")
 
 try:
 	import pygame
 except:
-	if constants.DISPTYPE == 'pygame':
+	if DISPTYPE == 'pygame':
 		print("Error in libeyelink: PyGame could not be loaded!")
 
 import os.path
@@ -67,7 +68,7 @@ class libeyelink:
 
 	MAX_TRY = 100
 
-	def __init__(self, display, resolution=constants.DISPSIZE, data_file=constants.LOGFILE+".edf", fg_color=constants.FGC, bg_color=constants.BGC, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
+	def __init__(self, display, resolution=DISPSIZE, data_file=LOGFILE+".edf", fg_color=FGC, bg_color=BGC, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
 
 		""""Initializes the connection to the Eyelink"""
 
@@ -247,7 +248,7 @@ class libeyelink:
 			pos = self.resolution[0] / 2, self.resolution[1] / 2
 
 		self.prepare_drift_correction(pos)
-		my_keyboard = Keyboard(keylist=["escape", "q"], timeout=0)
+		my_keyboard = Keyboard(keylist=["escape", "q"], timeout=1)
 
 		# loop until we have sufficient samples
 		lx = []
@@ -564,7 +565,7 @@ class eyelink_graphics(custom_display):
 		"""Draw calibration target at (x,y)"""
 		
 		# show fixation dot
-		self.screen.draw_fixation(fixtype='dot', colour=constants.FGC, pos=(x,y), pw=0, diameter=12)
+		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, diameter=12)
 		self.display.fill(screen=self.screen)
 		self.display.show()
 		
@@ -575,26 +576,36 @@ class eyelink_graphics(custom_display):
 	def play_beep(self, beepid):
 
 		"""Play a sound"""
+		
+		xc = self.display.dispsize[0]/2
+		yc = self.display.dispsize[1]/2
+		ld = 40 # line distance
 
 		if beepid == pylink.CAL_TARG_BEEP:
 			self.__target_beep__.play()
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
-			self.display.fill()
-			# show a picture: "calibration unsuccesfull, press 'q' to return to menu"?
+			# show a picture
+			self.screen.draw_text(text="calibration unsuccesfull, press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
+			self.display.fill(self.screen)
 			self.display.show()
+			self.screen.clear()
+			# play beep
 			self.__target_beep__error__.play()
 		elif beepid == pylink.CAL_GOOD_BEEP:
-			self.display.fill()
 			if self.state == "calibration":
-				# show a picture: "calibration succesfull, press 'v' to validate"?
+				self.screen.draw_text(text="calibration succesfull, press 'v' to validate", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
 			elif self.state == "validation":
-				# show a picture: "calibration succesfull, press 'q' to return to menu"?
+				self.screen.draw_text(text="calibration succesfull, press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
 			else:
-				# show a picture: "press 'q' to return to menu"?
+				self.screen.draw_text(text="press 'q' to return to menu", pos(xc,yc), center=True, font='mono', fontsize=12, antialias=True)
 				pass
+			# show screen
+			self.display.fill(self.screen)
 			self.display.show()
+			self.screen.clear()
+			# play beep
 			self.__target_beep__done__.play()
 		else: #	DC_GOOD_BEEP	or DC_TARG_BEEP
 			pass
@@ -643,7 +654,6 @@ class eyelink_graphics(custom_display):
 			return None
 
 		ky = []
-##		key = self.my_keyboard.to_chr(_key)
 
 		if key == "return":
 			keycode = pylink.ENTER_KEY
@@ -671,8 +681,6 @@ class eyelink_graphics(custom_display):
 			keycode = pylink.CURS_RIGHT
 		else:
 			keycode = 0
-
-		#print("key=%s, keycode=%s, state=%s" % (key,keycode,self.state))
 
 		return [pylink.KeyInput(keycode, 0)] # 0 = pygame.KMOD_NONE
 
@@ -724,16 +732,16 @@ class eyelink_graphics(custom_display):
 
 			bufferv = self.imagebuffer.tostring()
 			img =Image.new("RGBX",self.size)
-			imgsz = constants.DISPSIZE[0]/2, constants.DISPSIZE[1]/2
+			imgsz = DISPSIZE[0]/2, DISPSIZE[1]/2
 			img.fromstring(bufferv)
 			img = img.resize(imgsz)
 
-			if constants.DISPTYPE == 'pygame':
+			if DISPTYPE == 'pygame':
 				img = pygame.image.fromstring(img.tostring(),imgsz,"RGBX")
 				self.display.fill()
 				self.display.expdisplay.blit(img,((self.display.expdisplay.get_rect().w-imgsz[0])/2,(self.display.expdisplay.get_rect().h-imgsz[1])/2))
 				self.display.show()
-			elif constants.DISPTYPE == 'psychopy':
+			elif DISPTYPE == 'psychopy':
 				img = psychopy.visual.SimpleImageStim(self.display.expdisplay, image=img)
 				self.display.fill()
 				img.draw()

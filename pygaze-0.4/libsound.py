@@ -26,10 +26,11 @@
 # OpenSesame is free software, redistributable under the terms of the GNU Public
 # License as published by the Free Software Foundation.
 
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 
 import math
 import numpy
@@ -41,7 +42,7 @@ class Sound:
 
 	"""Sound object"""
 
-	def __init__(self, osc=constants.SOUNDOSCILLATOR, freq=constants.SOUNDFREQUENCY, length=constants.SOUNDLENGTH, attack=constants.SOUNDATTACK, decay=constants.SOUNDDECAY, soundfile=None):
+	def __init__(self, osc=SOUNDOSCILLATOR, freq=SOUNDFREQUENCY, length=SOUNDLENGTH, attack=SOUNDATTACK, decay=SOUNDDECAY, soundfile=None):
 		
 		"""Initializes a sound object
 		
@@ -50,22 +51,22 @@ class Sound:
 		
 		keyword arguments
 		osc		-- type of oscillator; allowed: 'sine', 'saw', 'square',
-				   'whitenoise' (default = constants.SOUNDOSCILLATOR)
+				   'whitenoise' (default = SOUNDOSCILLATOR)
 		freq		-- sound frequency in Herz, either float or integer
-				   (default = constants.SOUNDFREQUENCY)
+				   (default = SOUNDFREQUENCY)
 		length	-- sound length in milliseconds (default = 
-				   constants.SOUNDLENGTH)
+				   SOUNDLENGTH)
 		attack	-- sound attack ('fade in') in milliseconds (default = 
-				   constants.SOUNDATTACK)
+				   SOUNDATTACK)
 		decay		-- sound decay ('fade out') in milliseconds (default =
-				   constants.SOUNDDECAY)
+				   SOUNDDECAY)
 		soundfile	-- full path to soundfile with .ogg or .wav extension
 				   or None for no file; if a file is specified, all
 				   other keyword arguments will be ignored (default =
 				   None)
 		"""
 
-		pygame.mixer.init(frequency=constants.SOUNDSAMPLINGFREQUENCY, size=constants.SOUNDSAMPLESIZE, channels=constants.SOUNDCHANNELS, buffer=constants.SOUNDBUFFERSIZE)
+		pygame.mixer.init(frequency=SOUNDSAMPLINGFREQUENCY, size=SOUNDSAMPLESIZE, channels=SOUNDCHANNELS, buffer=SOUNDBUFFERSIZE)
 
 		# if a sound file was specified, use soundfile and ignore other keyword arguments
 		if soundfile != None:
@@ -92,12 +93,12 @@ class Sound:
 
 			l = []
 
-			attack = attack * constants.SOUNDSAMPLINGFREQUENCY / 1000
-			decay = decay * constants.SOUNDSAMPLINGFREQUENCY / 1000
+			attack = attack * SOUNDSAMPLINGFREQUENCY / 1000
+			decay = decay * SOUNDSAMPLINGFREQUENCY / 1000
 			amp = 32767 / 2
-			sps = constants.SOUNDSAMPLINGFREQUENCY
+			sps = SOUNDSAMPLINGFREQUENCY
 			cps = float(sps/freq) # cycles per sample
-			slen = constants.SOUNDSAMPLINGFREQUENCY * length / 1000 # number of samples
+			slen = SOUNDSAMPLINGFREQUENCY * length / 1000 # number of samples
 
 			for i in range(slen):
 				p = float((i % cps)) / cps * 2 * math.pi

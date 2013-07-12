@@ -19,11 +19,11 @@
 #
 # version: 0.4 (25-03-2013)
 
-
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 
 import libtime
 import libscreen
@@ -33,7 +33,7 @@ from libsound import Sound
 import copy
 import math
 
-if not constants.DUMMYMODE:
+if not DUMMYMODE:
 	from iViewXAPI import  *
 
 # function for identyfing errors
@@ -118,7 +118,7 @@ class SMItracker:
 
 	"""A class for SMI eye tracker objects"""
 
-	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport=5555, logfile=constants.LOGFILE):
+	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport=5555, logfile=LOGFILE):
 
 		"""Initializes the SMItracker object
 		
@@ -132,7 +132,7 @@ class SMItracker:
 		receiveport	-- port number for iViewX receiving (default = 5555)
 		logfile	-- logfile name (string value); note that this is the
 				   name for the SMI logfile, NOT the .idf file
-				   (default = constants.LOGFILE)
+				   (default = LOGFILE)
 		"""
 
 		# properties
@@ -154,8 +154,8 @@ class SMItracker:
 		self.spdtresh = 35 # degrees per second; saccade speed threshold
 		self.accthresh = 9500 # degrees per second**2; saccade acceleration threshold
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
-		self.dispsize = constants.SIZE # display size in pixels
-		self.screensize = constants.SCREENSIZE # display size in cm
+		self.dispsize = SIZE # display size in pixels
+		self.screensize = SCREENSIZE # display size in cm
 		self.prevsample = (-1,-1)
 		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
 

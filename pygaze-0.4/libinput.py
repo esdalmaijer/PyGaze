@@ -23,15 +23,16 @@
 # the OpenSesame experiment builder (www.cogsci.nl/opensesame) and the joystick
 # plugin for OpenSesame (by Edwin Dalmaijer and Sebastiaan Mathot).
 
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 	
 import libtime
 from libscreen import pos2psychopos, psychopos2pos
 
-if constants.DISPTYPE == 'psychopy':
+if DISPTYPE == 'psychopy':
 	import psychopy.event
 else:
 	import pygame
@@ -41,7 +42,7 @@ class Mouse:
 
 	"""A mouse for collecting responses"""
 
-	def __init__(self, disptype=constants.DISPTYPE, mousebuttonlist=constants.MOUSEBUTTONLIST, timeout=constants.MOUSETIMEOUT, visible=False):
+	def __init__(self, disptype=DISPTYPE, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT, visible=False):
 
 		"""Initializes the Mouse object
 		
@@ -50,14 +51,14 @@ class Mouse:
 		
 		keyword arguments
 		disptype	-- display type, either 'psychopy' or 'pygame' (default
-				   = constants.DISPTYPE)
+				   = DISPTYPE)
 		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
 					   [1,3] for left and right button) or None to
 					   allow all buttons (default =
-					   constants.MOUSEBUTTONLIST)
+					   MOUSEBUTTONLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to get_clicked method when no click is
-				   registered (default = constants.MOUSETIMEOUT)
+				   registered (default = MOUSETIMEOUT)
 		visible	-- Boolean indicating if mouse should be visible or not
 				   (default = False)
 		"""
@@ -86,7 +87,7 @@ class PyGameMouse:
 
 	import pygame.mouse
 
-	def __init__(self, mousebuttonlist=constants.MOUSEBUTTONLIST, timeout=constants.MOUSETIMEOUT, visible=False):
+	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT, visible=False):
 
 		"""Initializes mouse object
 		
@@ -97,10 +98,10 @@ class PyGameMouse:
 		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
 					   [1,3] for left and right button) or None to
 					   allow all buttons (default =
-					   constants.MOUSEBUTTONLIST)
+					   MOUSEBUTTONLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to get_clicked method when no click is
-				   registered (default = constants.MOUSETIMEOUT)
+				   registered (default = MOUSETIMEOUT)
 		visible	-- Boolean indicating if mouse should be visible or not
 				   (default = False)
 		"""
@@ -281,7 +282,7 @@ class PsychoPyMouse:
 
 	"""A mouse for collecting responses"""
 
-	def __init__(self, mousebuttonlist=constants.MOUSEBUTTONLIST, timeout=constants.MOUSETIMEOUT, visible=False):
+	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT, visible=False):
 
 		"""Initializes mouse object
 		
@@ -290,20 +291,20 @@ class PsychoPyMouse:
 		
 		keyword arguments
 		disptype	-- display type, either 'psychopy' or 'pygame' (default
-				   = constants.DISPTYPE)
+				   = DISPTYPE)
 		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
 					   [1,3] for left and right button) or None to
 					   allow all buttons (default =
-					   constants.MOUSEBUTTONLIST)
+					   MOUSEBUTTONLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to get_clicked method when no click is
-				   registered (default = constants.MOUSETIMEOUT)
+				   registered (default = MOUSETIMEOUT)
 		visible	-- Boolean indicating if mouse should be visible or not
 				   (default = False)
 		"""
 
 		# create mouse object
-		self.mouse = psychopy.event.Mouse(visible=False,win=psychopy.visual.openWindows[constants.SCREENNR])
+		self.mouse = psychopy.event.Mouse(visible=False,win=psychopy.visual.openWindows[SCREENNR])
 		
 		# set mouse characteristics
 		self.set_mousebuttonlist(mousebuttonlist)
@@ -477,7 +478,7 @@ class Keyboard:
 
 	"""A keyboard for collecting responses"""
 
-	def __init__(self, disptype=constants.DISPTYPE, keylist=constants.KEYLIST, timeout=constants.KEYTIMEOUT):
+	def __init__(self, disptype=DISPTYPE, keylist=KEYLIST, timeout=KEYTIMEOUT):
 
 		"""Initializes the Keyboard object
 		
@@ -486,13 +487,13 @@ class Keyboard:
 		
 		keyword arguments
 		disptype	-- display type, either 'psychopy' or 'pygame' (default
-				   = constants.DISPTYPE)
+				   = DISPTYPE)
 		keylist	-- list of keys that are allowed, e.g. ['1','a','enter']
 				   for the 1, A and Enter keys (default =
-				   constants.KEYLIST)
+				   KEYLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to the get_key method when no keypress is
-				   registered (default = constants.KEYTIMEOUT)
+				   registered (default = KEYTIMEOUT)
 		"""
 
 		if disptype in ['pygame','psychopy']:
@@ -519,7 +520,7 @@ class PyGameKeyboard:
 
 	import pygame.key
 
-	def __init__(self, keylist=constants.KEYLIST, timeout=constants.KEYTIMEOUT):
+	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
 
 		"""Initializes the Keyboard object
 		
@@ -529,10 +530,10 @@ class PyGameKeyboard:
 		keyword arguments
 		keylist	-- list of keys that are allowed, e.g. ['1','a','enter']
 				   for the 1, A and Enter keys (default =
-				   constants.KEYLIST)
+				   KEYLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to the get_key method when no keypress is
-				   registered (default = constants.KEYTIMEOUT)
+				   registered (default = KEYTIMEOUT)
 		"""
 
 		# dictionary for keynames and codes
@@ -648,7 +649,7 @@ class PsychoPyKeyboard:
 
 	"""A keyboard for collecting responses"""
 
-	def __init__(self, keylist=constants.KEYLIST, timeout=constants.KEYTIMEOUT):
+	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
 
 		"""Initializes the Keyboard object
 		
@@ -658,10 +659,10 @@ class PsychoPyKeyboard:
 		keyword arguments
 		keylist	-- list of keys that are allowed, e.g. ['1','a','enter']
 				   for the 1, A and Enter keys (default =
-				   constants.KEYLIST)
+				   KEYLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to the get_key method when no keypress is
-				   registered (default = constants.KEYTIMEOUT)
+				   registered (default = KEYTIMEOUT)
 		"""
 
 		# keymap
@@ -794,7 +795,7 @@ class Joystick:
 
 	"""A joystick for collecting responses"""
 
-	def __init__(self, joybuttonlist=constants.JOYBUTTONLIST, timeout=constants.JOYTIMEOUT):
+	def __init__(self, joybuttonlist=JOYBUTTONLIST, timeout=JOYTIMEOUT):
 
 		"""Initializes joystick object (joybuttonlist: list of buttons; timeout: timeout in ms)
 		
@@ -804,10 +805,10 @@ class Joystick:
 		keyword arguments
 		joybuttonlist	-- list of joystick buttons that are allowed (e.g.
 					   [0,2,4]) or None to allow all buttons
-					   (default = constants.JOYBUTTONLIST)
+					   (default = JOYBUTTONLIST)
 		timeout	-- time in milliseconds after which None is returned
 				   on a call to a get_* method when no input is
-				   registered (default = constants.JOYTIMEOUT)
+				   registered (default = JOYTIMEOUT)
 		"""
 
 		import pygame

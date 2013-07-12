@@ -18,18 +18,12 @@
 ##	along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 # version: 0.4 (25-03-2013)
-#
-#
-# Many thanks to Sebastiaan Mathot. libeyetracker is a slightly modified version of
-# libeyetracker.py, part of the eyetracker plugins for the OpenSesame experiment builder
-# (see: www.cogsci.nl/opensesame).
-# OpenSesame is free software, redistributable under the terms of the GNU Public
-# License as published by the Free Software Foundation.
 
+from defaults import *
 try:
-	import constants
+	from constants import *
 except:
-	import defaults as constants
+	pass
 	
 import libtime
 import libscreen
@@ -48,7 +42,7 @@ class Dummy:
 
 		self.recording = False
 		self.blinking = False
-		self.bbpos = (constants.DISPSIZE[0]/2, constants.DISPSIZE[1]/2)
+		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 
 		self.simulator = Mouse(mousebuttonlist=None,timeout=2,visible=False)
 
@@ -114,7 +108,7 @@ class Dummy:
 			return self.fix_triggered_drift_correction(pos)
 		
 		if pos == None:
-			pos = constants.DISPSIZE[0] / 2, constants.DISPSIZE[1] / 2
+			pos = DISPSIZE[0] / 2, DISPSIZE[1] / 2
 
 		# show mouse
 		self.simulator.set_visible(visible=True)
@@ -139,7 +133,7 @@ class Dummy:
 				return False
 				
 			# space bar
-			else:
+			elif pressed == 'space':
 				# get sample
 				gazepos = self.sample()
 				# sample is close enough to fixation dot
@@ -167,7 +161,7 @@ class Dummy:
 		print("Drift correction (fixation triggered) would now take place")
 
 		if pos == None:
-			pos = constants.DISPSIZE[0] / 2, constants.DISPSIZE[1] / 2
+			pos = DISPSIZE[0] / 2, DISPSIZE[1] / 2
 
 		# show fixation dot
 		self.screen.draw_fixation(fixtype='dot', colour=None, pos=pos, diameter=12)
