@@ -1,7 +1,7 @@
 # Display a message on your display until space is pressed
 #
 # handy for when you're away from your desk and want your
-# co-workers to know
+# co-workers to REALLY know (and possibly have a seizure)
 #
 # E.S. Dalmaijer, 2013
 
@@ -11,12 +11,8 @@ MESSAGE = "AFK; BRB"
 # import stuff
 import random
 from pygaze.defaults import *
-from pygaze import libtime
 from pygaze.libscreen import Display, Screen
 from pygaze.libinput import Keyboard
-
-# start timing
-libtime.expstart()
 
 # objects
 disp = Display()

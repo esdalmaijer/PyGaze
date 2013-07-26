@@ -12,9 +12,6 @@ from pygaze import liblog
 # # # # #
 # setup the experiment
 
-# start timing
-libtime.expstart()
-
 # create display object
 disp = libscreen.Display()
 
@@ -58,10 +55,6 @@ for trialnr in range(1,21):
     
     # wait for input
     response, t1 = kb.get_key()
-    
-    #DEBUG#
-    print t1
-    # # # #
     
     # process input
     if response == trialtype:

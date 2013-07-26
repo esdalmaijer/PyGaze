@@ -13,9 +13,6 @@ from pygaze import eyetracker
 # # # # #
 # experiment setup
 
-# start timing
-libtime.expstart()
-
 # create display object
 disp = libscreen.Display()
 

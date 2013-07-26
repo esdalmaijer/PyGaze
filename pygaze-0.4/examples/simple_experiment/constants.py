@@ -30,8 +30,8 @@ TRIALS = 5
 # used in libscreen, for the *_display functions. The values may be adjusted,
 # but not the constant's names
 SCREENNR = 0 # number of the screen used for displaying experiment
-DISPTYPE = 'pygame' # either 'psychopy' or 'pygame'
-DISPSIZE = (1920,1080) # canvas size
+DISPTYPE = 'psychopy' # either 'psychopy' or 'pygame'
+DISPSIZE = (1920, 1080) # resolution
 SCREENSIZE = (34.5, 19.7) # physical display size in cm
 MOUSEVISIBLE = False # mouse visibility
 BGC = (125,125,125,255) # backgroundcolour
