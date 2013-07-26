@@ -20,6 +20,7 @@
 # version: 0.4 (25-03-2013)
 
 import os.path
+import libtime
 
 # directory stuff
 DIR = os.path.split(os.path.abspath(__file__))[0]
@@ -31,3 +32,6 @@ SOUNDDIR = os.path.join(RESDIR, 'sounds')
 FONTFILES = []
 for fontfile in os.listdir(FONTDIR):
 	FONTFILES.append(os.path.join(FONTDIR, fontfile))
+
+# start timing
+libtime.expstart()
