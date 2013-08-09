@@ -2,6 +2,7 @@
 # version 2 (09-08-2013)
 # E.S. Dalmaijer (edwin.dalmaijer@gmail.com)
 
+import highscores
 from constants import *
 
 from pygaze import libtime
@@ -74,7 +75,7 @@ for trialnr in range(0,TRIALS):
 		# draw stimulus
 		screen.draw_circle(colour=STIMCOL, pos=stimpos, r=STIMSIZE/2, fill=True)
 		# draw crosshair
-		screen.draw_circle(colour=FGC, pos=gazepos, r=13, pw=1, fill=False)
+		screen.draw_circle(colour=FGC, pos=gazepos, r=13, pw=2, fill=False)
 		screen.draw_line(colour=FGC, spos=(gazepos[0]-15, gazepos[1]), epos=(gazepos[0]+15, gazepos[1]), pw=2)
 		screen.draw_line(colour=FGC, spos=(gazepos[0], gazepos[1]-15), epos=(gazepos[0], gazepos[1]+15), pw=2)
 		# draw point total
@@ -96,9 +97,19 @@ for trialnr in range(0,TRIALS):
 # # # # #
 # end
 
-# final display
+# score display
 screen.clear()
 screen.draw_text(text="You have scored %d points!" % points, colour=FGC, pos=(DISPSIZE[0]/2, DISPSIZE[1]/2), fontsize=FONTSIZE)
+disp.fill(screen=screen)
+disp.show()
+
+# wait for keypress
+keyboard.get_key(keylist=None, timeout=None)
+
+# highscore display
+scorestring = highscores.update(LOGFILENAME, points)
+screen.clear()
+screen.draw_text(text=scorestring, colour=FGC, pos=(DISPSIZE[0]/2, DISPSIZE[1]/2), fontsize=FONTSIZE)
 disp.fill(screen=screen)
 disp.show()
 

@@ -20,7 +20,9 @@
 
 # MAIN
 DUMMYMODE = True # False for gaze contingent display, True for dummy mode (using mouse or joystick)
-LOGFILENAME = 'default' # logfilename, without path
+print("Please type your name between quotes (e.g. 'player1') and press Enter")
+print("(do not use more than 8 letters!)\n")
+LOGFILENAME = input("Player name: ") # logfilename, without path
 LOGFILE = LOGFILENAME[:] # .txt; adding path before logfilename is optional; logs responses (NOT eye movements, these are stored in an EDF file!)
 TRIALS = 1
 
