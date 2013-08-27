@@ -28,7 +28,7 @@ try:
 	from constants import *
 except:
 	pass
-
+	
 import libtime
 from libscreen import pos2psychopos, psychopos2pos
 
@@ -776,16 +776,16 @@ class PsychoPyKeyboard:
 			timeout = self.timeout
 
 		# starttime
+		psychopy.event.clearEvents(eventType='keyboard')
 		starttime = libtime.get_time()
 		time = libtime.get_time()
 
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
-			keys = psychopy.event.getKeys(keyList=keylist,timeStamped=True)
-			for key, time in keys:
-				time = (time*1000) - libtime.expbegintime
+			keys = psychopy.event.getKeys(keyList=keylist,timeStamped=False)
+			for key in keys:
 				if keylist == None or key in keylist:
-					return key, time
+					return key, libtime.get_time()
 			time = libtime.get_time()
 
 		return None, time
