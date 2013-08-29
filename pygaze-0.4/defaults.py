@@ -33,6 +33,7 @@ SCREENNR = 0 # number of the screen used for displaying experiment
 DISPTYPE = 'psychopy' # either 'psycho' or 'pygame'
 DISPSIZE = (1280,1024) # canvas size
 SCREENSIZE = (33.8,27.1) # physical screen size in centimeters
+SCREENDIST = 57.0 # centimeters; distance between screen and participant's eyes
 MOUSEVISIBLE = False # mouse visibility
 BGC = (125,125,125,255) # backgroundcolour
 FGC = (0,0,0,255) # foregroundcolour

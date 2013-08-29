@@ -154,7 +154,7 @@ class SMItracker:
 		self.spdtresh = 35 # degrees per second; saccade speed threshold
 		self.accthresh = 9500 # degrees per second**2; saccade acceleration threshold
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
-		self.dispsize = SIZE # display size in pixels
+		self.dispsize = DISPSIZE # display size in pixels
 		self.screensize = SCREENSIZE # display size in cm
 		self.prevsample = (-1,-1)
 		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
@@ -189,7 +189,7 @@ class SMItracker:
 			self.connected = False
 
 		# initiation report
-		self.log("pygace initiation report start")
+		self.log("pygaze initiation report start")
 		self.log("experiment: %s" % self.description)
 		self.log("participant: %s" % self.participant)
 		self.log("display resolution: %sx%s" % (self.dispsize[0],self.dispsize[1]))
@@ -199,7 +199,7 @@ class SMItracker:
 		self.log("fixation threshold: %s degrees" % self.fixtresh)
 		self.log("speed threshold: %s degrees/second" % self.spdtresh)
 		self.log("accuracy threshold: %s degrees/second**2" % self.accthresh)
-		self.log("pygace initiation report end")
+		self.log("pygaze initiation report end")
 
 
 	def calibrate(self, calibrate=True, validate=True):
@@ -288,6 +288,9 @@ class SMItracker:
 				self.disp.show()
 				self.screen.clear()
 
+				# wait for a bit, to allow participant to fixate
+				libtime.pause(500)
+
 				# get samples
 				sl = [self.sample()] # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
 				t0 = libtime.get_time() # starting time
@@ -331,17 +334,17 @@ class SMItracker:
 				else:
 					err = errorstring(res)
 					print("Error in libsmi.SMItracker.calibrate: failed to obtain screen distance; %s" % err)
-					screendist = 57.0
+					screendist = SCREENDIST
 					print("libsmi.SMItracker.calibrate: As an estimate, the screendistance was set to it's default value of 57 cm")
 				# calculate thresholds based on tracker settings
 				self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
-				self.pxfixtresh = self.pxerrdist = deg2pix(screendist, self.fixtresh, pixpercm)
+				self.pxfixtresh = deg2pix(screendist, self.fixtresh, pixpercm)
 				self.pxaccuracy = ((deg2pix(screendist, self.accuracy[0][0], pixpercm),deg2pix(screendist, self.accuracy[0][1], pixpercm)), (deg2pix(screendist, self.accuracy[1][0], pixpercm),deg2pix(screendist, self.accuracy[1][1], pixpercm)))
 				self.pxspdtresh = deg2pix(screendist, self.spdtresh/float(self.samplerate), pixpercm) # in pixels per sample
 				self.pxacctresh = deg2pix(screendist, self.accthresh/float(self.samplerate**2), pixpercm) # in pixels per sample**2
 
 				# calibration report
-				self.log("pygace calibration report start")
+				self.log("pygaze calibration report start")
 				self.log("accuracy (degrees): LX=%s, LY=%s, RX=%s, RY=%s" % (self.accuracy[0][0],self.accuracy[0][1],self.accuracy[1][0],self.accuracy[1][1]))
 				self.log("accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s" % (self.pxaccuracy[0][0],self.pxaccuracy[0][1],self.pxaccuracy[1][0],self.pxaccuracy[1][1]))
 				self.log("precision (RMS noise in pixels): X=%s, Y=%s" % (self.pxdsttresh[0],self.pxdsttresh[1]))
@@ -349,7 +352,7 @@ class SMItracker:
 				self.log("fixation threshold: %s pixels" % self.pxfixtresh)
 				self.log("speed threshold: %s pixels/sample" % self.pxspdtresh)
 				self.log("accuracy threshold: %s pixels/sample**2" % self.pxacctresh)
-				self.log("pygace calibration report end")
+				self.log("pygaze calibration report end")
 
 				return True
 
