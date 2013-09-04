@@ -41,8 +41,8 @@ if DISPTYPE == 'psychopy':
 		from psychopy.visual import Line
 		from psychopy.visual import ShapeStim
 		from psychopy.visual import TextStim
-		from psychopy.visual import SimpleImageStim
-	except:		
+		from psychopy.visual import ImageStim
+	except:	
 		print("Error in libscreen: PsychoPy could not be loaded!")
 
 else:
@@ -54,6 +54,19 @@ else:
 	except:
 		print("Error in libscreen: PyGame could not be loaded!")
 
+# try importing PIL
+try:
+	from PIL import Image
+	pilimp = True
+except:
+	try:
+		import Image
+		pilimp = True
+	except:
+		pilimp = False
+		print("Warning in libscreen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
+	
+	
 global expdisplay
 
 
@@ -649,7 +662,7 @@ class PyGameScreen:
 			self.screen.blit(txtsurf, linepos)
 	
 	
-	def draw_image(self, image, pos=None):
+	def draw_image(self, image, pos=None, scale=None):
 		
 		"""Draws an image on the screen
 		
@@ -659,6 +672,8 @@ class PyGameScreen:
 		keyword arguments
 		pos		-- image center position, an (x,y) position tuple or
 				   None for a central position (default = None)
+		scale	-- scale factor for the image or None for no scaling
+				   (default = None)
 		
 		returns
 		Nothing	-- loads and draws an image surface on (PyGame) or
@@ -670,6 +685,10 @@ class PyGameScreen:
 			pos = (self.dispsize[0]/2, self.dispsize[1]/2)
 		
 		img = pygame.image.load(image)
+		
+		if scale != None:
+			pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
+		
 		imgpos = (pos[0] - img.get_width()/2, pos[1] - img.get_height()/2)
 		
 		self.screen.blit(img, imgpos)
@@ -1065,7 +1084,7 @@ class PsychoPyScreen:
 		self.screen.append(TextStim(expdisplay, text=str(text), font=font, pos=pos, color=colour, height=fontsize, antialias=antialias, alignHoriz=align, fontFiles=pygaze.FONTFILES, wrapWidth=None))
 	
 	
-	def draw_image(self, image, pos=None):
+	def draw_image(self, image, pos=None, scale=None):
 		
 		"""Draws an image on the screen
 		
@@ -1075,6 +1094,8 @@ class PsychoPyScreen:
 		keyword arguments
 		pos		-- image center position, an (x,y) position tuple or
 				   None for a central position (default = None)
+		scale	-- scale factor for the image or None for no scaling
+				   (default = None)
 		
 		returns
 		Nothing	-- loads and draws an image surface on (PyGame) or
@@ -1087,7 +1108,17 @@ class PsychoPyScreen:
 		
 		pos = pos2psychopos(pos,dispsize=self.dispsize)
 		
-		self.screen.append(SimpleImageStim(expdisplay, image=image, pos=pos))
+		if scale == None:
+			imgsize = None
+		else:
+			if pilimp:
+				img = Image.open(image)
+				imgsize = (img.size[0]*scale, img.size[1]*scale)
+			else:
+				imgsize = None
+				print("Warning in libscreen.Screen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
+			
+		self.screen.append(ImageStim(expdisplay, image=image, pos=pos, size=imgsize))
 
 
 	def set_background_colour(self, colour=None):
