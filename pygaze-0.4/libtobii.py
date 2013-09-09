@@ -108,11 +108,13 @@ class TobiiTracker:
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 		self.dispsize = DISPSIZE # display size in pixels
 		self.screensize = SCREENSIZE # display size in cm
-		self.pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize)) / 2.0
+		self.screendist = SCREENDIST # distance between participant and screen in cm
+		self.pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2.0
+		self.pxerrdist = deg2pix(self.screendist, self.errdist, self.pixpercm)
 		self.prevsample = (-1,-1)
 		
 		# validation properties
-		self.nvalsamples = 500 # samples for one validation point
+		self.nvalsamples = 1000 # samples for one validation point
 
 		# basic properties
 		self.connected = False
@@ -129,19 +131,19 @@ class TobiiTracker:
 		self.errorbeep = Sound(osc='saw',freq=100, length=100)
 		
 		# initialize controller
-		self.controller = TobiiController(display.expdisplay)
+		self.controller = TobiiController(display)
 		self.controller.setDataFile("%s_TOBII_output.tsv" % logfile)
+		self.controller.waitForFindEyeTracker()
+		self.controller.activate(self.controller.eyetrackers.keys()[0])
 
 		# initiation report
-		self.log("pygaze initiation report start")
-		self.log("display resolution: %sx%s" % (self.dispsize[0],self.dispsize[1]))
-		self.log("display size in cm: %sx%s" % (self.screensize[0],self.screensize[1]))
-		self.log("samplerate: %s Hz" % self.samplerate)
-		self.log("sampletime: %s ms" % self.sampletime)
-		self.log("fixation threshold: %s degrees" % self.fixtresh)
-		self.log("speed threshold: %s degrees/second" % self.spdtresh)
-		self.log("accuracy threshold: %s degrees/second**2" % self.accthresh)
-		self.log("pygaze initiation report end")
+		self.controller.datafile.write("pygaze initiation report start\n")
+		self.controller.datafile.write("display resolution: %sx%s\n" % (self.dispsize[0],self.dispsize[1]))
+		self.controller.datafile.write("display size in cm: %sx%s\n" % (self.screensize[0],self.screensize[1]))
+		self.controller.datafile.write("fixation threshold: %s degrees\n" % self.fixtresh)
+		self.controller.datafile.write("speed threshold: %s degrees/second\n" % self.spdtresh)
+		self.controller.datafile.write("accuracy threshold: %s degrees/second**2\n" % self.accthresh)
+		self.controller.datafile.write("pygaze initiation report end\n")
 
 
 	def calibrate(self, calibrate=True, validate=True):
@@ -165,12 +167,12 @@ class TobiiTracker:
 		"""
 		
 		# calibration and validation points
-		lb = 0.1 * self.dispsize[0] # left bound
-		xc = 0.5 * self.dispsize[0] # horizontal center
-		rb = 0.9 * self.dispsize[0] # right bound
-		ub = 0.1 * self.dispsize[1] # upper bound
-		yc = 0.5 * self.dispsize[1] # vertical center
-		bb = 0.9 * self.dispsize[1] # bottom bound
+		lb = int(0.1 * self.dispsize[0]) # left bound
+		xc = int(0.5 * self.dispsize[0]) # horizontal center
+		rb = int(0.9 * self.dispsize[0]) # right bound
+		ub = int(0.1 * self.dispsize[1]) # upper bound
+		yc = int(0.5 * self.dispsize[1]) # vertical center
+		bb = int(0.9 * self.dispsize[1]) # bottom bound
 
 		calpos = [(lb,ub), (rb,ub) , (xc,yc), (lb,bb), (rb,bb)]
 
@@ -180,7 +182,7 @@ class TobiiTracker:
 		
 		while True:
 			
-			ret = controller.doCalibration(calpos)
+			ret = self.controller.doCalibration(calpos)
 			
 			if ret == 'accept':
 				calibrated =  True
@@ -210,6 +212,8 @@ class TobiiTracker:
 			self.disp.fill(self.screen)
 			self.disp.show()
 			self.screen.clear()
+			# allow user some time to gaze at dot
+			libtime.pause(1000)
 			# collect samples
 			lxsamples = numpy.zeros(self.nvalsamples)
 			lysamples = numpy.zeros(self.nvalsamples)
@@ -231,10 +235,13 @@ class TobiiTracker:
 			lydev = numpy.mean(abs(lysamples-pos[1]))
 			rxdev = numpy.mean(abs(rxsamples-pos[0]))
 			rydev = numpy.mean(abs(rysamples-pos[1]))
-			lxacc.append(lxdev)
-			lyacc.append(lydev)
-			rxacc.append(rxdev)
-			ryacc.append(rydev)
+			i = calpos.index(pos)
+			lxacc[i] = lxdev
+			lyacc[i] = lydev
+			rxacc[i] = rxdev
+			ryacc[i] = rydev
+			# wait for a bit to slow down validation process a bit
+			libtime.pause(1000)
 
 		# calculate mean accuracy
 		self.pxaccuracy = [(numpy.mean(lxacc), numpy.mean(lyacc)), (numpy.mean(rxacc), numpy.mean(ryacc))]
@@ -288,7 +295,7 @@ class TobiiTracker:
 		t0 = self.controller.gazeData[0].Timestamp
 		ist = numpy.zeros(len(self.controller.gazeData)-1)
 		for i in range(0,len(self.controller.gazeData)-1):
-			ist[i] = (self.controller.gazeData[i+1] - self.controller.gazeData[i]) / 1000.0
+			ist[i] = (self.controller.gazeData[i+1].Timestamp - self.controller.gazeData[i].Timestamp) / 1000.0
 		
 		# mean intersample time
 		self.sampletime = numpy.mean(ist)
@@ -299,25 +306,28 @@ class TobiiTracker:
 		self.controller.eyetracker.events.OnGazeDataReceived -= self.controller.on_gazedata
 		self.controller.gazeData = []
 		self.controller.eventData = []
+		self.recording = False
 
 
 		# # # # #
 		# calibration report
 
 		# recalculate thresholds (degrees to pixels)
-		self.pxfixtresh = deg2pix(screendist, self.fixtresh, self.pixpercm)
-		self.pxspdtresh = deg2pix(screendist, self.spdtresh/float(self.samplerate), self.pixpercm) # in pixels per sample
-		self.pxacctresh = deg2pix(screendist, self.accthresh/float(self.samplerate**2), self.pixpercm) # in pixels per sample**2
+		self.pxfixtresh = deg2pix(self.screendist, self.fixtresh, self.pixpercm)
+		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh/float(self.samplerate), self.pixpercm) # in pixels per sample
+		self.pxacctresh = deg2pix(self.screendist, self.accthresh/float(self.samplerate**2), self.pixpercm) # in pixels per sample**2
 		
 		# write report to log
-		self.log("pygaze calibration report start")
-		self.log("accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s" % (self.pxaccuracy[0][0],self.pxaccuracy[0][1],self.pxaccuracy[1][0],self.pxaccuracy[1][1]))
-		self.log("precision (RMS noise in pixels): X=%s, Y=%s" % (self.pxdsttresh[0],self.pxdsttresh[1]))
-		self.log("distance between participant and display: %s cm" % SCREENDIST)
-		self.log("fixation threshold: %s pixels" % self.pxfixtresh)
-		self.log("speed threshold: %s pixels/sample" % self.pxspdtresh)
-		self.log("accuracy threshold: %s pixels/sample**2" % self.pxacctresh)
-		self.log("pygaze calibration report end")
+		self.controller.datafile.write("pygaze calibration report start\n")
+		self.controller.datafile.write("samplerate: %s Hz\n" % self.samplerate)
+		self.controller.datafile.write("sampletime: %s ms\n" % self.sampletime)
+		self.controller.datafile.write("accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s\n" % (self.pxaccuracy[0][0],self.pxaccuracy[0][1],self.pxaccuracy[1][0],self.pxaccuracy[1][1]))
+		self.controller.datafile.write("precision (RMS noise in pixels): X=%s, Y=%s\n" % (self.pxdsttresh[0],self.pxdsttresh[1]))
+		self.controller.datafile.write("distance between participant and display: %s cm\n" % self.screendist)
+		self.controller.datafile.write("fixation threshold: %s pixels\n" % self.pxfixtresh)
+		self.controller.datafile.write("speed threshold: %s pixels/sample\n" % self.pxspdtresh)
+		self.controller.datafile.write("accuracy threshold: %s pixels/sample**2\n" % self.pxacctresh)
+		self.controller.datafile.write("pygaze calibration report end\n")
 
 		return True
 
@@ -338,10 +348,10 @@ class TobiiTracker:
 			self.stop_recording()
 
 		# save data
-		controller.closeDataFile()
+		self.controller.closeDataFile()
 		
 		# close connection
-		controller.destroy()
+		self.controller.destroy()
 		self.connected = False
 	
 	
@@ -498,7 +508,7 @@ class TobiiTracker:
 				   in the log file
 		"""
 		
-		controller.recordEvent(msg)
+		self.controller.recordEvent(msg)
 	
 	
 	def log_var(self, var, val):
@@ -551,7 +561,7 @@ class TobiiTracker:
 		"""
 
 		# get new sample		
-		gazepos = controller.getCurrentGazePosition()
+		gazepos = self.controller.getCurrentGazePosition()
 		
 		# if sample is invalid, return missing value
 		if None in gazepos:
@@ -930,7 +940,8 @@ class TobiiController:
 		
 	def on_eyetracker_browser_event(self, event_type, event_name, eyetracker_info):
 		
-		"""
+		"""Adds a new or updates an existing tracker to self.eyetrackers,
+		if one is available
 		
 		arguments
 		event_type		--	a tobii.eye_tracking_io.browsing.EyetrackerBrowser
@@ -1090,10 +1101,10 @@ class TobiiController:
 		img = Image.new('RGB',self.disp.dispsize)
 		draw = ImageDraw.Draw(img)
 		
-		self.calin = {'colour':(128,128,128), 'pos':(self.disp.dispsize[0]/2,self.disp.dispsize[1]/2), 'r':2}
-		self.calout = {'colour':(128,255,128), 'pos':(self.disp.dispsize[0]/2,self.disp.dispsize[1]/2), 'r':64}
+		self.calin = {'colour':(0,0,0), 'pos':(int(self.disp.dispsize[0]/2),int(self.disp.dispsize[1]/2)), 'r':2}
+		self.calout = {'colour':(128,255,128), 'pos':(int(self.disp.dispsize[0]/2),int(self.disp.dispsize[1]/2)), 'r':64}
 		self.calresult = {'img':img}
-		self.calresultmsg = {'text':"",'pos':(0,self.disp.dispsize[1]/4)}
+		self.calresultmsg = {'text':"",'pos':(int(self.disp.dispsize[0]/2),int(self.disp.dispsize[1]/4))}
 #		self.calin = psychopy.visual.Circle(self.win,radius=2,fillColor=(0.0,0.0,0.0))
 #		self.calout = psychopy.visual.Circle(self.win,radius=64,lineColor=(0.0,1.0,0.0))
 #		self.calresult = psychopy.visual.SimpleImageStim(self.win,img)
@@ -1117,7 +1128,7 @@ class TobiiController:
 
 		# draw central target
 		self.screen.clear()
-		self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=True)
+		self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=False)
 		self.screen.draw_circle(colour=self.calin['colour'], pos=self.calin['pos'], r=self.calin['r'], fill=True)
 		self.disp.fill(self.screen)
 		self.disp.show()
@@ -1133,8 +1144,8 @@ class TobiiController:
 			# recalculate to psycho coordinates
 #			self.calin.setPos(((p.x-0.5)*self.win.size[0],(0.5-p.y)*self.win.size[1]))
 #			self.calout.setPos(((p.x-0.5)*self.win.size[0],(0.5-p.y)*self.win.size[1]))
-			self.calin['pos'] = (p.x,p.y)
-			self.calout['pos'] = (p.x,p.y)
+			self.calin['pos'] = (int(p.x),int(p.y))
+			self.calout['pos'] = (int(p.x),int(p.y))
 
 			
 #			clock.reset()
@@ -1146,7 +1157,7 @@ class TobiiController:
 			while currentTime < 1.5:
 				# reduce size of the outer ring, as time passes
 #				self.calout.setRadius(40*(1.5-(currentTime))+4)
-				self.calout['r'] = (40*(1.5-(currentTime))+4)
+				self.calout['r'] = int(40*(1.5-(currentTime))+4)
 				# check for input (should this even be here?)
 #				psychopy.event.getKeys()
 				self.kb.get_key(keylist=None, timeout=1)
@@ -1155,7 +1166,7 @@ class TobiiController:
 #				self.calin.draw()
 #				win.flip()
 				self.screen.clear()
-				self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=True)
+				self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=False)
 				self.screen.draw_circle(colour=self.calin['colour'], pos=self.calin['pos'], r=self.calin['r'], fill=True)
 				self.disp.fill(self.screen)
 				self.disp.show()
@@ -1183,7 +1194,7 @@ class TobiiController:
 
 		# reset display (same seems to be done below: what's the use?)
 #		win.flip()
-		disp.show()
+		self.disp.show()
 		
 		# get calibration info
 		self.getcalibration_completed = False
@@ -1243,8 +1254,8 @@ class TobiiController:
 		
 		# alternative approach (Dalmaijer): use PyGaze drawing operations on self.screem, then present self.screen
 		self.screen.draw_text(text=self.calresultmsg['text'],pos=self.calresultmsg['pos'])
-		disp.fill(self.screen)
-		disp.show()
+		self.disp.fill(self.screen)
+		self.disp.show()
 		
 		# wait for keyboard input
 #		waitkey = True
@@ -1508,10 +1519,10 @@ class TobiiController:
 					of both eyes
 		"""
 		
-		return ((gaze.LeftGazePoint2D.x-0.5)*self.win.size[0],
-				(0.5-gaze.LeftGazePoint2D.y)*self.win.size[1],
-				(gaze.RightGazePoint2D.x-0.5)*self.win.size[0],
-				(0.5-gaze.RightGazePoint2D.y)*self.win.size[1])
+		return ((gaze.LeftGazePoint2D.x-0.5)*self.disp.dispsize[0],
+				(0.5-gaze.LeftGazePoint2D.y)*self.disp.dispsize[1],
+				(gaze.RightGazePoint2D.x-0.5)*self.disp.dispsize[0],
+				(0.5-gaze.RightGazePoint2D.y)*self.disp.dispsize[1])
 	
 	def getCurrentGazePosition(self):
 		
@@ -1554,7 +1565,7 @@ class TobiiController:
 		self.datafile = open(filename,'w')
 		self.datafile.write('Recording date:\t'+datetime.datetime.now().strftime('%Y/%m/%d')+'\n')
 		self.datafile.write('Recording time:\t'+datetime.datetime.now().strftime('%H:%M:%S')+'\n')
-		self.datafile.write('Recording resolution\t%d x %d\n\n' % tuple(self.win.size))
+		self.datafile.write('Recording resolution\t%d x %d\n\n' % tuple(self.disp.dispsize))
 		
 		
 	def closeDataFile(self):
@@ -1642,11 +1653,11 @@ class TobiiController:
 			# write timestamp and gaze position for both eyes to the datafile
 			self.datafile.write('%.1f\t%.4f\t%.4f\t%d\t%.4f\t%.4f\t%d'%(
 								(g.Timestamp-timeStampStart)/1000.0,
-								g.LeftGazePoint2D.x*self.win.size[0] if g.LeftValidity!=4 else -1.0,
-								g.LeftGazePoint2D.y*self.win.size[1] if g.LeftValidity!=4 else -1.0,
+								g.LeftGazePoint2D.x*self.disp.dispsize[0] if g.LeftValidity!=4 else -1.0,
+								g.LeftGazePoint2D.y*self.disp.dispsize[1] if g.LeftValidity!=4 else -1.0,
 								g.LeftValidity,
-								g.RightGazePoint2D.x*self.win.size[0] if g.RightValidity!=4 else -1.0,
-								g.RightGazePoint2D.y*self.win.size[1] if g.RightValidity!=4 else -1.0,
+								g.RightGazePoint2D.x*self.disp.dispsize[0] if g.RightValidity!=4 else -1.0,
+								g.RightGazePoint2D.y*self.disp.dispsize[1] if g.RightValidity!=4 else -1.0,
 								g.RightValidity))
 			
 			# if no correct sample is available, data is missing
