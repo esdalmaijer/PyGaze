@@ -625,8 +625,8 @@ class TobiiTracker:
 				self.controller.startTracking()
 				self.recording = True
 			except:
-				print("Error in libtobii.TobiiTracker.start_recording: failed to start recording")
 				self.recording = False
+				raise Exception("Error in libtobii.TobiiTracker.start_recording: failed to start recording")
 		else:
 			print("WARNING: libtobii.TobiiTracker.start_recording: already recording!")
 	
@@ -655,8 +655,8 @@ class TobiiTracker:
 				self.controller.stopTracking()
 				self.recording = False
 			except:
-				print("Error in libtobii.TobiiTracker.stop_recording: failed to stop recording")
 				self.recording = True
+				raise Exception("Error in libtobii.TobiiTracker.stop_recording: failed to stop recording")
 		
 		else:
 			print("WARNING: libtobii.TobiiTracker.stop_recording: recording has not started yet!")
@@ -1050,11 +1050,11 @@ class TobiiController:
 		"""
 		
 		if error:
-			print "  Connection to %s failed because of an exception: %s" % (eyetracker_info, error)
+			print "WARNING! Connection to %s failed because of an exception: %s" % (eyetracker_info, error)
 			if error == 0x20000402:
-				print "The selected unit is too old, a unit which supports protocol version 1.0 is required.\n\n<b>Details:</b> <i>%s</i>" % error
+				print "WARNING! The selected unit is too old, a unit which supports protocol version 1.0 is required.\n\n<b>Details:</b> <i>%s</i>" % error
 			else:
-				print "Could not connect to %s" % (eyetracker_info)
+				print "WARNING! Could not connect to %s" % (eyetracker_info)
 			return False
 		
 		self.eyetracker = eyetracker
@@ -1307,7 +1307,7 @@ class TobiiController:
 		"""
 		
 		if error:
-			print "Could not start calibration because of error. (0x%0x)" % error
+			print "WARNING! Could not start calibration because of error. (0x%0x)" % error
 			return False
 		self.initcalibration_completed = True
 	
@@ -1335,7 +1335,7 @@ class TobiiController:
 		"""
 
 		if error:
-			print "Add Calibration Point failed because of error. (0x%0x)" % error
+			print "WARNING! Add Calibration Point failed because of error. (0x%0x)" % error
 			return False
 		
 		self.add_point_completed = True
@@ -1365,12 +1365,12 @@ class TobiiController:
 		"""
 
 		if error == 0x20000502:
-			print "CalibCompute failed because not enough data was collected:", error
-			print "Not enough data was collected during calibration procedure."
+			print "WARNING! CalibCompute failed because not enough data was collected:", error
+			print "WARNING! Not enough data was collected during calibration procedure."
 			self.computeCalibration_succeeded = False
 		elif error != 0:
-			print "CalibCompute failed because of a server error:", error
-			print "Could not compute calibration because of a server error.\n\n<b>Details:</b>\n<i>%s</i>" % (error)
+			print "WARNING! CalibCompute failed because of a server error:", error
+			print "WARNING! Could not compute calibration because of a server error.\n\n<b>Details:</b>\n<i>%s</i>" % (error)
 			self.computeCalibration_succeeded = False
 		else:
 			print ""
@@ -1403,12 +1403,12 @@ class TobiiController:
 		"""
 		
 		if error:
-			print "On_calib_response: Error =", error
+			print "WARNING! On_calib_response: Error =", error
 			self.calib = None
 			self.getcalibration_completed = True
 			return False
 		
-		print "On_calib_response: Success"
+		print "WARNING! On_calib_response: Success"
 		self.calib = calib
 		self.getcalibration_completed = True
 		return False	
@@ -1612,7 +1612,7 @@ class TobiiController:
 	
 	def flushData(self):
 		
-		"""
+		"""Saves data to data file, throws an exception when no data file is specified
 		
 		arguments
 		None
@@ -1626,8 +1626,7 @@ class TobiiController:
 		
 		# return if there is no datafile or no data
 		if self.datafile == None:
-			print 'data file is not set.'
-			return
+			raise Exception('Error in libtobii.TobiController.flushData: data file is not set.')
 		
 		if len(self.gazeData)==0:
 			return

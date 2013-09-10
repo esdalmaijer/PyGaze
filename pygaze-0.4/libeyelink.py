@@ -45,17 +45,17 @@ if not DUMMYMODE:
 else:
 	custom_display = object
 
-try:
-	import psychopy.visual
-except:
-	if DISPYPE == 'psychopy':
-		print("Error in libeyelink: PsychoPy could not be loaded!")
+if DISPYPE == 'psychopy':
+	try:
+		import psychopy.visual
+	except:
+		raise Exception("Error in libeyelink: PsychoPy could not be loaded!")
 
-try:
-	import pygame
-except:
-	if DISPTYPE == 'pygame':
-		print("Error in libeyelink: PyGame could not be loaded!")
+if DISPTYPE == 'pygame':
+	try:
+		import pygame
+	except:
+		raise Exception("Error in libeyelink: PyGame could not be loaded!")
 
 import os.path
 import array
@@ -76,8 +76,8 @@ class libeyelink:
 
 		stem, ext = os.path.splitext(data_file)
 		if len(stem) > 8 or len(ext) > 4:
-			file_name = "default.edf"
-			print("The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
+			data_file = "default.edf"
+			print("WARNING! The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
 
 		# properties
 		self.data_file = data_file
@@ -98,7 +98,7 @@ class libeyelink:
 			try:
 				_eyelink = pylink.EyeLink()
 			except:
-				print("Error in libeyelink.libeyelink.__init__(): Failed to connect to the tracker!")
+				raise Exception("Error in libeyelink.libeyelink.__init__(): Failed to connect to the tracker!")
 
 			graphics_env = eyelink_graphics(self.screen, _eyelink)
 			pylink.openGraphicsEx(graphics_env)
@@ -145,7 +145,7 @@ class libeyelink:
 		self.send_command("button_function 5 'accept_target_fixation'")
 
 		if not self.connected():
-			print("Error in libeyelink.libeyelink.__init__(): Failed to connect to the eyetracker!")
+			raise Exception("Error in libeyelink.libeyelink.__init__(): Failed to connect to the eyetracker!")
 
 
 	def send_command(self, cmd):
@@ -188,7 +188,7 @@ class libeyelink:
 		"""Starts eyelink calibration"""
 
 		if self.recording:
-			print("Error in libeyelink.libeyelink.calibrate(): Trying to calibrate after recording has started!")
+			raise Exception("Error in libeyelink.libeyelink.calibrate(): Trying to calibrate after recording has started!")
 
 		pylink.getEYELINK().doTrackerSetup()
 
@@ -198,7 +198,7 @@ class libeyelink:
 		"""Performs drift correction and falls back to calibration screen if necessary"""
 
 		if self.recording:
-			print("Error in libeyelink.libeyelink.drift_correction(): Trying to perform drift correction after recording has started!")
+			raise Exception("Error in libeyelink.libeyelink.drift_correction(): Trying to perform drift correction after recording has started!")
 
 		if fix_triggered:
 			return self.fix_triggered_drift_correction(pos)
@@ -215,7 +215,7 @@ class libeyelink:
 		# perform drift check
 		while True:
 			if not self.connected():
-				print("Error in libeyelink.libeyelink.drift_correction(): The eyelink is not connected!")
+				raise Exception("Error in libeyelink.libeyelink.drift_correction(): The eyelink is not connected!")
 			try:
 				# Params: x, y, draw fix, allow_setup
 				error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 0, 1)
@@ -242,7 +242,7 @@ class libeyelink:
 
 		# wait for a bit until samples start coming in (again, not sure if this is indeed what's going on)
 		if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
-			print("Error in libeyelink.libeyelink.prepare_drift_correction(): Failed to perform drift correction (waitForBlockStart error)")
+			print("WARNING libeyelink.libeyelink.prepare_drift_correction(): Failed to perform drift correction (waitForBlockStart error)")
 
 
 	def fix_triggered_drift_correction(self, pos=None, min_samples=30, max_dev=60, reset_threshold=10):
@@ -250,7 +250,7 @@ class libeyelink:
 		"""Performs fixation triggered drift correction and falls back to the calibration screen if necessary"""
 
 		if self.recording:
-			print("Error in libeyelink.libeyelink.fix_triggered_drift_correction(): Trying to perform drift correction after recording has started!")
+			raise Exception("Error in libeyelink.libeyelink.fix_triggered_drift_correction(): Trying to perform drift correction after recording has started!")
 
 		self.recording = True
 
@@ -339,11 +339,11 @@ class libeyelink:
 			if not error:
 				break
 			if i > self.MAX_TRY:
-				print("Error in libeyelink.libeyelink.start_recording(): Failed to start recording!")
+				raise Exception("Error in libeyelink.libeyelink.start_recording(): Failed to start recording!")
 				self.close()
 				libtime.expend()
 			i += 1
-			print("libeyelink.libeyelink.start_recording(): Failed to start recording (attempt %d of %d)" % (i, self.MAX_TRY))
+			print("WARNING libeyelink.libeyelink.start_recording(): Failed to start recording (attempt %d of %d)" % (i, self.MAX_TRY))
 			pylink.msecDelay(100)
 
 		# don't know what this is
@@ -351,7 +351,7 @@ class libeyelink:
 
 		# wait a bit until samples start coming in
 		if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
-			print("Error in libeyelink.libeyelink.start_recording(): Failed to start recording (waitForBlockStart error)!")
+			raise Exception("Error in libeyelink.libeyelink.start_recording(): Failed to start recording (waitForBlockStart error)!")
 
 
 	def stop_recording(self):
@@ -395,7 +395,7 @@ class libeyelink:
 			self.log_var("eye_used", "left")
 			self.eye_used = self.left_eye
 		else:
-			print("Error in libeyelink.libeyelink.set_eye_used(): Failed to determine which eye is being recorded")
+			print("WARNING libeyelink.libeyelink.set_eye_used(): Failed to determine which eye is being recorded")
 
 
 	def sample(self):
@@ -403,7 +403,7 @@ class libeyelink:
 		"""Returns a (x,y) tuple of the most recent gaze sample from the eyelink"""
 
 		if not self.recording:
-			print("Error in libeyelink.libeyelink.sample(): Recording was not started before collecting eyelink data!")
+			raise Exception("Error in libeyelink.libeyelink.sample(): Recording was not started before collecting eyelink data!")
 
 		if self.eye_used == None:
 			self.set_eye_used()
@@ -423,7 +423,7 @@ class libeyelink:
 		"""Waits until a specified event has occurred"""
 
 		if not self.recording:
-			print("Error in libeyelink.libeyelink.wait_for_event(): Recording was not started before collecting eyelink data!")
+			raise Exception("Error in libeyelink.libeyelink.wait_for_event(): Recording was not started before collecting eyelink data!")
 
 		if self.eye_used == None:
 			self.set_eye_used()

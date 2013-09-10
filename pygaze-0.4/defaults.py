@@ -23,8 +23,7 @@
 # MAIN
 DUMMYMODE = False # False for gaze contingent display, True for dummy mode (using mouse or joystick)
 LOGFILENAME = 'default' # logfilename, without path
-LOGFILE = LOGFILENAME[:] # .txt; adding path before logfilename is optional; logs responses (NOT eye movements, these are stored in an EDF file!)
-TRIALS = 5
+LOGFILE = LOGFILENAME[:] # .txt; adding path before logfilename is optional; logs responses (NOT eye movements, these are stored in a different (EDF/IDF/TXT) file!)
 
 # DISPLAY
 # used in libscreen, for the *_display functions. The values may be adjusted,

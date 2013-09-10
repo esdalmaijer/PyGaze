@@ -71,9 +71,9 @@ class Sound:
 		# if a sound file was specified, use soundfile and ignore other keyword arguments
 		if soundfile != None:
 			if not os.path.exists(soundfile):
-				print("Error in libsound.Player.__init__(): Sound file not found!")
+				raise Exception("Error in libsound.Player.__init__(): Sound file %s not found!" % soundfile)
 			if os.path.splitext(soundfile)[1].lower() not in (".ogg", ".wav"):
-				print("Error in libsound.Player.__init__(): Sound file is not in .ogg or .wav format!")
+				raise Exception("Error in libsound.Player.__init__(): Sound file %s is not in .ogg or .wav format!" % soundfile)
 
 			self.sound = pygame.mixer.Sound(soundfile)
 
@@ -88,8 +88,7 @@ class Sound:
 			elif osc == 'whitenoise':
 				_func = self.white_noise
 			else:
-				_func = math.sin
-				print("Error in libsound.Sound.__init__(): Oscillator could not be recognized; oscillator is set to 'sine'.")
+				raise Exception("Error in libsound.Sound.__init__(): oscillator %s could not be recognized; oscillator is set to 'sine'." % osc)
 
 			l = []
 
@@ -180,8 +179,7 @@ class Sound:
 		"""
 
 		if type(panning) not in (int, float) and panning not in ['left','right']:
-			print("Error in libsound.Sound.pan(): panning must be a value between 0.0 and 1.0 or either 'left' or 'right'.")
-			return
+			raise Exception("Error in libsound.Sound.pan(): panning must be a value between 0.0 and 1.0 or either 'left' or 'right'.")
 
 		if panning == 0:
 			return
@@ -254,4 +252,4 @@ class Sound:
 		if volume <= 1.0 and volume >= 0.0:
 			self.sound.set_volume(volume)
 		else:
-			print("Error in libsound.Sound.set_volume(): Volume must be a value between 0.0 and 1.0.")
+			raise Exception("Error in libsound.Sound.set_volume(): Volume must be a value between 0.0 and 1.0.")

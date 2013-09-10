@@ -67,7 +67,7 @@ class Mouse:
 			self.disptype = disptype
 		else:
 			self.disptype = 'pygame'
-			print("Error in libinput.Mouse.__init__: disptype not recognized; set to default ('pygame')")
+			print("WARNING! libinput.Mouse.__init__: disptype not recognized; set to default ('pygame')")
 
 		if self.disptype == 'pygame':
 			self.__class__ = PyGameMouse
@@ -75,7 +75,7 @@ class Mouse:
 			self.__class__ = PsychoPyMouse
 		else:
 			self.__class__ = PyGameMouse
-			print("Error in libscreen.Mouse.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameMouse is used")
+			print("WARNING! libscreen.Mouse.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameMouse is used")
 
 		# create mouse
 		self.__init__(mousebuttonlist=mousebuttonlist, timeout=timeout, visible=visible)
@@ -500,7 +500,7 @@ class Keyboard:
 			self.disptype = disptype
 		else:
 			self.disptype = 'pygame'
-			print("Error in libinput.Keyboard.__init__: disptype not recognized; set to default ('pygame')")
+			print("WARNING! libinput.Keyboard.__init__: disptype not recognized; set to default ('pygame')")
 
 		if self.disptype == 'pygame':
 			self.__class__ = PyGameKeyboard
@@ -508,7 +508,7 @@ class Keyboard:
 			self.__class__ = PsychoPyKeyboard
 		else:
 			self.__class__ = PyGameKeyboard
-			print("Error in libscreen.Keyboard.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameKeyboard is used")
+			print("WARNING! libscreen.Keyboard.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameKeyboard is used")
 
 		# create keyboard
 		self.__init__(keylist=keylist, timeout=timeout)

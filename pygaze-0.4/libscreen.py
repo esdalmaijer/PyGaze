@@ -43,7 +43,7 @@ if DISPTYPE == 'psychopy':
 		from psychopy.visual import TextStim
 		from psychopy.visual import ImageStim
 	except:	
-		print("Error in libscreen: PsychoPy could not be loaded!")
+		raise Exception("Error in libscreen: PsychoPy could not be loaded!")
 
 else:
 	try:
@@ -52,7 +52,7 @@ else:
 		import pygame.draw
 		import pygame.image
 	except:
-		print("Error in libscreen: PyGame could not be loaded!")
+		raise Exception("Error in libscreen: PyGame could not be loaded!")
 
 # try importing PIL
 try:
@@ -64,7 +64,7 @@ except:
 		pilimp = True
 	except:
 		pilimp = False
-		print("Warning in libscreen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
+		print("WARNING! libscreen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
 	
 	
 global expdisplay
@@ -109,8 +109,7 @@ class Display:
 		if disptype in ['pygame','psychopy']:
 			self.disptype = disptype
 		else:
-			self.disptype = 'pygame'
-			print("Error in libscreen.Display.__init__: disptype not recognized; set to default ('pygame')")
+			raise Exception("Error in libscreen.Display.__init__: disptype not recognized; use 'pygame' or 'psychopy'")
 
 		# pygame
 		if self.disptype == 'pygame':
@@ -200,14 +199,14 @@ class Display:
 				self.expdisplay.set_clip(None)
 
 			else:
-				print("Error in libscreen.Display.show_part: rect should be a single rect (i.e. a (x,y,w,h) tuple) or a list of rects!")
+				raise Exception("Error in libscreen.Display.show_part: rect should be a single rect (i.e. a (x,y,w,h) tuple) or a list of rects!")
 
 		elif self.disptype == 'psychopy':
 			if screen:
 				for s in screen.screen:
 					s.draw()
 			self.show()
-			print("Display.show_part not available for psychopy display type; show is used instead")
+			print("WARNING! libscreen.Display.show_part not available for PsychoPy display type; show is used instead")
 		
 		return libtime.get_time()
 
@@ -295,8 +294,7 @@ class Screen:
 		if disptype in ['pygame','psychopy']:
 			self.disptype = disptype
 		else:
-			self.disptype = 'pygame'
-			print("Error in libscreen.Screen.__init__: disptype not recognized; set to default ('pygame')")
+			raise Exception("Error in libscreen.Screen.__init__: disptype not recognized; use 'pygame' or 'psychopy'")
 
 		if self.disptype == 'pygame':
 			self.__class__ = PyGameScreen
@@ -304,7 +302,7 @@ class Screen:
 			self.__class__ = PsychoPyScreen
 		else:
 			self.__class__ = PyGameScreen
-			print("Error in libscreen.Screen.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameScreen is used")
+			print("WARNING! libscreen.Screen.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameScreen is used")
 
 		# create screen
 		self.create(screen=screen)
@@ -586,7 +584,7 @@ class PyGameScreen:
 
 		if fixtype not in ['cross','x','dot']:
 			fixtype == 'cross'
-			print("Error in libscreen.Screen.draw_fixation: fixtype not recognized; fixtype set to default ('cross')")
+			raise Exception("Error in libscreen.Screen.draw_fixation: fixtype %s not recognized; fixtype should be one of 'cross','x','dot'" % fixtype)
 		if colour == None:
 			colour = self.fgc
 		if pos == None:
@@ -1016,8 +1014,7 @@ class PsychoPyScreen:
 		"""
 		
 		if fixtype not in ['cross','x','dot']:
-			fixtype == 'cross'
-			print("Error in libscreen.Screen.draw_fixation: fixtype not recognized; fixtype set to default ('cross')")
+			raise Exception("Error in libscreen.Screen.draw_fixation: fixtype %s not recognized; fixtype should be one of 'cross','x','dot'" % fixtype)
 		if colour == None:
 			colour = self.fgc
 		if pos == None:
@@ -1116,7 +1113,7 @@ class PsychoPyScreen:
 				imgsize = (img.size[0]*scale, img.size[1]*scale)
 			else:
 				imgsize = None
-				print("Warning in libscreen.Screen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
+				print("WARNING! libscreen.Screen: PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
 			
 		self.screen.append(ImageStim(expdisplay, image=image, pos=pos, size=imgsize))
 

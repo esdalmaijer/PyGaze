@@ -30,7 +30,7 @@ if DISPTYPE == 'psychopy':
 		import psychopy
 		from psychopy.visual import Aperture
 	except:
-		print("Error in libgazecon: PsychoPy could not be loaded!")
+		raise Exception("Error in libgazecon: PsychoPy could not be loaded!")
 
 else:
 	try:
@@ -38,7 +38,7 @@ else:
 		import pygame.display
 		import pygame.draw
 	except:
-		print("Error in libgazecon: PyGame could not be loaded!")
+		raise Exception("Error in libgazecon: PyGame could not be loaded!")
 
 from libscreen import pos2psychopos, psychopos2pos
 
@@ -95,7 +95,7 @@ class FRL:
 		elif pos == 'topleft':
 			self.frlcor = (self.frlxdis, self.frlydis)
 		else:
-			print("ERROR! FRL position argument (in constants) not recognized.")
+			print("WARNING! libgazecon.FRL.__init__: FRL position argument %s not recognized." % pos)
 			print("FRL position set to center.")
 			self.frlcor = (0, 0)
 
@@ -103,7 +103,7 @@ class FRL:
 			self.disptype = disptype
 		else:
 			self.disptype = 'pygame'
-			print("Error in libgazecon.FRL.__init__: disptype not recognized; set to default ('pygame')")
+			print("WARNING! libgazecon.FRL.__init__: disptype not recognized; set to default ('pygame')")
 
 		if self.disptype == 'pygame':
 			self.__class__ = PyGameFRL
@@ -112,7 +112,7 @@ class FRL:
 			self.frl = Aperture(psychopy.visual.openWindows[SCREENNR], self.size, pos=pos2psychopos(self.frlcor), shape='circle', units='pix')
 		else:
 			self.__class__ = PyGameFRL
-			print("Error in libgazecon.FRL.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameFRL is used")
+			print("WARNING! libgazecon.FRL.__init__: self.disptype was not recognized, which is very unexpected and should not happen! PyGameFRL is used")
 
 
 class PyGameFRL:
@@ -277,7 +277,7 @@ class Cursor:
 			self.ctype = ctype
 		else:
 			self.ctype = 'arrow'
-			print("Error in libgazecon.Cursor.__init__: Cursor type could not be recognized; Cursor type set to 'arrow'")
+			print("WARNING! libgazecon.Cursor.__init__: Cursor type could not be recognized; Cursor type set to 'arrow'")
 			
 		self.fill = fill
 		self.pw = pw
@@ -289,21 +289,21 @@ class Cursor:
 				self.size = size
 		else:
 			self.size = (size[0], size[1])
-			print("Error in libgazecon.Cursor.__init__: too many entries for cursor size; only the first two are used")
+			print("WARNING! libgazecon.Cursor.__init__: too many entries for cursor size; only the first two are used")
 			
 		if type(colour) == tuple or type(colour) == list:
 			if len(colour) == 3 or len(colour) == 4:
 				self.colour = colour
 			else:
 				self.colour = colour[:4]
-				print("Error in libgazecon.Cursor.__init__: too many list entries for cursor colour; only the first four are used")
+				print("WARNING! libgazecon.Cursor.__init__: too many list entries for cursor colour; only the first four are used")
 		else:
 			if disptype == 'pygame':
 				if colour in pygame.colordict.THECOLORS:
 					self.colour = pygame.colordict.THECOLORS[colour]
 				else:
 					self.colour = (0,0,0)
-					print("Error in libgazecon.Cursor.__init__: colour could not be recognized; Cursor colour set to 'black'")
+					print("WARNING! libgazecon.Cursor.__init__: colour could not be recognized; Cursor colour set to 'black'")
 			else:
 				self.colour = colour
 			

@@ -163,7 +163,7 @@ class SMItracker:
 		res = iViewXAPI.iV_SetLogger(c_int(1), c_char_p(logfile + '_SMILOG.txt'))
 		if res != 1:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.__init__: failed to set logger; %s" % err)
+			raise Exception("Error in libsmi.SMItracker.__init__: failed to set logger; %s" % err)
 		# first logger argument is for logging type (I'm guessing these are decimal bit codes)
 		# LOG status					bitcode
 		# 1 = LOG_LEVEL_BUG			 00001
@@ -181,12 +181,12 @@ class SMItracker:
 			self.sampletime = 1000.0 / self.samplerate
 			if res != 1:
 				err = errorstring(res)
-				print("Error in libsmi.SMItracker.__init__: failed to get system information; %s" % err)
+				raise Exception("Error in libsmi.SMItracker.__init__: failed to get system information; %s" % err)
 		# handle connection errors
 		else:
-			err = errorstring(res)
-			print("Error in libsmi.SMItracker.__init__: establishing connection failed; %s" % err)
 			self.connected = False
+			err = errorstring(res)
+			raise Exception("Error in libsmi.SMItracker.__init__: establishing connection failed; %s" % err)
 
 		# initiation report
 		self.log("pygaze initiation report start")
@@ -238,7 +238,7 @@ class SMItracker:
 		res = iViewXAPI.iV_SetupCalibration(byref(calibrationData))
 		if res != 1:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.calibrate: failed to setup calibration; %s" % err)
+			raise Exception("Error in libsmi.SMItracker.calibrate: failed to setup calibration; %s" % err)
 
 		# calibrate
 		cres = iViewXAPI.iV_Calibrate()
@@ -315,12 +315,12 @@ class SMItracker:
 				while res != 1 and i < self.maxtries: # multiple tries, in case no (valid) sample is available
 					res = iViewXAPI.iV_GetAccuracy(byref(accuracyData),0) # 0 is for 'no visualization'
 					i += 1
-					libtime.pause(self.sampletime) # wait for sampletime
+					libtime.pause(int(self.sampletime)) # wait for sampletime
 				if res == 1:
 					self.accuracy = ((accuracyData.deviationLX,accuracyData.deviationLY), (accuracyData.deviationLX,accuracyData.deviationLY)) # dsttresh = (left tuple, right tuple); tuple = (horizontal deviation, vertical deviation) in degrees of visual angle
 				else:
 					err = errorstring(res)
-					print("Error in libsmi.SMItracker.calibrate: failed to obtain accuracy data; %s" % err)
+					print("WARNING libsmi.SMItracker.calibrate: failed to obtain accuracy data; %s" % err)
 					self.accuracy = ((2,2),(2,2))
 					print("libsmi.SMItracker.calibrate: As an estimate, the intersample distance threshhold was set to it's default value of 2 degrees")
 				# get distance from screen to eyes (information from tracker)
@@ -328,12 +328,12 @@ class SMItracker:
 				while res != 1 and i < self.maxtries: # multiple tries, in case no (valid) sample is available
 					res = iViewXAPI.iV_GetSample(byref(sampleData))
 					i += 1
-					libtime.pause(self.sampletime) # wait for sampletime
+					libtime.pause(int(self.sampletime)) # wait for sampletime
 				if res == 1:
 					screendist = sampleData.leftEye.eyePositionZ / 10.0 # eyePositionZ is in mm; screendist is in cm
 				else:
 					err = errorstring(res)
-					print("Error in libsmi.SMItracker.calibrate: failed to obtain screen distance; %s" % err)
+					print("WARNING libsmi.SMItracker.calibrate: failed to obtain screen distance; %s" % err)
 					screendist = SCREENDIST
 					print("libsmi.SMItracker.calibrate: As an estimate, the screendistance was set to it's default value of 57 cm")
 				# calculate thresholds based on tracker settings
@@ -358,12 +358,12 @@ class SMItracker:
 
 			# validation error
 			else:
-				print("Error in libsmi.SMItracker.calibrate: validation was unsuccesful %s" % verr)
+				print("WARNING libsmi.SMItracker.calibrate: validation was unsuccesful %s" % verr)
 				return False
 
 		# calibration error
 		else:
-			print("Error in libsmi.SMItracker.calibrate: calibration was unsuccesful; %s" % cerr)
+			print("WARNING libsmi.SMItracker.calibrate: calibration was unsuccesful; %s" % cerr)
 			return False
 
 
@@ -382,7 +382,7 @@ class SMItracker:
 		res = iViewXAPI.iV_SaveData(str(self.outputfile), str(self.description), str(self.participant), 1)
 		if res != 1:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.close: failed to save data; %s" % err)
+			raise Exception("Error in libsmi.SMItracker.close: failed to save data; %s" % err)
 
 		# close connection
 		iViewXAPI.iV_Disconnect()
@@ -540,7 +540,7 @@ class SMItracker:
 		res = iViewXAPI.iV_Log(c_char_p(msg))
 		if res != 1:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.log: failed to log message '%s'; %s" % (msg,err))
+			print("WARNING libsmi.SMItracker.log: failed to log message '%s'; %s" % (msg,err))
 
 	def log_var(self, var, val):
 
@@ -560,7 +560,7 @@ class SMItracker:
 		res = iViewXAPI.iV_Log(c_char_p(msg))
 		if res != 1:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.log_var: failed to log variable '%s' with value '%s'; %s" % (var,val,err))
+			print("WARNING libsmi.SMItracker.log_var: failed to log variable '%s' with value '%s'; %s" % (var,val,err))
 
 	def prepare_backdrop(self):
 
@@ -596,7 +596,7 @@ class SMItracker:
 				return sampleData.rightEye.diam
 		else:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.sample: failed to obtain sample; %s" % err)
+			print("WARNING libsmi.SMItracker.sample: failed to obtain sample; %s" % err)
 			return None
 
 
@@ -625,7 +625,7 @@ class SMItracker:
 			return self.prevsample
 		else:
 			err = errorstring(res)
-			print("Error in libsmi.SMItracker.sample: failed to obtain sample; %s" % err)
+			print("WARNING libsmi.SMItracker.sample: failed to obtain sample; %s" % err)
 			return (-1,-1)
 
 
@@ -643,7 +643,7 @@ class SMItracker:
 		try:
 			iViewXAPI.iV_SendCommand(c_char_p(cmd))
 		except:
-			print("Error in libsmi.SMItracker.send_command: failed to send remote command to iViewX (iV_SendCommand might be deprecated)")
+			raise Exception("Error in libsmi.SMItracker.send_command: failed to send remote command to iViewX (iV_SendCommand might be deprecated)")
 
 	def set_backdrop(self):
 
@@ -690,15 +690,17 @@ class SMItracker:
 		if res == 1:
 			self.recording = True
 		else:
-			err = errorstring(res)
-			print("Error in libsmi.SMItracker.start_recording: %s" % err)
 			self.recording = False
+			err = errorstring(res)
+			raise Exception("Error in libsmi.SMItracker.start_recording: %s" % err)
+
 
 	def status_msg(self, msg):
 
 		"""Not supported for SMItracker (yet)"""
 
 		print("function not supported yet")
+
 
 	def stop_recording(self):
 
@@ -720,9 +722,10 @@ class SMItracker:
 		if res == 1:
 			self.recording = False
 		else:
-			err = errorstring(res)
-			print("Error in libsmi.SMItracker.stop_recording: %s" % err)
 			self.recording = False
+			err = errorstring(res)
+			raise Exception("Error in libsmi.SMItracker.stop_recording: %s" % err)
+
 
 	def wait_for_blink_end(self):
 
@@ -904,7 +907,7 @@ class SMItracker:
 
 		# get starting position (no blinks)
 		newpos = self.sample()
-		while sum(newpos) == 0:
+		while sum(newpos) < 1:
 			newpos = self.sample()
 		prevpos = newpos[:]
 		s0 = 0

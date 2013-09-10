@@ -33,7 +33,7 @@ else:
 
 # check disptype
 if DISPTYPE not in ['pygame','psychopy']:
-	print("Error in libtime: disptype not recognized; set to default ('pygame')")
+	raise Exception("Error in libtime: disptype not recognized; use either 'pygame' or 'psychopy'")
 
 # PsychoPy functions
 if DISPTYPE == 'psychopy':
