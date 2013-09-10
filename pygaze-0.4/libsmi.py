@@ -885,7 +885,7 @@ class SMItracker:
 				v1 = s / (t1-t0)
 				# calculate acceleration
 				a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-				if s1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
+				if s < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 					saccadic = False
 					epos = newpos[:]
 					etime = libtime.get_time()
@@ -937,7 +937,7 @@ class SMItracker:
 					v1 = s / (t1-t0)
 					# calculate acceleration
 					a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-					if s1 > self.pxspdtresh or a > self.pxacctresh:
+					if s > self.pxspdtresh or a > self.pxacctresh:
 						saccadic = True
 						spos = prevpos[:]
 						stime = libtime.get_time()
