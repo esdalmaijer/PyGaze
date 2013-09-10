@@ -915,11 +915,10 @@ class SMItracker:
 		newpos = self.sample()
 		while sum(newpos) < 1:
 			newpos = self.sample()
-			stime = libtime.get_time()
+			t0 = libtime.get_time()
 		prevpos = newpos[:]
 		s = 0
 		v0 = 0
-		t0 = copy.copy(stime)
 
 		# get samples
 		saccadic = False
