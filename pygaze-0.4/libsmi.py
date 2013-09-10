@@ -866,25 +866,31 @@ class SMItracker:
 
 		# METHOD 2
 		# get starting position (no blinks)
-		stime, spos = self.wait_for_saccade_start()
+		t0, spos = self.wait_for_saccade_start()
 		prevpos = self.sample()
-		s0 = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
+		t1 = libtime.get_time()
+		s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
+		v0 = s / (t1-t0)
 
 		# get samples
 		saccadic = True
 		while saccadic:
 			# get new sample
 			newpos = self.sample()
-			if sum(newpos) > 0 and newpos != prevpos:
+			t1 = libtime.get_time()
+			if sum(newpos) > 1 and newpos != prevpos:
 				# calculate distance
-				s1 = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
+				s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
+				# calculate velocity
+				v1 = s / (t1-t0)
 				# calculate acceleration
-				a = s1-s0 # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+				a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
 				if s1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 					saccadic = False
 					epos = newpos[:]
 					etime = libtime.get_time()
-				s0 = copy.copy(s1)
+				t0 = copy.copy(t1)
+				v0 = copy.copy(v1)
 			# udate previous sample
 			prevpos = newpos[:]
 
@@ -909,27 +915,34 @@ class SMItracker:
 		newpos = self.sample()
 		while sum(newpos) < 1:
 			newpos = self.sample()
+			stime = libtime.get_time()
 		prevpos = newpos[:]
-		s0 = 0
+		s = 0
+		v0 = 0
+		t0 = copy.copy(stime)
 
 		# get samples
 		saccadic = False
 		while not saccadic:
 			# get new sample
 			newpos = self.sample()
-			if sum(newpos) > 0 and newpos != prevpos:
+			t1 = libtime.get_time()
+			if sum(newpos) > 1 and newpos != prevpos:
 				# check if distance is larger than accuracy error
 				sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
 				if (sx/self.pxdsttresh[0])**2 + (sy/self.pxdsttresh[1])**2 > self.weightdist: # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
 					# calculate distance
-					s1 = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/sample
+					s = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/sample
+					# calculate velocity
+					v1 = s / (t1-t0)
 					# calculate acceleration
-					a = s1-s0 # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+					a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
 					if s1 > self.pxspdtresh or a > self.pxacctresh:
 						saccadic = True
 						spos = prevpos[:]
 						stime = libtime.get_time()
-					s0 = copy.copy(s1)
+					t0 = copy.copy(t1)
+					v0 = copy.copy(v1)
 
 				# udate previous sample
 				prevpos = newpos[:]
