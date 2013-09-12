@@ -46,7 +46,7 @@ class EyeTracker:
 			trackertype = 'dummy'
 	
 		# correct wrong input
-		if trackertype not in ['eyelink','smi','dummy']:
+		if trackertype not in ['eyelink','smi','tobii','dummy']:
 			trackertype = 'dummy'
 			raise Exception("Error in eyetracker.EyeTracker: trackertype not recognized; it should be one of 'eyelink', 'smi', 'tobii', 'dummy'")
 
@@ -67,6 +67,15 @@ class EyeTracker:
 			self.__class__ = SMItracker
 			# initialize
 			self.__class__.__init__(self, display, ip=ip, sendport=sendport, receiveport=receiveport, logfile=logfile)
+
+		# Tobii
+		elif trackertype == 'tobii':
+			# import libraries
+			from libtobii import TobiiTracker
+			# morph class
+			self.__class__ = TobiiTracker
+			# initialize
+			self.__class__.__init__(self, display, logfile=logfile)
 
 		# dummy mode
 		elif trackertype == 'dummy':
