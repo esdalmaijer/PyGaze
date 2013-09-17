@@ -34,8 +34,8 @@ DISPSIZE = (1280,1024) # canvas size
 SCREENSIZE = (33.8,27.1) # physical screen size in centimeters
 SCREENDIST = 57.0 # centimeters; distance between screen and participant's eyes
 MOUSEVISIBLE = False # mouse visibility
-BGC = (125,125,125,255) # backgroundcolour
-FGC = (0,0,0,255) # foregroundcolour
+BGC = (125,125,125) # backgroundcolour
+FGC = (0,0,0) # foregroundcolour
 
 # SOUND
 # defaults used in libsound. The values may be adjusted, but not the constants'
