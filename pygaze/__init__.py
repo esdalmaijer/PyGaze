@@ -24,9 +24,14 @@ import libtime
 
 # directory stuff
 DIR = os.path.split(os.path.abspath(__file__))[0]
-RESDIR = os.path.join(DIR, 'resources')
-FONTDIR = os.path.join(RESDIR, 'fonts')
-SOUNDDIR = os.path.join(RESDIR, 'sounds')
+if os.path.exists(u'resources'):
+	RESDIR = u'resources'
+elif os.path.exists(os.path.join(DIR, u'resources')):
+	RESDIR = os.path.join(DIR, u'resources')
+elif os.path.exists(u'/usr/share/pygaze/resources'):
+	RESDIR = u'/usr/share/pygaze/resources'
+FONTDIR = os.path.join(RESDIR, u'fonts')
+SOUNDDIR = os.path.join(RESDIR, u'sounds')
 
 # fontfiles
 FONTFILES = []
