@@ -45,7 +45,7 @@ if not DUMMYMODE:
 else:
 	custom_display = object
 
-if DISPYPE == 'psychopy':
+if DISPTYPE == 'psychopy':
 	try:
 		import psychopy.visual
 	except:

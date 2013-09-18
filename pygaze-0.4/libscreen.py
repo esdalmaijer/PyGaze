@@ -979,9 +979,9 @@ class PsychoPyScreen:
 			pl.append(pos2psychopos(pos,dispsize=self.dispsize))
 
 		if fill:
-			self.screen.append(ShapeStim(expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb',vertices=pointlist, closeShape=True))
+			self.screen.append(ShapeStim(expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb',vertices=pl, closeShape=True))
 		else:
-			self.screen.append(ShapeStim(expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=rgb2psychorgb(self.bgc), fillColorSpace='rgb',vertices=pointlist, closeShape=True))
+			self.screen.append(ShapeStim(expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=rgb2psychorgb(self.bgc), fillColorSpace='rgb',vertices=pl, closeShape=True))
 
 			
 	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1, diameter=12):
