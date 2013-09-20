@@ -19,7 +19,6 @@
 #
 # version: 0.4 (25-03-2013)
 
-
 # MAIN
 DUMMYMODE = True # False for gaze contingent display, True for dummy mode (using mouse or joystick)
 LOGFILENAME = 'default' # logfilename, without path
@@ -34,8 +33,8 @@ DISPTYPE = 'psychopy' # either 'psychopy' or 'pygame'
 DISPSIZE = (1920, 1080) # resolution
 SCREENSIZE = (34.5, 19.7) # physical display size in cm
 MOUSEVISIBLE = False # mouse visibility
-BGC = (125,125,125,255) # backgroundcolour
-FGC = (0,0,0,255) # foregroundcolour
+BGC = (125,125,125) # backgroundcolour
+FGC = (0,0,0) # foregroundcolour
 
 # SOUND
 # defaults used in libsound. The values may be adjusted, but not the constants'

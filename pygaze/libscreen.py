@@ -129,7 +129,9 @@ class Display:
 		# psychopy
 		elif self.disptype == 'psychopy':
 			# create window
-			expdisplay = Window(size=self.dispsize, pos=None, color=rgb2psychorgb(self.bgc), colorSpace='rgb', fullscr=True, screen=self.screennr, units='pix')
+			expdisplay = Window(size=self.dispsize, pos=None,
+				color=rgb2psychorgb(self.bgc), colorSpace='rgb', fullscr=True,
+				screen=self.screennr, units='pix')
 			# set mouse visibility
 			expdisplay.setMouseVisible(self.mousevis)
 			# get screen in window
@@ -404,7 +406,6 @@ class PyGameScreen:
 			pos = (self.dispsize[0]/2, self.dispsize[1]/2)
 		if fill:
 			pw = 0
-
 		pygame.draw.circle(self.screen, colour, pos, r, pw)
 		
 
@@ -945,7 +946,13 @@ class PsychoPyScreen:
 		spos = pos2psychopos(spos,dispsize=self.dispsize)
 		epos = pos2psychopos(epos,dispsize=self.dispsize)
 		
-		self.screen.append(Line(expdisplay, start=spos, end=epos, lineColor=colour, lineColorSpace='rgb', lineWidth=pw))
+		# The `Line` class appears to be broken in a recent update of
+		# PsychoPy. Hence the fallback to `ShapeStim`. See also:
+		# <https://groups.google.com/forum/#!topic/psychopy-dev/1sKn6RrqH-8>
+		#self.screen.append(Line(expdisplay, start=spos, end=epos, lineColor=colour, lineColorSpace='rgb', lineWidth=pw))
+		stim = ShapeStim(expdisplay, lineWidth=pw, vertices=[spos, epos],
+			lineColor=colour)
+		self.screen.append(stim)
 
 
 	def draw_polygon(self, pointlist, colour=None, pw=1, fill=True):
