@@ -1,0 +1,11 @@
+global
+remove 'lib' from library names?
+
+libgazecon
+update cursor
+add simulated scotoma
+add suggested fixation (possibly under cursor)
+
+libsmi
+add EyeLink-like screen with text and options
+(e.g. "press 'c' to calibrate")
