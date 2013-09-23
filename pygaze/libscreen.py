@@ -92,8 +92,7 @@ class Display:
 		bgc		-- the background colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
 				   (default = BGC)
-		screennr	-- the screen number: 0, 1 etc. (default =
-				   SCREENNR)
+		screennr	-- the screen number: 0, 1 etc. (default = SCREENNR)
 		screen	-- a Screen object to be presented on the new Display
 				   (default=None)
 		"""

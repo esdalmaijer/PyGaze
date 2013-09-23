@@ -74,8 +74,8 @@ class AOI:
 			self.pos = pos
 		
 		# check AOI size
-		if type(size) == int:
-			size = [size,size]
+		if type(size) in [int,float]:
+			size = [size, size]
 		elif type(size) == tuple:
 			size = [size[0],size[1]]
 		elif type(size) == list:
@@ -87,6 +87,9 @@ class AOI:
 		# check if aoitype and size match
 		if self.aoitype == 'circle' and self.size[0] != self.size[1]:
 			raise Exception("Error in libgazecon.AOI.__init__: libgazecon.AOI.__init__: a circle does not have different width and height arguments! Either use 'ellipse' as aoitype or a single integer size value")
+		
+		# calculate radius (used for circle)
+		self.r = self.size[0]/2
 
 	
 	def contains(self, pos):
@@ -106,7 +109,7 @@ class AOI:
 		
 		if self.aoitype == 'circle':
 			
-			if (self.pos[0]-pos[0])**2 + (self.pos[1]-pos[1])**2 < self.size[0]**2:
+			if (self.pos[0]-pos[0])**2 + (self.pos[1]-pos[1])**2 < self.r**2:
 				return True
 			else:
 				return False
