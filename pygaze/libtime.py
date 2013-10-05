@@ -121,10 +121,17 @@ else:
 		"""
 
 		global expbegintime
+		global _cpu_time
+		
+		# On Windows, `time.clock()` provides higher accuracy than
+		# `time.time()`.
+		if sys.platform == 'win32':
+			_cpu_time = time.clock
+		else:
+			_cpu_time = time.time
 
 		pygame.init()
-
-		expbegintime = pygame.time.get_ticks()
+		expbegintime = _cpu_time()
 
 
 	def get_time():
@@ -139,7 +146,7 @@ else:
 				   expbegintime
 		"""
 
-		ctime = pygame.time.get_ticks() - expbegintime
+		ctime = _cpu_time() - expbegintime
 
 		return ctime
 
