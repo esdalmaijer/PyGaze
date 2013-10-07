@@ -57,7 +57,7 @@ class EyeTracker:
 			# morph class
 			self.__class__ = libeyelink
 			# initialize
-			self.__class__.__init__(self, display, resolution=resolution, data_file=eyedatafile+".edf", fg_color=fgc, bg_color=bgc, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
+			self.__class__.__init__(self, display, resolution=resolution, data_file=eyedatafile+".edf", fg_color=fgc, bg_color=bgc, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
 			
 		# SMI
 		elif trackertype == 'smi':
@@ -66,7 +66,7 @@ class EyeTracker:
 			# morph class
 			self.__class__ = SMItracker
 			# initialize
-			self.__class__.__init__(self, display, ip=ip, sendport=sendport, receiveport=receiveport, logfile=logfile)
+			self.__class__.__init__(self, display, ip=ip, sendport=sendport, receiveport=receiveport, logfile=logfile, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
 
 		# Tobii
 		elif trackertype == 'tobii':
@@ -75,7 +75,7 @@ class EyeTracker:
 			# morph class
 			self.__class__ = TobiiTracker
 			# initialize
-			self.__class__.__init__(self, display, logfile=logfile)
+			self.__class__.__init__(self, display, logfile=logfile, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
 
 		# dummy mode
 		elif trackertype == 'dummy':

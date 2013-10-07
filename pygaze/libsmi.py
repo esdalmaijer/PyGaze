@@ -118,7 +118,7 @@ class SMItracker:
 
 	"""A class for SMI eye tracker objects"""
 
-	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport=5555, logfile=LOGFILE):
+	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport=5555, logfile=LOGFILE, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
 
 		"""Initializes the SMItracker object
 		
@@ -135,29 +135,38 @@ class SMItracker:
 				   (default = LOGFILE)
 		"""
 
-		# properties
+		# object properties
 		self.disp = display
 		self.screen = libscreen.Screen()
+		self.dispsize = DISPSIZE # display size in pixels
+		self.screensize = SCREENSIZE # display size in cm
+		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
+		self.errorbeep = Sound(osc='saw',freq=100, length=100)
+		
+		# output file properties
 		self.outputfile = logfile #TODO: EDIT PATH TO DATADIRECTORY
 		self.description = "experiment" # TODO: EXPERIMENT NAME
 		self.participant = "participant" # TODO: PP NAME
+		
+		# eye tracker properties
 		self.connected = False
 		self.recording = False
 		self.eye_used = 0 # 0=left, 1=right, 2=binocular
 		self.left_eye = 0
 		self.right_eye = 1
 		self.binocular = 2
-		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
-		self.errorbeep = Sound(osc='saw',freq=100, length=100)
-		self.errdist = 2 # degrees
-		self.fixtresh = 1.5 # degrees
-		self.spdtresh = 35 # degrees per second; saccade speed threshold
-		self.accthresh = 9500 # degrees per second**2; saccade acceleration threshold
-		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
-		self.dispsize = DISPSIZE # display size in pixels
-		self.screensize = SCREENSIZE # display size in cm
-		self.prevsample = (-1,-1)
+		self.errdist = 2 # degrees; maximal error for drift correction
 		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
+		self.prevsample = (-1,-1)
+		
+		# event detection properties
+		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
+		self.fixtimetresh = 100 # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
+		self.spdtresh = saccade_velocity_threshold # degrees per second; saccade velocity threshold
+		self.accthresh = saccade_acceleration_threshold # degrees per second**2; saccade acceleration threshold
+		self.eventdetection = eventdetection
+		self.set_detection_type(self.eventdetection)
+		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 
 		# set logger
 		res = iViewXAPI.iV_SetLogger(c_int(1), c_char_p(logfile + '_SMILOG.txt'))
@@ -340,8 +349,8 @@ class SMItracker:
 				self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
 				self.pxfixtresh = deg2pix(screendist, self.fixtresh, pixpercm)
 				self.pxaccuracy = ((deg2pix(screendist, self.accuracy[0][0], pixpercm),deg2pix(screendist, self.accuracy[0][1], pixpercm)), (deg2pix(screendist, self.accuracy[1][0], pixpercm),deg2pix(screendist, self.accuracy[1][1], pixpercm)))
-				self.pxspdtresh = deg2pix(screendist, self.spdtresh/float(self.samplerate), pixpercm) # in pixels per sample
-				self.pxacctresh = deg2pix(screendist, self.accthresh/float(self.samplerate**2), pixpercm) # in pixels per sample**2
+				self.pxspdtresh = deg2pix(screendist, self.spdtresh, pixpercm)/1000.0 # in pixels per millisecond
+				self.pxacctresh = deg2pix(screendist, self.accthresh, pixpercm)/1000.0 # in pixels per millisecond**2
 
 				# calibration report
 				self.log("pygaze calibration report start")
@@ -350,8 +359,8 @@ class SMItracker:
 				self.log("precision (RMS noise in pixels): X=%s, Y=%s" % (self.pxdsttresh[0],self.pxdsttresh[1]))
 				self.log("distance between participant and display: %s cm" % screendist)
 				self.log("fixation threshold: %s pixels" % self.pxfixtresh)
-				self.log("speed threshold: %s pixels/sample" % self.pxspdtresh)
-				self.log("accuracy threshold: %s pixels/sample**2" % self.pxacctresh)
+				self.log("speed threshold: %s pixels/ms" % self.pxspdtresh)
+				self.log("accuracy threshold: %s pixels/ms**2" % self.pxacctresh)
 				self.log("pygaze calibration report end")
 
 				return True
@@ -725,19 +734,34 @@ class SMItracker:
 			self.recording = False
 			err = errorstring(res)
 			raise Exception("Error in libsmi.SMItracker.stop_recording: %s" % err)
+	
+	
+	def set_detection_type(eventdetection):
+		
+		"""Set the event detection type to either PyGaze algorithms, or
+		native algorithms as provided by the manufacturer (only if
+		available: detection type will default to PyGaze if no native
+		functions are available)
+		
+		arguments
+		eventdetection	--	a string indicating which detection type
+						should be employed: either 'pygaze' for
+						PyGaze event detection algorithms or
+						'native' for manufacturers algorithms (only
+						if available; will default to 'pygaze' if no
+						native event detection is available)
+		returns		--	detection type for saccades, fixations and
+						blinks in a tuple, e.g. 
+						('pygaze','native','native') when 'native'
+						was passed, but native detection was not
+						available for saccade detection
+		"""
+		
+		if eventdetection in ['pygaze','native']:
+			self.eventdetection = eventdetection
+		
+		return ('pygaze','native','pygaze')
 
-
-	def wait_for_blink_end(self):
-
-		"""Not supported for SMItracker (yet)"""
-
-		print("function not supported yet")
-
-	def wait_for_blink_start(self):
-
-		"""Not supported for SMItracker (yet)"""
-
-		print("function not supported yet")
 
 	def wait_for_event(self, event):
 
@@ -770,12 +794,103 @@ class SMItracker:
 			outcome = self.wait_for_blink_start()
 		elif event == 4:
 			outcome = self.wait_for_blink_end()
+		else:
+			raise Exception("Error in libsmi.SMItracker.wait_for_event: eventcode %s is not supported" % event)
 
 		return outcome
 
+
+	def wait_for_blink_end(self):
+
+		"""Waits for a blink end and returns the blink ending time
+		
+		arguments
+		None
+		
+		returns
+		timestamp		--	blink ending time in milliseconds, as
+						measured from experiment begin time
+		"""
+
+		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer blink detection; PyGaze algorithm \
+				will be used")
+
+		# # # # #
+		# PyGaze method
+		
+		blinking = True
+		
+		# loop while there is a blink
+		while blinking:
+			# get newest sample
+			gazepos = self.sample()
+			# check if it's valid
+			if self.is_valid_sample(gazepos):
+				# if it is a valid sample, blinking has stopped
+				blinking = False
+		
+		# return timestamp of blink end
+		return libtime.get_time()		
+		
+
+	def wait_for_blink_start(self):
+
+		"""Waits for a blink start and returns the blink starting time
+		
+		arguments
+		None
+		
+		returns
+		timestamp		--	blink starting time in milliseconds, as
+						measured from experiment begin time
+		"""
+		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer blink detection; PyGaze algorithm \
+				will be used")
+
+		# # # # #
+		# PyGaze method
+		
+		blinking = False
+		
+		# loop until there is a blink
+		while not blinking:
+			# get newest sample
+			gazepos = self.sample()
+			# check if it's a valid sample
+			if not self.is_valid_sample(gazepos):
+				# get timestamp for possible blink start
+				t0 = libtime.get_time()
+				# loop until a blink is determined, or a valid sample occurs
+				while not self.is_valid_sample(self.sample()):
+					# check if time has surpassed 150 ms
+					if libtime.get_time()-t0 >= 150:
+						# return timestamp of blink start
+						return t0
+		
+
 	def wait_for_fixation_end(self):
 
-		"""Returns time and gaze position when a fixation is ended;
+		"""Returns time and gaze position when a fixation has ended;
 		function assumes that a 'fixation' has ended when a deviation of
 		more than self.pxfixtresh from the initial fixation position has
 		been detected (self.pxfixtresh is created in self.calibration,
@@ -791,18 +906,51 @@ class SMItracker:
 					   was initiated
 		"""
 
-		# function assumes that a 'fixation' has ended when a deviation of more than maxerr
-		# from the initial 'fixation' position has been detected (using Pythagoras, ofcourse)
+		# # # # #
+		# SMI method
 
-		stime, spos = self.wait_for_fixation_start()
+		if self.eventdetection == 'native':
+			
+			moving = True			
+			while moving:
+				# get newest event
+				res = 0
+				while res != 1:
+					res = iViewXAPI.iV_GetEvent(byref(eventData))
+					stime = libtime.get_time()
+				# check if event is a fixation (SMI only supports
+				# fixations at the moment)
+				if eventData.eventType == 'F':
+					# get timestamp and starting position
+					timediff = stime - (int(eventData.startTime) / 1000.0)
+					etime = timediff + (int(eventData.endTime) / 1000.0) # time is in microseconds
+					fixpos = (evenData.positionX, evenData.positionY)
+					# return starting time and position
+					return etime, fixpos
+
+		# # # # #
+		# PyGaze method
 		
-		while True:
-			npos = self.sample() # get newest sample
-			if npos != (0,0):
-				if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > self.pxfixtresh: # Pythagoras
-					break
-
-		return libtime.get_time(), spos
+		else:
+			
+			# function assumes that a 'fixation' has ended when a deviation of more than fixtresh
+			# from the initial 'fixation' position has been detected
+			
+			# get starting time and position
+			stime, spos = self.wait_for_fixation_start()
+			
+			# loop until fixation has ended
+			while True:
+				# get new sample
+				npos = self.sample() # get newest sample
+				# check if sample is valid
+				if self.is_valid_sample(npos):
+					# check if sample deviates to much from starting position
+					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+						# break loop if deviation is too high
+						break
+	
+			return libtime.get_time(), spos
 
 
 	def wait_for_fixation_start(self):
@@ -823,27 +971,54 @@ class SMItracker:
 					   tuple of the position from which the fixation
 					   was initiated
 		"""
-
-		# function assumes a 'fixation' has started when gaze position remains reasonably
-		# stable for five samples in a row
 		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a fixation start
+			# detection built into their API (only ending)
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer fixation START detection (only \
+				fixation ENDING; PyGaze algorithm will be used")
+			
+			
+		# # # # #
+		# PyGaze method
+		
+		# function assumes a 'fixation' has started when gaze position
+		# remains reasonably stable for self.fixtimetresh
+		
+		# get starting position
+		spos = self.sample()
+		while not self.is_valid_sample(spos):
+			spos = self.sample()
+		
+		# get starting time
+		t0 = libtime.get_time()
+
 		# wait for reasonably stable position
-		xl = [] # list for last five samples (x coordinate)
-		yl = [] # list for last five samples (y coordinate)
 		moving = True
 		while moving:
+			# get new sample
 			npos = self.sample()
-			if npos != (0,0):
-				xl.append(npos[0]) # add newest sample
-				yl.append(npos[1]) # add newest sample
-				if len(xl) == 5:
-					# check if deviation is small enough
-					if ((max(xl)-min(xl))**2 + (max(yl)-min(yl))**2)**0.5 < self.pxfixtresh:
-						moving = False
-					# remove oldest sample
-					xl.pop(0); yl.pop(0)
-
-		return libtime.get_time(), (xl[-1],yl[-1])
+			# check if sample is valid
+			if self.is_valid_sample(npos):
+				# check if new sample is too far from starting position
+				if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+					# if not, reset starting position and time
+					spos = copy.copy(npos)
+					t0 = libtime.get_time()
+				# if new sample is close to starting sample
+				else:
+					# get timestamp
+					t1 = libtime.get_time()
+					# check if fixation time threshold has been surpassed
+					if t1 - t0 >= self.fixtimetresh:
+						# return time and starting position
+						return t1, spos
 
 
 	def wait_for_saccade_end(self):
@@ -861,34 +1036,51 @@ class SMItracker:
 							   are (x,y) gaze position tuples
 		"""
 
-		# NOTE: v in px/sample = s
-		# NOTE: a in px/sample**2 = v1 - v0
+		# # # # #
+		# SMI method
 
-		# METHOD 2
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer saccade detection; PyGaze \
+				algorithm will be used")
+
+		# # # # #
+		# PyGaze method
+		
 		# get starting position (no blinks)
 		t0, spos = self.wait_for_saccade_start()
+		# get valid sample
 		prevpos = self.sample()
+		while not self.is_valid_sample(prevpos):
+			prevpos = self.sample()
+		# get starting time, intersample distance, and velocity
 		t1 = libtime.get_time()
 		s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
 		v0 = s / (t1-t0)
 
-		# get samples
+		# run until velocity and acceleration go below threshold
 		saccadic = True
 		while saccadic:
 			# get new sample
 			newpos = self.sample()
 			t1 = libtime.get_time()
-			if sum(newpos) > 1 and newpos != prevpos:
+			if self.is_valid_sample(newpos) and newpos != prevpos:
 				# calculate distance
 				s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
 				# calculate velocity
 				v1 = s / (t1-t0)
 				# calculate acceleration
 				a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-				if s < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
+				# check if velocity and acceleration are below threshold
+				if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 					saccadic = False
 					epos = newpos[:]
 					etime = libtime.get_time()
+				# update previous values
 				t0 = copy.copy(t1)
 				v0 = copy.copy(v1)
 			# udate previous sample
@@ -911,11 +1103,27 @@ class SMItracker:
 					   startpos is an (x,y) gaze position tuple
 		"""
 
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer saccade detection; PyGaze \
+				algorithm will be used")
+
+		# # # # #
+		# PyGaze method
+		
 		# get starting position (no blinks)
 		newpos = self.sample()
-		while sum(newpos) < 1:
+		while not self.is_valid_sample(newpos):
 			newpos = self.sample()
-			t0 = libtime.get_time()
+		# get starting time, position, intersampledistance, and velocity
+		t0 = libtime.get_time()
 		prevpos = newpos[:]
 		s = 0
 		v0 = 0
@@ -926,20 +1134,22 @@ class SMItracker:
 			# get new sample
 			newpos = self.sample()
 			t1 = libtime.get_time()
-			if sum(newpos) > 1 and newpos != prevpos:
-				# check if distance is larger than accuracy error
+			if self.is_valid_sample(newpos) and newpos != prevpos:
+				# check if distance is larger than precision error
 				sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
 				if (sx/self.pxdsttresh[0])**2 + (sy/self.pxdsttresh[1])**2 > self.weightdist: # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
 					# calculate distance
-					s = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/sample
+					s = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/ms
 					# calculate velocity
 					v1 = s / (t1-t0)
 					# calculate acceleration
-					a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-					if s > self.pxspdtresh or a > self.pxacctresh:
+					a = (v1-v0) / (t1-t0) # acceleration in pixels/ms**2
+					# check if either velocity or acceleration are above threshold values
+					if v1 > self.pxspdtresh or a > self.pxacctresh:
 						saccadic = True
 						spos = prevpos[:]
 						stime = libtime.get_time()
+					# update previous values
 					t0 = copy.copy(t1)
 					v0 = copy.copy(v1)
 
@@ -947,3 +1157,29 @@ class SMItracker:
 				prevpos = newpos[:]
 
 		return stime, spos
+	
+	
+	def is_valid_sample(gazepos):
+		
+		"""Checks if the sample provided is valid, based on SMI specific
+		criteria (for internal use)
+		
+		arguments
+		gazepos		--	a (x,y) gaze position tuple, as returned by
+						self.sample()
+		
+		returns
+		valid			--	a Boolean: True on a valid sample, False on
+						an invalid sample
+		"""
+		
+		# return False if a sample is invalid
+		if gazepos == (-1,-1):
+			return False
+		# sometimes, on SMI devices, invalid samples can actually contain
+		# numbers; these do 
+		elif sum(gazepos) < 10 and 0.0 in gazepos:
+			return False
+		
+		# in any other case, the sample is valid
+		return True

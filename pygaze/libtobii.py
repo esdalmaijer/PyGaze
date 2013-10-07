@@ -89,7 +89,7 @@ class TobiiTracker:
 	
 	"""A class for Tobii EyeTracker objects"""
 	
-	def __init__(self, display, logfile=LOGFILE):
+	def __init__(self, display, logfile=LOGFILE, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
 		
 		"""Initializes a TobiiTracker instance
 		
@@ -99,37 +99,46 @@ class TobiiTracker:
 		keyword arguments
 		None
 		"""
-		
-		# event detection properties
-		self.errdist = 2 # degrees
-		self.fixtresh = 1.5 # degrees
-		self.spdtresh = 35 # degrees per second; saccade speed threshold
-		self.accthresh = 9500 # degrees per second**2; saccade acceleration threshold
-		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
+
+		# object properties
+		self.disp = display
+		self.screen = libscreen.Screen()
 		self.dispsize = DISPSIZE # display size in pixels
 		self.screensize = SCREENSIZE # display size in cm
 		self.screendist = SCREENDIST # distance between participant and screen in cm
 		self.pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2.0
-		self.pxerrdist = deg2pix(self.screendist, self.errdist, self.pixpercm)
-		self.prevsample = (-1,-1)
+		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
+		self.errorbeep = Sound(osc='saw',freq=100, length=100)
 		
-		# validation properties
-		self.nvalsamples = 1000 # samples for one validation point
-
-		# basic properties
+		# output file properties
+		self.outputfile = logfile #TODO: EDIT PATH TO DATADIRECTORY
+		self.description = "experiment" # TODO: EXPERIMENT NAME
+		self.participant = "participant" # TODO: PP NAME
+		
+		# eye tracker properties
 		self.connected = False
 		self.recording = False
 		self.eye_used = 0 # 0=left, 1=right, 2=binocular
 		self.left_eye = 0
 		self.right_eye = 1
 		self.binocular = 2
+		self.errdist = 2 # degrees; maximal error for drift correction
+		self.pxerrdist = deg2pix(self.screendist, self.errdist, self.pixpercm)
+		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
+		self.prevsample = (-1,-1)
+
+		# validation properties
+		self.nvalsamples = 1000 # samples for one validation point
 		
-		# objects
-		self.disp = display
-		self.screen = libscreen.Screen()
-		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
-		self.errorbeep = Sound(osc='saw',freq=100, length=100)
-		
+		# event detection properties
+		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
+		self.fixtimetresh = 100 # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
+		self.spdtresh = saccade_velocity_threshold # degrees per second; saccade velocity threshold
+		self.accthresh = saccade_acceleration_threshold # degrees per second**2; saccade acceleration threshold
+		self.eventdetection = eventdetection
+		self.set_detection_type(self.eventdetection)
+		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
+				
 		# initialize controller
 		self.controller = TobiiController(display)
 		self.controller.setDataFile("%s_TOBII_output.tsv" % logfile)
@@ -323,8 +332,8 @@ class TobiiTracker:
 
 		# recalculate thresholds (degrees to pixels)
 		self.pxfixtresh = deg2pix(self.screendist, self.fixtresh, self.pixpercm)
-		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh/float(self.samplerate), self.pixpercm) # in pixels per sample
-		self.pxacctresh = deg2pix(self.screendist, self.accthresh/float(self.samplerate**2), self.pixpercm) # in pixels per sample**2
+		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh, self.pixpercm)/1000.0 # in pixels per millisecons
+		self.pxacctresh = deg2pix(self.screendist, self.accthresh, self.pixpercm)/1000.0 # in pixels per millisecond**2
 		
 		# write report to log
 		self.controller.datafile.write("pygaze calibration report start\n")
@@ -334,8 +343,8 @@ class TobiiTracker:
 		self.controller.datafile.write("precision (RMS noise in pixels): X=%s, Y=%s\n" % (self.pxdsttresh[0],self.pxdsttresh[1]))
 		self.controller.datafile.write("distance between participant and display: %s cm\n" % self.screendist)
 		self.controller.datafile.write("fixation threshold: %s pixels\n" % self.pxfixtresh)
-		self.controller.datafile.write("speed threshold: %s pixels/sample\n" % self.pxspdtresh)
-		self.controller.datafile.write("accuracy threshold: %s pixels/sample**2\n" % self.pxacctresh)
+		self.controller.datafile.write("speed threshold: %s pixels/ms\n" % self.pxspdtresh)
+		self.controller.datafile.write("accuracy threshold: %s pixels/ms**2\n" % self.pxacctresh)
 		self.controller.datafile.write("pygaze calibration report end\n")
 
 		return True
@@ -672,20 +681,39 @@ class TobiiTracker:
 			print("WARNING! libtobii.TobiiTracker.stop_recording: recording has not started yet!")
 	
 	
-	def wait_for_blink_end(self):
-
-		"""Not supported for TobiiTracker (yet)"""
+	def set_detection_type(eventdetection):
 		
-		print("function not supported yet")
-	
-	
-	def wait_for_blink_start(self):
-
-		"""Not supported for TobiiTracker (yet)"""
+		"""Set the event detection type to either PyGaze algorithms, or
+		native algorithms as provided by the manufacturer (only if
+		available: detection type will default to PyGaze if no native
+		functions are available)
 		
-		print("function not supported yet")
-	
-	
+		arguments
+		eventdetection	--	a string indicating which detection type
+						should be employed: either 'pygaze' for
+						PyGaze event detection algorithms or
+						'native' for manufacturers algorithms (only
+						if available; will default to 'pygaze' if no
+						native event detection is available)
+		returns		--	detection type for saccades, fixations and
+						blinks in a tuple, e.g. 
+						('pygaze','native','native') when 'native'
+						was passed, but native detection was not
+						available for saccade detection
+		"""
+		
+		# warn if detection is set to native
+		if eventdetection == 'native':
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not provide detection algorithms; PyGaze \
+				algorithm will be used instead")
+		
+		# set event detection methods to PyGaze
+		self.eventdetection = 'pygaze'
+		
+		return (self.eventdetection,self.eventdetection,self.eventdetection)
+
+
 	def wait_for_event(self, event):
 
 		"""Waits for event
@@ -717,13 +745,103 @@ class TobiiTracker:
 			outcome = self.wait_for_blink_start()
 		elif event == 4:
 			outcome = self.wait_for_blink_end()
+		else:
+			raise Exception("Error in libtobii.TobiiTracker.wait_for_event: eventcode %s is not supported" % event)
 
 		return outcome
 
-	
+
+	def wait_for_blink_end(self):
+
+		"""Waits for a blink end and returns the blink ending time
+		
+		arguments
+		None
+		
+		returns
+		timestamp		--	blink ending time in milliseconds, as
+						measured from experiment begin time
+		"""
+
+		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but SMI does not offer blink detection; PyGaze algorithm \
+				will be used")
+
+		# # # # #
+		# PyGaze method
+		
+		blinking = True
+		
+		# loop while there is a blink
+		while blinking:
+			# get newest sample
+			gazepos = self.sample()
+			# check if it's valid
+			if self.is_valid_sample(gazepos):
+				# if it is a valid sample, blinking has stopped
+				blinking = False
+		
+		# return timestamp of blink end
+		return libtime.get_time()		
+		
+
+	def wait_for_blink_start(self):
+
+		"""Waits for a blink start and returns the blink starting time
+		
+		arguments
+		None
+		
+		returns
+		timestamp		--	blink starting time in milliseconds, as
+						measured from experiment begin time
+		"""
+		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not offer blink detection; PyGaze algorithm \
+				will be used")
+
+		# # # # #
+		# PyGaze method
+		
+		blinking = False
+		
+		# loop until there is a blink
+		while not blinking:
+			# get newest sample
+			gazepos = self.sample()
+			# check if it's a valid sample
+			if not self.is_valid_sample(gazepos):
+				# get timestamp for possible blink start
+				t0 = libtime.get_time()
+				# loop until a blink is determined, or a valid sample occurs
+				while not self.is_valid_sample(self.sample()):
+					# check if time has surpassed 150 ms
+					if libtime.get_time()-t0 >= 150:
+						# return timestamp of blink start
+						return t0
+		
+
 	def wait_for_fixation_end(self):
 
-		"""Returns time and gaze position when a fixation is ended;
+		"""Returns time and gaze position when a fixation has ended;
 		function assumes that a 'fixation' has ended when a deviation of
 		more than self.pxfixtresh from the initial fixation position has
 		been detected (self.pxfixtresh is created in self.calibration,
@@ -739,18 +857,51 @@ class TobiiTracker:
 					   was initiated
 		"""
 
-		# function assumes that a 'fixation' has ended when a deviation of more than maxerr
-		# from the initial 'fixation' position has been detected (using Pythagoras, ofcourse)
+		# # # # #
+		# SMI method
 
-		stime, spos = self.wait_for_fixation_start()
+		if self.eventdetection == 'native':
+			
+			moving = True			
+			while moving:
+				# get newest event
+				res = 0
+				while res != 1:
+					res = iViewXAPI.iV_GetEvent(byref(eventData))
+					stime = libtime.get_time()
+				# check if event is a fixation (SMI only supports
+				# fixations at the moment)
+				if eventData.eventType == 'F':
+					# get timestamp and starting position
+					timediff = stime - (int(eventData.startTime) / 1000.0)
+					etime = timediff + (int(eventData.endTime) / 1000.0) # time is in microseconds
+					fixpos = (evenData.positionX, evenData.positionY)
+					# return starting time and position
+					return etime, fixpos
+
+		# # # # #
+		# PyGaze method
 		
-		while True:
-			npos = self.sample() # get newest sample
-			if npos != (0,0):
-				if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > self.pxfixtresh: # Pythagoras
-					break
-
-		return libtime.get_time(), spos
+		else:
+			
+			# function assumes that a 'fixation' has ended when a deviation of more than fixtresh
+			# from the initial 'fixation' position has been detected
+			
+			# get starting time and position
+			stime, spos = self.wait_for_fixation_start()
+			
+			# loop until fixation has ended
+			while True:
+				# get new sample
+				npos = self.sample() # get newest sample
+				# check if sample is valid
+				if self.is_valid_sample(npos):
+					# check if sample deviates to much from starting position
+					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+						# break loop if deviation is too high
+						break
+	
+			return libtime.get_time(), spos
 
 
 	def wait_for_fixation_start(self):
@@ -771,27 +922,54 @@ class TobiiTracker:
 					   tuple of the position from which the fixation
 					   was initiated
 		"""
-
-		# function assumes a 'fixation' has started when gaze position remains reasonably
-		# stable for five samples in a row
 		
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a fixation start
+			# detection built into their API (only ending)
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not offer fixation detection; PyGaze \
+				algorithm will be used")
+			
+			
+		# # # # #
+		# PyGaze method
+		
+		# function assumes a 'fixation' has started when gaze position
+		# remains reasonably stable for self.fixtimetresh
+		
+		# get starting position
+		spos = self.sample()
+		while not self.is_valid_sample(spos):
+			spos = self.sample()
+		
+		# get starting time
+		t0 = libtime.get_time()
+
 		# wait for reasonably stable position
-		xl = [] # list for last five samples (x coordinate)
-		yl = [] # list for last five samples (y coordinate)
 		moving = True
 		while moving:
+			# get new sample
 			npos = self.sample()
-			if npos != (0,0):
-				xl.append(npos[0]) # add newest sample
-				yl.append(npos[1]) # add newest sample
-				if len(xl) == 5:
-					# check if deviation is small enough
-					if ((max(xl)-min(xl))**2 + (max(yl)-min(yl))**2)**0.5 < self.pxfixtresh:
-						moving = False
-					# remove oldest sample
-					xl.pop(0); yl.pop(0)
-
-		return libtime.get_time(), (xl[-1],yl[-1])
+			# check if sample is valid
+			if self.is_valid_sample(npos):
+				# check if new sample is too far from starting position
+				if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+					# if not, reset starting position and time
+					spos = copy.copy(npos)
+					t0 = libtime.get_time()
+				# if new sample is close to starting sample
+				else:
+					# get timestamp
+					t1 = libtime.get_time()
+					# check if fixation time threshold has been surpassed
+					if t1 - t0 >= self.fixtimetresh:
+						# return time and starting position
+						return t1, spos
 
 
 	def wait_for_saccade_end(self):
@@ -809,30 +987,53 @@ class TobiiTracker:
 							   are (x,y) gaze position tuples
 		"""
 
-		# NOTE: v in px/sample = s
-		# NOTE: a in px/sample**2 = v1 - v0
+		# # # # #
+		# SMI method
 
-		# METHOD 2
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not offer saccade detection; PyGaze \
+				algorithm will be used")
+
+		# # # # #
+		# PyGaze method
+		
 		# get starting position (no blinks)
-		stime, spos = self.wait_for_saccade_start()
+		t0, spos = self.wait_for_saccade_start()
+		# get valid sample
 		prevpos = self.sample()
-		s0 = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
+		while not self.is_valid_sample(prevpos):
+			prevpos = self.sample()
+		# get starting time, intersample distance, and velocity
+		t1 = libtime.get_time()
+		s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
+		v0 = s / (t1-t0)
 
-		# get samples
+		# run until velocity and acceleration go below threshold
 		saccadic = True
 		while saccadic:
 			# get new sample
 			newpos = self.sample()
-			if sum(newpos) > 0 and newpos != prevpos:
+			t1 = libtime.get_time()
+			if self.is_valid_sample(newpos) and newpos != prevpos:
 				# calculate distance
-				s1 = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
+				s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
+				# calculate velocity
+				v1 = s / (t1-t0)
 				# calculate acceleration
-				a = s1-s0 # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-				if s1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
+				a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+				# check if velocity and acceleration are below threshold
+				if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 					saccadic = False
 					epos = newpos[:]
 					etime = libtime.get_time()
-				s0 = copy.copy(s1)
+				# update previous values
+				t0 = copy.copy(t1)
+				v0 = copy.copy(v1)
 			# udate previous sample
 			prevpos = newpos[:]
 
@@ -853,36 +1054,86 @@ class TobiiTracker:
 					   startpos is an (x,y) gaze position tuple
 		"""
 
+		# # # # #
+		# SMI method
+
+		if self.eventdetection == 'native':
+			
+			# print warning, since SMI does not have a blink detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not offer saccade detection; PyGaze \
+				algorithm will be used")
+
+		# # # # #
+		# PyGaze method
+		
 		# get starting position (no blinks)
 		newpos = self.sample()
-		while sum(newpos) == 0:
+		while not self.is_valid_sample(newpos):
 			newpos = self.sample()
+		# get starting time, position, intersampledistance, and velocity
+		t0 = libtime.get_time()
 		prevpos = newpos[:]
-		s0 = 0
+		s = 0
+		v0 = 0
 
 		# get samples
 		saccadic = False
 		while not saccadic:
 			# get new sample
 			newpos = self.sample()
-			if sum(newpos) > 0 and newpos != prevpos:
-				# check if distance is larger than accuracy error
+			t1 = libtime.get_time()
+			if self.is_valid_sample(newpos) and newpos != prevpos:
+				# check if distance is larger than precision error
 				sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
 				if (sx/self.pxdsttresh[0])**2 + (sy/self.pxdsttresh[1])**2 > self.weightdist: # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
 					# calculate distance
-					s1 = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/sample
+					s = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/ms
+					# calculate velocity
+					v1 = s / (t1-t0)
 					# calculate acceleration
-					a = s1-s0 # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
-					if s1 > self.pxspdtresh or a > self.pxacctresh:
+					a = (v1-v0) / (t1-t0) # acceleration in pixels/ms**2
+					# check if either velocity or acceleration are above threshold values
+					if v1 > self.pxspdtresh or a > self.pxacctresh:
 						saccadic = True
 						spos = prevpos[:]
 						stime = libtime.get_time()
-					s0 = copy.copy(s1)
+					# update previous values
+					t0 = copy.copy(t1)
+					v0 = copy.copy(v1)
 
 				# udate previous sample
 				prevpos = newpos[:]
 
 		return stime, spos
+	
+	
+	def is_valid_sample(gazepos):
+		
+		"""Checks if the sample provided is valid, based on Tobii specific
+		criteria (for internal use)
+		
+		arguments
+		gazepos		--	a (x,y) gaze position tuple, as returned by
+						self.sample()
+		
+		returns
+		valid			--	a Boolean: True on a valid sample, False on
+						an invalid sample
+		"""
+		
+		# return False if a sample is invalid
+		if gazepos == (-1,-1):
+			return False
+		# sometimes, on Tobii devices, invalid samples are the negative
+		# display resolution value
+		elif gazepos[0] == -1*self.dispsize[0] or gazepos[1] == -1*self.dispsize[1]:
+			return False
+		
+		# in any other case, the sample is valid
+		return True
 
 
 # The code below is based on Hiroyuki Sogo's (Ehime University)
@@ -1115,10 +1366,6 @@ class TobiiController:
 		self.calout = {'colour':(128,255,128), 'pos':(int(self.disp.dispsize[0]/2),int(self.disp.dispsize[1]/2)), 'r':64}
 		self.calresult = {'img':img}
 		self.calresultmsg = {'text':"",'pos':(int(self.disp.dispsize[0]/2),int(self.disp.dispsize[1]/4))}
-#		self.calin = psychopy.visual.Circle(self.win,radius=2,fillColor=(0.0,0.0,0.0))
-#		self.calout = psychopy.visual.Circle(self.win,radius=64,lineColor=(0.0,1.0,0.0))
-#		self.calresult = psychopy.visual.SimpleImageStim(self.win,img)
-#		self.calresultmsg = psychopy.visual.TextStim(self.win,pos=(0,-win.size[1]/4))
 		
 		# start calibration
 		self.initcalibration_completed = False
@@ -1127,15 +1374,6 @@ class TobiiController:
 		while not self.initcalibration_completed:
 			pass
 		
-#		waitkey = True
-#		while waitkey:
-#			for key in psychopy.event.getKeys():
-#				if key=='space':
-#					waitkey = False				
-#			self.calout.draw()
-#			self.calin.draw()
-#			win.flip()
-
 		# draw central target
 		self.screen.clear()
 		self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=False)
@@ -1146,42 +1384,30 @@ class TobiiController:
 		self.kb.get_key(keylist=['space'],timeout=None)
 		
 		# run through all points
-#		clock = psychopy.core.Clock()
 		for self.point_index in range(len(self.points)):
 			# create tobii.eye_tracking_io.types 2D point
 			px, py = self.points[self.point_index]
 			p = Point2D()
 			p.x, p.y = float(px)/self.disp.dispsize[0], float(py)/self.disp.dispsize[0]
 			# recalculate to psycho coordinates
-#			self.calin.setPos(((p.x-0.5)*self.win.size[0],(0.5-p.y)*self.win.size[1]))
-#			self.calout.setPos(((p.x-0.5)*self.win.size[0],(0.5-p.y)*self.win.size[1]))
 			self.calin['pos'] = (int(px),int(py))
 			self.calout['pos'] = (int(px),int(py))
-
-			
-#			clock.reset()
-#			currentTime = clock.getTime()
 
 			# show target while decreasing its size for 1.5 seconds
 			t0 = libtime.get_time()
 			currentTime = (libtime.get_time() - t0) / 1000.0
 			while currentTime < 1.5:
 				# reduce size of the outer ring, as time passes
-#				self.calout.setRadius(40*(1.5-(currentTime))+4)
 				self.calout['r'] = int(40*(1.5-(currentTime))+4)
 				# check for input (should this even be here?)
-#				psychopy.event.getKeys()
 				self.kb.get_key(keylist=None, timeout=1)
 				# draw calibration point
-#				self.calout.draw()
-#				self.calin.draw()
-#				win.flip()
 				self.screen.clear()
 				self.screen.draw_circle(colour=self.calout['colour'], pos=self.calout['pos'], r=self.calout['r'], fill=False)
 				self.screen.draw_circle(colour=self.calin['colour'], pos=self.calin['pos'], r=self.calin['r'], fill=True)
 				self.disp.fill(self.screen)
 				self.disp.show()
-				# 
+				# get time
 				currentTime = (libtime.get_time() - t0) / 1000.0
 			
 			# wait for point calibration to succeed
@@ -1204,7 +1430,6 @@ class TobiiController:
 		self.eyetracker.StopCalibration(None)
 
 		# reset display (same seems to be done below: what's the use?)
-#		win.flip()
 		self.disp.show()
 		
 		# get calibration info
@@ -1215,19 +1440,14 @@ class TobiiController:
 		
 		# fill screen with half-gray
 		self.screen.clear(colour=(128,128,128))
-#		self.disp.fill(self.screen)
-#		self.disp.show()
-#		draw.rectangle(((0,0),tuple(self.win.size)),fill=(128,128,128))
 		
 		# show calibration info
 		if not self.computeCalibration_succeeded:
 			# computeCalibration failed.
-#			self.calresultmsg.setText('Not enough data was collected (Retry:r/Abort:ESC)')
 			self.calresultmsg['text'] = 'Not enough data was collected (Retry:r/Abort:ESC)'
 			
 		elif self.calib == None:
 			# no calibration data
-#			self.calresultmsg.setText('No calibration data (Retry:r/Abort:ESC)')
 			self.calresultmsg['text'] = 'No calibration data (Retry:r/Abort:ESC)'
 			
 		else:
@@ -1237,53 +1457,27 @@ class TobiiController:
 				points[data.true_point] = {'left':data.left, 'right':data.right}
 			
 			if len(points) == 0:
-#				self.calresultmsg.setText('No ture calibration data (Retry:r/Abort:ESC)')
 				self.calresultmsg['text'] = 'No ture calibration data (Retry:r/Abort:ESC)'
 			
 			else:
 				for p,d in points.iteritems():
 					if d['left'].status == 1:
 						self.screen.draw_line(colour=(255,0,0), spos=(p.x*self.disp.dispsize[0],p.y*self.disp.dispsize[1]), epos=(d['left'].map_point.x*self.disp.dispsize[0],d['left'].map_point.y*self.disp.dispsize[1]), pw=3)
-#						draw.line(((p.x*self.win.size[0],p.y*self.win.size[1]),
-#								   (d['left'].map_point.x*self.win.size[0],
-#									d['left'].map_point.y*self.win.size[1])),fill=(255,0,0))
 					if d['right'].status == 1:
 						self.screen.draw_line(colour=(0,255,0), spos=(p.x*self.disp.dispsize[0],p.y*self.disp.dispsize[1]), epos=(d['right'].map_point.x*self.disp.dispsize[0],d['right'].map_point.y*self.disp.dispsize[1]), pw=3)
-#						draw.line(((p.x*self.win.size[0],p.y*self.win.size[1]),
-#								   (d['right'].map_point.x*self.win.size[0],
-#									d['right'].map_point.y*self.win.size[1])),fill=(0,255,0))
 					self.screen.draw_ellipse(colour=(0,0,0), x=p.x*self.disp.dispsize[0]-10, y=p.y*self.disp.dispsize[1]-10, w=20, h=20, pw=3, fill=False)
-#					draw.ellipse(((p.x*self.win.size[0]-10,p.y*self.win.size[1]-10),
-#								  (p.x*self.win.size[0]+10,p.y*self.win.size[1]+10)),
-#								 outline=(0,0,0))
-#				self.calresultmsg.setText('Accept calibration results (Accept:a/Retry:r/Abort:ESC)')
+
 				self.calresultmsg['text'] = 'Accept calibration results (Accept:a/Retry:r/Abort:ESC)'
 		
 		# original approach (Sogo): draw an image, then show that image via PscyhoPy
-#		self.calresult.setImage(img)
 		self.calresult['img'] = img
 		
-		# alternative approach (Dalmaijer): use PyGaze drawing operations on self.screem, then present self.screen
+		# alternative approach (Dalmaijer): use PyGaze drawing operations on self.screen, then present self.screen
 		self.screen.draw_text(text=self.calresultmsg['text'],pos=self.calresultmsg['pos'])
 		self.disp.fill(self.screen)
 		self.disp.show()
 		
 		# wait for keyboard input
-#		waitkey = True
-#		while waitkey:
-#			for key in psychopy.event.getKeys():
-#				if key == 'a':
-#					retval = 'accept'
-#					waitkey = False
-#				elif key == 'r':
-#					retval = 'retry'
-#					waitkey = False
-#				elif key == 'escape':
-#					retval = 'abort'
-#					waitkey = False
-#			self.calresult.draw()
-#			self.calresultmsg.draw()
-#			self.win.flip()
 		key, presstime = self.kb.get_key(keylist=['a','r','escape'], timeout=None)
 		if key == 'a':
 			retval = 'accept'
