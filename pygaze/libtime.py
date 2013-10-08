@@ -21,6 +21,7 @@
 
 
 import sys
+import time
 
 from defaults import *
 try:
