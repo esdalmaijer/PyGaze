@@ -20,6 +20,9 @@
 # version: 0.4 (25-03-2013)
 
 
+import sys
+import time
+
 from defaults import *
 try:
 	from constants import *
