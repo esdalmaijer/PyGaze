@@ -30,6 +30,7 @@ import sys
 
 
 # on Windows, PyGame's webcam support is a bit shaky, so we use vidcap
+# project homepage: http://videocapture.sourceforge.net/
 if sys.platform == 'win32':
 	import vidcap
 # for other platforms, we use PyGame
@@ -66,8 +67,16 @@ def available_devices():
 	
 	# Windows
 	if sys.platform == 'win32':
-		# TODO: figure out what to do on Windows
-		devlist = [0,1]
+		# loop through 100 numbers (0-99) and see if they work
+		devlist = []
+		for i in range(100):
+			try:
+				dev = vidcap.new_Dev(i, 0)
+				devlist.append(i)
+				del dev
+			except:
+				pass
+		
 	# other platforms
 	else:
 		devlist = pygame.camera.list_cameras()
@@ -117,7 +126,7 @@ class Camera:
 		# autodetect device
 		if self.devname == None:
 			try:
-				self.dev = available_devices()[0]
+				self.devname = available_devices()[0]
 			except:
 				raise Exception("Error in libwebcam.Camera.__init__: no webcam devices available!")
 		
@@ -129,12 +138,13 @@ class Camera:
 		# create device
 		if sys.platform == 'win32':
 			# initialize camera device
-			self.dev = vidcap.new_Dev(self.devname, 0) # first argument: devnr; second argument: Boolean indicating if camimages should be displayed on separate display
-			# check if resolution is correct
-			buff, width, height = self.dev.getbuffer()
-			if not self.camres == (width,height):
-				print("WARNING in libwebcam.Camera.__init__: requested resolution %s is not available; device actual resolution of (%d,%d) will be used" % (self.camres,width,height))
-				self.camres = (width,height)
+			self.dev = vidcap.new_Dev(self.devname, 0) # first argument: devnr; second argument: Boolean indicating if camimages should be displayed on separate window (e.g. for debugging purposes)
+			self.dev.setresolution(self.camres[0], self.camres[1])
+#			# check if resolution is correct
+#			buff, width, height = self.dev.getbuffer()
+#			if not self.camres == (width,height):
+#				print("WARNING in libwebcam.Camera.__init__: requested resolution %s is not available; device actual resolution of (%d,%d) will be used" % (self.camres,width,height))
+#				self.camres = (width,height)
 		else:
 			self.dev = pygame.camera.Camera(self.devname, self.camres, 'RGB')
 			self.dev.start()
@@ -206,7 +216,7 @@ class Camera:
 			# if the display type is psychopy, we can return the PIL Image
 			if self.disptype == 'psychopy':
 				return self.img
-			# if the disptype is pygame, we need to convert it to a PyGame image
+			# if the disptype is pygame, we need to convert the PIL Image to a PyGame image
 			else:
 				return pygame.image.fromstring(self.img.tostring(), (width,height), 'RGB', False) # (string, size, format, flipped)
 		
@@ -217,7 +227,7 @@ class Camera:
 			# if the display type is pygame, we can return the PyGame image
 			if self.disptype == 'pygame':
 				return img
-			# if the disptype is psychopy, we need to convert it to a PIL Image
+			# if the disptype is psychopy, we need to convert the PyGame image to a PIL Image
 			else:
 				self.img.fromstring(pygame.image.tostring(img, 'RGB', False), 'raw', 'RGB', 0, self.flipnr)
 				return self.img
