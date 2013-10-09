@@ -664,24 +664,48 @@ class PyGameScreen:
 		"""Draws an image on the screen
 		
 		arguments
-		image		-- a full path to an image file
+		image		--	a full path to an image file, or a pygame Surface
+					(if image is neither of these, this function will
+					attempt to treat the image as a PIL Image)
 		
 		keyword arguments
-		pos		-- image center position, an (x,y) position tuple or
-				   None for a central position (default = None)
-		scale	-- scale factor for the image or None for no scaling
-				   (default = None)
+		pos		--	image center position, an (x,y) position tuple or
+					None for a central position (default = None)
+		scale		--	scale factor for the image or None for no scaling
+					(default = None)
 		
 		returns
-		Nothing	-- loads and draws an image surface on (PyGame) or
-				   adds SimpleImageStim to (PsychoPy) the self.screen
-				   property
+		Nothing	--	loads and draws an image surface on (PyGame) or
+					adds SimpleImageStim to (PsychoPy) the self.screen
+					property
 		"""
 		
 		if pos == None:
 			pos = (self.dispsize[0]/2, self.dispsize[1]/2)
 		
-		img = pygame.image.load(image)
+		# check if image is a path name
+		if type(image) == str:
+			# check if the image file exists
+			if os.path.isfile(image):
+				# load image from file
+				try:
+					img = pygame.image.load(image)
+				except:
+					raise Exception("Error in libscreen.PyGameScreen.draw_image: could not load image file %s" % image)
+			else:
+				raise Exception("Error in libscreen.PyGameScreen.draw_image: path %s is not a file!" % image)
+		
+		# check if image is a PyGame Surface
+		elif type(image) == pygame.Surface:
+			# since image is already a PyGame Surface, we needn't do anything with it
+			img = image
+		# finally, try if the image is supported by PIL
+		else:
+			try:
+				# PIL Image to PyGame Surface
+				img = pygame.image.fromstring(image.tostring(), (image.size[0],image.size[1]), 'RGB', False)
+			except:
+				raise Exception("Error in libscreen.PyGameScreen.draw_image: image format not recognized!")
 		
 		if scale != None:
 			pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
