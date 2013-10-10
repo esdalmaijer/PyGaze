@@ -29,20 +29,44 @@ except:
 import sys
 
 
-# on Windows, PyGame's webcam support is a bit shaky, so we use vidcap
-# project homepage: http://videocapture.sourceforge.net/
+# on Windows, PyGame's webcam support is a bit shaky, so we provide a vidcap
+# back-end; project homepage: http://videocapture.sourceforge.net/
+vidimp = False
 if sys.platform == 'win32':
-	import vidcap
-# for other platforms, we use PyGame
-else:
+	# we needn't use vidcap specifically, so we try to import it
 	try:
-		import pygame.image
-		import pygame.camera
-		pygame.camera.init()
+		import vidcap
+		vidimp = True
+	# if this fails, we present a warning, but do not need to crash
 	except:
-		raise Exception("Error in libwebcam: could not import and initialize PyGame camera module!")
+		print("WARNING! libwebcam: vidcap could not be imported; pygame back-end is still available")
 
-from PIL import Image
+# for other platforms, we use PyGame
+pgcamimp = False
+try:
+	import pygame.camera
+	pygame.camera.init()
+	pgcamimp = True
+except:
+	# show a warning if vidcap is loaded
+	if sys.platform == 'win32' and vidimp:
+		print("WARNING! libwebcam: pygame could not be imported; vidcap back-end is still available")
+	# raise an exception if vidcap failed to load as well
+	else:
+		raise Exception("Error in libwebcam: could not import and initialize PyGame camera module; could not import vidcap either!")
+
+# try to import pygame image module
+try:
+	import pygame.image
+	pgimgimp = True
+except:
+	pgimgimp = False
+# try to import PIL Image module
+try:
+	from PIL import Image
+	pilimgimp = True
+except:
+	pilimgimp = False
 
 
 # # # # #
@@ -65,21 +89,27 @@ def available_devices():
 					the Webcam class
 	"""
 	
-	# Windows
-	if sys.platform == 'win32':
-		# loop through 100 numbers (0-99) and see if they work
-		devlist = []
-		for i in range(100):
-			try:
-				dev = vidcap.new_Dev(i, 0)
-				devlist.append(i)
-				del dev
-			except:
-				pass
-		
-	# other platforms
-	else:
+	# first, we try using PyGame
+	try:
 		devlist = pygame.camera.list_cameras()
+	
+	# if this fails, we try vidcap (only works on Windows)
+	except:
+		if sys.platform == 'win32':
+			# loop through 100 numbers (0-99) and see if they work
+			devlist = []
+			for i in range(100):
+				# try if this device number works
+				try:
+					dev = vidcap.new_Dev(i, 0)	# new device
+					devlist.append(i)			# add dev nr to list
+					del dev				# delete device again
+				# if the device number does not work, simply do nothing
+				except:
+					pass
+		# if PyGame did not work and we're not on Windows, raise exception
+		else:
+			raise Exception("Error in libwebcam.available_devices: could not use PyGame or vidcap to find devices!")
 	
 	return devlist
 
@@ -93,7 +123,7 @@ class Camera:
 	and PyGame on all other platforms (even if DISPTYPE is set to
 	'psychopy'!)"""
 	
-	def __init__(self, disptype=DISPTYPE, dev=None, resolution=(640,480), verflip=False, horflip=False):
+	def __init__(self, disptype=DISPTYPE, dev=None, devtype='pygame', resolution=(640,480), verflip=False, horflip=False):
 		
 		"""Initializes a Camera instance
 		
@@ -106,6 +136,10 @@ class Camera:
 		dev			--	number or name of the webcam that should be
 						accessed (e.g. 0 or '/dev/video0') or None
 						to use the first available (default = None)
+		devtype		--	string indicating the device backend you
+						want to use; should be either 'pygame' or
+						'vidcap'; note that vidcap only works on
+						Windows! (default = 'pygame')
 		resolution		--	preferred resolution of the webcam images
 						(default = (640,480))
 		verflip		--	Boolean indicating if images should be
@@ -114,13 +148,41 @@ class Camera:
 						flipped horizontally (default = False)
 		"""
 		
+		# # # # #
+		# check device type and do some trouble shooting
+		
+		# check if devtype is a valid back-end
+		if devtype not in ['vidcap','pygame']:
+			raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not supported, use 'pygame' or 'vidcap'" % devtype)
+		# vidcap trouble shooting
+		elif devtype == 'vidcap':
+			if sys.platform != 'win32':
+				raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not available on your system '%s' (only on Windows)" % (devtype,sys.platform))
+			if not vidimp:
+				raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not available because vidcap could not be imported (have you installed it correctly?)" % devtype)
+			if not pilimgimp:
+				raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not available because PIL's Image module could not be imported (vidcap back-end depends on this)" % devtype)
+		# pygame trouble shooting
+		elif devtype == 'pygame':
+			if not pgcamimp:
+				raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not available; could not import and initialize PyGame camera module!" % devtype)
+			if not pgimgimp:
+				raise Exception("Error in libwebcam.Camera.__init__: devtype '%s' is not available; could not import PyGame image module!" % devtype)
+			if disptype == 'psychopy' and not pilimgimp:
+				raise Exception("Error in libwebcam.Camera.__init__: disptype '%s' is not available; could not import PIL Image module (psycho disptype depends on this)!" % disptype)
+		# if we survived all the trouble shooting, finally set the devtype property
+		self.devtype = devtype
+		
+		# # # # #
+		# do actual initialization
+		
 		# properties
 		self.disptype = disptype
 		self.devname = dev
 		self.camres = resolution
 		self.horflip = horflip
 		self.verflip = verflip
-		self.flipnr = 0
+		self.flipnr = -1
 		self.img = Image.new('RGB',self.camres,'black')
 		
 		# autodetect device
@@ -136,7 +198,7 @@ class Camera:
 			raise Exception("Error in libwebcam.Camera.__init__: webcam %s is not available!" % self.devname)
 		
 		# create device
-		if sys.platform == 'win32':
+		if self.devtype == 'vidcap':
 			# initialize camera device
 			self.dev = vidcap.new_Dev(self.devname, 0) # first argument: devnr; second argument: Boolean indicating if camimages should be displayed on separate window (e.g. for debugging purposes)
 			self.dev.setresolution(self.camres[0], self.camres[1])
@@ -176,14 +238,14 @@ class Camera:
 		self.verflip = verflip
 		self.horflip = horflip
 		
-		# windows		
-		if sys.platform == 'win32' or self.disptype == 'psychopy':
+		# when PIL is used, set flipnr (indicating if an image should be flipped)
+		if self.devtype == 'vidcap' or self.disptype == 'psychopy':
 			if self.verflip:
 				self.flipnr = -1 # or 1?
 			if self.horflip:
 				print("WARNING in libwebcam.Camera.set_imgflip: horizontal flipping not supported (yet)")
 		
-		# all other platforms
+		# PyGame camera and image modules
 		else:
 			try:
 				self.dev.set_controls(self.horflip,self.verflip,self.dev.get_controls()[2])
@@ -208,7 +270,7 @@ class Camera:
 		"""
 		
 		# windows
-		if sys.platform == 'win32':
+		if self.devtype == 'vidcap':
 			# read buffer
 			buff, width, height = self.dev.getbuffer()
 			# buffer to PIL Image
@@ -247,5 +309,6 @@ class Camera:
 		None
 		"""
 		
-		if sys.platform != 'win32':
+		# pygame cam needs to be stopped
+		if self.devtype == 'pygame':
 			self.dev.stop()
