@@ -873,7 +873,7 @@ class eyelink_graphics(custom_display):
 		self.screen = libscreen.Screen(mousevisible=False)
 		self.kb = Keyboard(keylist=None, timeout=1)
 		if display.disptype == 'pygame':
-			self.kb.set_timeout(timeout=0)
+			self.kb.set_timeout(timeout=0.001)
 
 		# drawing properties
 		self.xc = self.display.dispsize[0]/2
