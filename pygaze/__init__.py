@@ -19,7 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-version = u'0.4.1'
+version = u'0.4.2~pre1'
 
 import os.path
 import libtime
