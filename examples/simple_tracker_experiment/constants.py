@@ -21,7 +21,7 @@
 
 
 # MAIN
-DUMMYMODE = True # False for gaze contingent display, True for dummy mode (using mouse or joystick)
+DUMMYMODE = False # False for gaze contingent display, True for dummy mode (using mouse or joystick)
 LOGFILENAME = 'default' # logfilename, without path
 LOGFILE = LOGFILENAME[:] # .txt; adding path before logfilename is optional; logs responses (NOT eye movements, these are stored in an EDF file!)
 TRIALS = 5
@@ -34,8 +34,8 @@ DISPTYPE = 'pygame' # either 'psychopy' or 'pygame'
 DISPSIZE = (1920,1080) # canvas size
 SCREENSIZE = (34.5, 19.7) # physical display size in cm
 MOUSEVISIBLE = False # mouse visibility
-BGC = (125,125,125) # backgroundcolour
-FGC = (0,0,0) # foregroundcolour
+BGC = (125,125,125,255) # backgroundcolour
+FGC = (0,0,0,255) # foregroundcolour
 
 # SOUND
 # defaults used in libsound. The values may be adjusted, but not the constants'

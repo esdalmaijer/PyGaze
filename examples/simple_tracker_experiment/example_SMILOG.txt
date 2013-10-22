@@ -1,0 +1,83 @@
+0.0529541	iViewX API ApiLogger - Status: 1
+0.183517	Connection to iView has been established
+1.18772	pygaze initiation report start
+1.18776	experiment: experiment
+1.18778	participant: participant
+1.1878	display resolution: 1920x1080
+1.18784	display size in cm: 34.5x19.7
+1.18786	samplerate: 120 Hz
+1.18789	sampletime: 8.33333333333 ms
+1.18791	fixation threshold: 1.5 degrees
+1.18793	speed threshold: 35 degrees/second
+1.18795	acceleration threshold: 9500 degrees/second**2
+1.18797	pygaze initiation report end
+33.2181	pygaze calibration report start
+33.2182	accuracy (degrees): LX=0.1325, LY=0.2675, RX=0.1325, RY=0.2675
+33.2182	accuracy (in pixels): LX=7.8770469034, LY=15.9028045305, RX=7.8770469034, RY=15.9028045305
+33.2182	precision (RMS noise in pixels): X=8.39367508977, Y=10.0109184092
+33.2183	distance between participant and display: 61.6648 cm
+33.2183	fixation threshold: 89.194335464 pixels
+33.2183	speed threshold: 2.08072592032 pixels/ms
+33.2184	acceleration threshold: 570.001432732 pixels/ms**2
+33.2184	pygaze calibration report end
+39.1526	start_trial 1 trialtype left
+39.1661	fixation
+40.0473	target left
+42.2129	start_trial 2 trialtype left
+42.2264	fixation
+43.1332	target left
+44.8547	start_trial 3 trialtype left
+44.8691	fixation
+45.9125	target left
+47.5781	start_trial 4 trialtype right
+47.5915	fixation
+48.79	target right
+50.3164	start_trial 5 trialtype left
+50.33	fixation
+51.3602	target left
+53.2396	start_trial 6 trialtype right
+53.254	fixation
+54.4142	target right
+56.0616	start_trial 7 trialtype right
+56.0752	fixation
+56.8845	target right
+58.464	start_trial 8 trialtype right
+58.479	fixation
+59.2715	target right
+61.0109	start_trial 9 trialtype left
+61.0258	fixation
+62.2797	target left
+63.7386	start_trial 10 trialtype left
+63.753	fixation
+64.6919	target left
+66.1186	start_trial 11 trialtype left
+66.1285	fixation
+67.3557	target left
+69.0828	start_trial 12 trialtype right
+69.0964	fixation
+70.1169	target right
+71.9813	start_trial 13 trialtype left
+71.9949	fixation
+72.8342	target left
+75.5622	start_trial 14 trialtype left
+75.5757	fixation
+76.4861	target left
+78.6908	start_trial 15 trialtype right
+78.7043	fixation
+79.7342	target right
+81.4573	start_trial 16 trialtype right
+81.4725	fixation
+82.6165	target right
+84.3945	start_trial 17 trialtype left
+84.4045	fixation
+85.5886	target left
+87.1927	start_trial 18 trialtype right
+87.2073	fixation
+88.0914	target right
+89.6673	start_trial 19 trialtype right
+89.682	fixation
+90.6496	target right
+93.0919	start_trial 20 trialtype left
+93.1056	fixation
+94.0696	target left
+95.2207	End of Log file
