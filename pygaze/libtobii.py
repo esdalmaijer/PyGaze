@@ -2,22 +2,23 @@
 #
 # This file is part of PyGaze - the open-source toolbox for eye tracking
 #
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
+# PyGaze is a Python module for easily creating gaze contingent experiments
+# or other software (as well as non-gaze contingent experiments/software)
+# Copyright (C) 2012-2013 Edwin S. Dalmaijer
 #
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>
+
 
 # TobiiTracker
 import math
@@ -150,7 +151,7 @@ class TobiiTracker:
 		self.controller.datafile.write("display size in cm: %sx%s\n" % (self.screensize[0],self.screensize[1]))
 		self.controller.datafile.write("fixation threshold: %s degrees\n" % self.fixtresh)
 		self.controller.datafile.write("speed threshold: %s degrees/second\n" % self.spdtresh)
-		self.controller.datafile.write("accuracy threshold: %s degrees/second**2\n" % self.accthresh)
+		self.controller.datafile.write("acceleration threshold: %s degrees/second**2\n" % self.accthresh)
 		self.controller.datafile.write("pygaze initiation report end\n")
 
 
@@ -331,8 +332,8 @@ class TobiiTracker:
 
 		# recalculate thresholds (degrees to pixels)
 		self.pxfixtresh = deg2pix(self.screendist, self.fixtresh, self.pixpercm)
-		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh, self.pixpercm)/1000.0 # in pixels per millisecons
-		self.pxacctresh = deg2pix(self.screendist, self.accthresh, self.pixpercm)/1000.0 # in pixels per millisecond**2
+		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh/1000.0, self.pixpercm) # in pixels per millisecons
+		self.pxacctresh = deg2pix(self.screendist, self.accthresh/1000.0, self.pixpercm) # in pixels per millisecond**2
 		
 		# write report to log
 		self.controller.datafile.write("pygaze calibration report start\n")
@@ -680,7 +681,7 @@ class TobiiTracker:
 			print("WARNING! libtobii.TobiiTracker.stop_recording: recording has not started yet!")
 	
 	
-	def set_detection_type(eventdetection):
+	def set_detection_type(self, eventdetection):
 		
 		"""Set the event detection type to either PyGaze algorithms, or
 		native algorithms as provided by the manufacturer (only if
@@ -764,15 +765,15 @@ class TobiiTracker:
 
 		
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			# print warning, since SMI does not have a blink detection
+			# print warning, since Tobii does not have a blink detection
 			# built into their API
 			
 			print("WARNING! 'native' event detection has been selected, \
-				but SMI does not offer blink detection; PyGaze algorithm \
+				but Tobii does not offer blink detection; PyGaze algorithm \
 				will be used")
 
 		# # # # #
@@ -806,11 +807,11 @@ class TobiiTracker:
 		"""
 		
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			# print warning, since SMI does not have a blink detection
+			# print warning, since Tobii does not have a blink detection
 			# built into their API
 			
 			print("WARNING! 'native' event detection has been selected, \
@@ -857,50 +858,38 @@ class TobiiTracker:
 		"""
 
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			moving = True			
-			while moving:
-				# get newest event
-				res = 0
-				while res != 1:
-					res = iViewXAPI.iV_GetEvent(byref(eventData))
-					stime = libtime.get_time()
-				# check if event is a fixation (SMI only supports
-				# fixations at the moment)
-				if eventData.eventType == 'F':
-					# get timestamp and starting position
-					timediff = stime - (int(eventData.startTime) / 1000.0)
-					etime = timediff + (int(eventData.endTime) / 1000.0) # time is in microseconds
-					fixpos = (evenData.positionX, evenData.positionY)
-					# return starting time and position
-					return etime, fixpos
+			# print warning, since Tobii does not have a fixation detection
+			# built into their API
+			
+			print("WARNING! 'native' event detection has been selected, \
+				but Tobii does not offer fixation detection; PyGaze algorithm \
+				will be used")
 
 		# # # # #
 		# PyGaze method
 		
-		else:
-			
-			# function assumes that a 'fixation' has ended when a deviation of more than fixtresh
-			# from the initial 'fixation' position has been detected
-			
-			# get starting time and position
-			stime, spos = self.wait_for_fixation_start()
-			
-			# loop until fixation has ended
-			while True:
-				# get new sample
-				npos = self.sample() # get newest sample
-				# check if sample is valid
-				if self.is_valid_sample(npos):
-					# check if sample deviates to much from starting position
-					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
-						# break loop if deviation is too high
-						break
-	
-			return libtime.get_time(), spos
+		# function assumes that a 'fixation' has ended when a deviation of more than fixtresh
+		# from the initial 'fixation' position has been detected
+		
+		# get starting time and position
+		stime, spos = self.wait_for_fixation_start()
+		
+		# loop until fixation has ended
+		while True:
+			# get new sample
+			npos = self.sample() # get newest sample
+			# check if sample is valid
+			if self.is_valid_sample(npos):
+				# check if sample deviates to much from starting position
+				if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+					# break loop if deviation is too high
+					break
+
+		return libtime.get_time(), spos
 
 
 	def wait_for_fixation_start(self):
@@ -923,11 +912,11 @@ class TobiiTracker:
 		"""
 		
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			# print warning, since SMI does not have a fixation start
+			# print warning, since Tobii does not have a fixation start
 			# detection built into their API (only ending)
 			
 			print("WARNING! 'native' event detection has been selected, \
@@ -987,11 +976,11 @@ class TobiiTracker:
 		"""
 
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			# print warning, since SMI does not have a blink detection
+			# print warning, since Tobii does not have a blink detection
 			# built into their API
 			
 			print("WARNING! 'native' event detection has been selected, \
@@ -1054,11 +1043,11 @@ class TobiiTracker:
 		"""
 
 		# # # # #
-		# SMI method
+		# Tobii method
 
 		if self.eventdetection == 'native':
 			
-			# print warning, since SMI does not have a blink detection
+			# print warning, since Tobii does not have a blink detection
 			# built into their API
 			
 			print("WARNING! 'native' event detection has been selected, \
@@ -1109,7 +1098,7 @@ class TobiiTracker:
 		return stime, spos
 	
 	
-	def is_valid_sample(gazepos):
+	def is_valid_sample(self, gazepos):
 		
 		"""Checks if the sample provided is valid, based on Tobii specific
 		criteria (for internal use)

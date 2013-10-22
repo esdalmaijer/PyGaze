@@ -2,22 +2,23 @@
 #
 # This file is part of PyGaze - the open-source toolbox for eye tracking
 #
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
+# PyGaze is a Python module for easily creating gaze contingent experiments
+# or other software (as well as non-gaze contingent experiments/software)
+# Copyright (C) 2012-2013 Edwin S. Dalmaijer
 #
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>
+
 
 from defaults import *
 try:
@@ -207,7 +208,7 @@ class SMItracker:
 		self.log("sampletime: %s ms" % self.sampletime)
 		self.log("fixation threshold: %s degrees" % self.fixtresh)
 		self.log("speed threshold: %s degrees/second" % self.spdtresh)
-		self.log("accuracy threshold: %s degrees/second**2" % self.accthresh)
+		self.log("acceleration threshold: %s degrees/second**2" % self.accthresh)
 		self.log("pygaze initiation report end")
 
 
@@ -349,8 +350,8 @@ class SMItracker:
 				self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
 				self.pxfixtresh = deg2pix(screendist, self.fixtresh, pixpercm)
 				self.pxaccuracy = ((deg2pix(screendist, self.accuracy[0][0], pixpercm),deg2pix(screendist, self.accuracy[0][1], pixpercm)), (deg2pix(screendist, self.accuracy[1][0], pixpercm),deg2pix(screendist, self.accuracy[1][1], pixpercm)))
-				self.pxspdtresh = deg2pix(screendist, self.spdtresh, pixpercm)/1000.0 # in pixels per millisecond
-				self.pxacctresh = deg2pix(screendist, self.accthresh, pixpercm)/1000.0 # in pixels per millisecond**2
+				self.pxspdtresh = deg2pix(screendist, self.spdtresh/1000.0, pixpercm) # in pixels per millisecond
+				self.pxacctresh = deg2pix(screendist, self.accthresh/1000.0, pixpercm) # in pixels per millisecond**2
 
 				# calibration report
 				self.log("pygaze calibration report start")
@@ -360,7 +361,7 @@ class SMItracker:
 				self.log("distance between participant and display: %s cm" % screendist)
 				self.log("fixation threshold: %s pixels" % self.pxfixtresh)
 				self.log("speed threshold: %s pixels/ms" % self.pxspdtresh)
-				self.log("accuracy threshold: %s pixels/ms**2" % self.pxacctresh)
+				self.log("acceleration threshold: %s pixels/ms**2" % self.pxacctresh)
 				self.log("pygaze calibration report end")
 
 				return True
@@ -736,7 +737,7 @@ class SMItracker:
 			raise Exception("Error in libsmi.SMItracker.stop_recording: %s" % err)
 	
 	
-	def set_detection_type(eventdetection):
+	def set_detection_type(self, eventdetection):
 		
 		"""Set the event detection type to either PyGaze algorithms, or
 		native algorithms as provided by the manufacturer (only if
@@ -1159,7 +1160,7 @@ class SMItracker:
 		return stime, spos
 	
 	
-	def is_valid_sample(gazepos):
+	def is_valid_sample(self, gazepos):
 		
 		"""Checks if the sample provided is valid, based on SMI specific
 		criteria (for internal use)
