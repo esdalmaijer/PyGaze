@@ -2,22 +2,23 @@
 #
 # This file is part of PyGaze - the open-source toolbox for eye tracking
 #
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
+# PyGaze is a Python module for easily creating gaze contingent experiments
+# or other software (as well as non-gaze contingent experiments/software)
+# Copyright (C) 2012-2013 Edwin S. Dalmaijer
 #
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>
+
 
 from defaults import *
 try:
@@ -497,7 +498,7 @@ class libeyelink:
 		return gaze
 	
 	
-	def set_detection_type(eventdetection):
+	def set_detection_type(self, eventdetection):
 		
 		"""Set the event detection type to either PyGaze algorithms, or
 		native algorithms as provided by the manufacturer (only if
@@ -827,9 +828,9 @@ class libeyelink:
 			return libtime.get_time()	
 	
 	
-	def is_valid_sample(gazepos):
+	def is_valid_sample(self, gazepos):
 		
-		"""Checks if the sample provided is valid, based on SMI specific
+		"""Checks if the sample provided is valid, based on EyeLink specific
 		criteria (for internal use)
 		
 		arguments
@@ -843,10 +844,6 @@ class libeyelink:
 		
 		# return False if a sample is invalid
 		if gazepos == (-1,-1):
-			return False
-		# sometimes, on SMI devices, invalid samples can actually contain
-		# numbers; these do 
-		elif sum(gazepos) < 10 and 0.0 in gazepos:
 			return False
 		
 		# in any other case, the sample is valid
