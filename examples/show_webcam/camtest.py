@@ -31,7 +31,7 @@ kb = Keyboard()
 
 # webcam
 camlist = libwebcam.available_devices()
-cam = libwebcam.Camera(dev=camlist[0], resolution=CAMRES, verflip=VFLIP, horflip=HFLIP)
+cam = libwebcam.Camera(dev=camlist[0], devtype=DEVTYPE, resolution=CAMRES, verflip=VFLIP, horflip=HFLIP)
 
 
 # # # # #

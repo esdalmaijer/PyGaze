@@ -34,6 +34,7 @@ KEYLIST = None # None for all keys; list of keynames for keys of choice (e.g. ['
 KEYTIMEOUT = 1 # None for no timeout, or a value in milliseconds
 
 # CAMERA
+DEVTYPE = 'pygame'
 CAMRES = (640,480)
 VFLIP = False
 HFLIP = False
