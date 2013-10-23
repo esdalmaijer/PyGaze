@@ -21,6 +21,7 @@
 
 
 # TobiiTracker
+import copy
 import math
 import numpy
 
@@ -414,6 +415,14 @@ class TobiiTracker:
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
 
+		# start recording if recording has not yet started
+		if not self.recording:
+			self.start_recording()
+			stoprec = True
+		else:
+			stoprec = False
+
+		result = False
 		pressed = False
 		while not pressed:
 			pressed, presstime = self.kb.get_key()
@@ -423,10 +432,19 @@ class TobiiTracker:
 					return self.calibrate(calibrate=True, validate=True)
 				gazepos = self.sample()
 				if ((gazepos[0]-pos[0])**2  + (gazepos[1]-pos[1])**2)**0.5 < self.pxerrdist:
-					return True
+					result = True
 				else:
 					self.errorbeep.play()
-		return False
+		
+		# stop recording WITHOUT saving gaze data
+		if stoprec:
+			self.controller.eyetracker.StopTracking()
+			self.controller.eyetracker.events.OnGazeDataReceived -= self.controller.on_gazedata
+			self.controller.gazeData = []
+			self.controller.eventData = []
+			self.recording = False
+
+		return result
 	
 	
 	def fix_triggered_drift_correction(self, pos=None, min_samples=10, max_dev=60, reset_threshold=30):

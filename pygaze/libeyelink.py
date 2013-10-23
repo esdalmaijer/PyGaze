@@ -51,6 +51,8 @@ if DISPTYPE == 'pygame':
 	except:
 		raise Exception("Error in libeyelink: PyGame could not be loaded!")
 
+import copy
+import math
 import os.path
 import array
 from PIL import Image
@@ -115,6 +117,7 @@ class libeyelink:
 		self.set_detection_type(self.eventdetection)
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 		self.screendist = SCREENDIST # distance between participant and screen in cm
+		self.screensize = SCREENSIZE # distance between participant and screen in cm
 		self.pixpercm = (self.resolution[0]/float(self.screensize[0]) + self.resolution[1]/float(self.screensize[1])) / 2.0
 
 
@@ -235,6 +238,10 @@ class libeyelink:
 		# wait for spacepress
 		self.kb.get_key(keylist=['space'], timeout=None)
 
+		# start recording
+		self.log("PYGAZE RMS CALIBRATION START")
+		self.start_recording()
+
 		# show fixation
 		self.screen.fill()
 		self.scr.draw_fixation(fixtype='dot')
@@ -252,6 +259,11 @@ class libeyelink:
 			s = self.sample() # sample
 			if s != sl[-1] and s != (-1,-1) and s != (0,0):
 				sl.append(s)
+
+		# stop recording
+		self.log("PYGAZE RMS CALIBRATION END")
+		self.stop_recording()
+
 		# calculate RMS noise
 		Xvar = []
 		Yvar = []
