@@ -593,7 +593,7 @@ class PyGameKeyboard:
 		self.timeout = timeout
 
 
-	def get_key(self, keylist='default', timeout='default'):
+	def get_key(self, keylist='default', timeout='default', flush=False):
 
 		"""Wait for keyboard input
 		
@@ -608,6 +608,12 @@ class PyGameKeyboard:
 				   when no keypress is registered (default = None);
 				   None for no timeout or 'default' to use the timeout
 				   property (default = 'default')
+		flush		--	Boolean indicating if all input from before
+					calling get_key should be ignored, if set to
+					False keypresses from before calling this
+					function will be registered, otherwise every
+					keyboard input from before calling this function
+					will be flushed (default = False)
 		
 		returns
 		key, presstime	-- key is a string, indicating which button has
@@ -622,6 +628,10 @@ class PyGameKeyboard:
 			keylist = self.klist
 		if timeout == 'default':
 			timeout = self.timeout
+		
+		# flush if necessary
+		if flush:
+			pygame.event.get(pygame.KEYDOWN)
 			
 		# starttime
 		starttime = libtime.get_time()
@@ -741,7 +751,7 @@ class PsychoPyKeyboard:
 		self.timeout = timeout
 
 
-	def get_key(self, keylist='default', timeout='default'):
+	def get_key(self, keylist='default', timeout='default', flush=False):
 
 		"""Wait for keyboard input
 		
@@ -756,6 +766,12 @@ class PsychoPyKeyboard:
 				   when no keypress is registered (default = None);
 				   None for no timeout or 'default' to use the timeout
 				   property (default = 'default')
+		flush		--	Boolean indicating if all input from before
+					calling get_key should be ignored, if set to
+					False keypresses from before calling this
+					function will be registered, otherwise every
+					keyboard input from before calling this function
+					will be flushed (default = False)
 		
 		returns
 		key, presstime	-- key is a string, indicating which button has
@@ -771,8 +787,11 @@ class PsychoPyKeyboard:
 		if timeout == 'default':
 			timeout = self.timeout
 
+		# flush if necessary
+		if flush:
+			psychopy.event.clearEvents(eventType='keyboard')
+
 		# starttime
-		psychopy.event.clearEvents(eventType='keyboard')
 		starttime = libtime.get_time()
 		time = libtime.get_time()
 
