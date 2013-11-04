@@ -159,6 +159,7 @@ class SMItracker:
 		self.errdist = 2 # degrees; maximal error for drift correction
 		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
 		self.prevsample = (-1,-1)
+		self.prevps = -1
 		
 		# event detection properties
 		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
@@ -593,21 +594,37 @@ class SMItracker:
 		
 		returns
 		pupil size	-- returns pupil diameter for the eye that is currently
-				   being tracked (as specified by self.eye_used) or None
+				   being tracked (as specified by self.eye_used) or -1
 				   when no data is obtainable
 		"""
 
 		res = iViewXAPI.iV_GetSample(byref(sampleData))
 
+		# if a new sample exists
 		if res == 1:
+			# left eye
 			if self.eye_used == self.left_eye:
-				return sampleData.leftEye.diam
-			elif self.eye_used == self.right_eye:
-				return sampleData.rightEye.diam
+				ps = sampleData.leftEye.diam
+			# right eye
+			else:
+				ps = sampleData.rightEye.diam
+			# set prvious pupil size to newest pupil size
+			self.prevps = ps
+			
+			return ps
+		
+		# no new sample available
+		elif res == 2:
+			
+			return self.prevps
+		
+		# invalid data
 		else:
+			# print warning to interpreter
 			err = errorstring(res)
-			print("WARNING libsmi.SMItracker.sample: failed to obtain sample; %s" % err)
-			return None
+			print("WARNING libsmi.SMItracker.pupil_size: failed to obtain sample; %s" % err)
+			
+			return -1
 
 
 	def sample(self):

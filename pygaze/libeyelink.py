@@ -495,7 +495,7 @@ class libeyelink:
 		
 		returns
 		pupil size	-- returns pupil diameter for the eye that is currently
-				   being tracked (as specified by self.eye_used) or None
+				   being tracked (as specified by self.eye_used) or -1
 				   when no data is obtainable
 		"""
 
@@ -520,11 +520,11 @@ class libeyelink:
 			else:
 				ps = -1
 			# set new pupil size as previous pupil size
-			self.prevps = ps[:]
+			self.prevps = ps
 
 		# if no new sample is available, use old data
 		else:
-			ps = self.prevps[:]
+			ps = self.prevps
 
 		return ps
 
