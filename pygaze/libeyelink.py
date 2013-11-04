@@ -107,6 +107,7 @@ class libeyelink:
 		self.right_eye = 1
 		self.binocular = 2
 		self.prevsample = (-1,-1)
+		self.prevps = -1
 
 		# event detection properties
 		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
@@ -483,6 +484,49 @@ class libeyelink:
 			self.eye_used = self.left_eye
 		else:
 			print("WARNING libeyelink.libeyelink.set_eye_used(): Failed to determine which eye is being recorded")
+	
+	
+	def pupil_size(self):
+
+		"""Return pupil size
+		
+		arguments
+		None
+		
+		returns
+		pupil size	-- returns pupil diameter for the eye that is currently
+				   being tracked (as specified by self.eye_used) or None
+				   when no data is obtainable
+		"""
+
+		if not self.recording:
+			raise Exception("Error in libeyelink.libeyelink.pupil_size(): Recording was not started before collecting eyelink data!")
+
+		if self.eye_used == None:
+			self.set_eye_used()
+		
+		# get newest sample
+		s = pylink.getEYELINK().getNewestSample()
+		
+		# check if sample is new
+		if s != None:
+			# right eye
+			if self.eye_used == self.right_eye and s.isRightSample():
+				ps = s.getRightEye().getPupilSize()
+			# left eye
+			elif self.eye_used == self.left_eye and s.isLeftSample():
+				ps = s.getLeftEye().getPupilSize()
+			# invalid
+			else:
+				ps = -1
+			# set new pupil size as previous pupil size
+			self.prevps = ps[:]
+
+		# if no new sample is available, use old data
+		else:
+			ps = self.prevps[:]
+
+		return ps
 
 
 	def sample(self):
