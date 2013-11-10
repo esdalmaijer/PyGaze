@@ -1,1 +1,0 @@
-- Why does libtobii use `logfile` and libeyelink `datafile`? 
