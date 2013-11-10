@@ -22,7 +22,7 @@
 import sys
 import time
 
-from defaults import *
+from pygaze.defaults import *
 try:
 	from constants import *
 except:

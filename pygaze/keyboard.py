@@ -19,6 +19,31 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from keyboard import Keyboard
-from mouse import Mouse
-from joystick import Joystick
+from pygaze.defaults import *
+try:
+	from constants import *
+except:
+	pass
+
+class Keyboard:
+
+	"""A keyboard for collecting responses"""
+
+	def __init__(self, disptype=DISPTYPE, **args):
+
+		"""
+		Initializes the Keyboard object.
+		
+		TODO: docstring;
+		"""
+
+		if disptype == u'pygame':
+			from pygaze._keyboard.pygamekeyboard import PyGameKeyboard
+			self.__class__ = PyGameKeyboard
+		elif disptype == u'psychopy':
+			from pygaze._keyboard.psychopykeyboard import PsychoPyKeyboard
+			self.__class__ = PsychoPyKeyboard
+		else:
+			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__.__init__(self, **args)
+

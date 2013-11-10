@@ -20,13 +20,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-from defaults import *
+from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 
-import libtime
+from pygaze import libtime
 import libscreen
 from libinput import Keyboard
 from libsound import Sound
