@@ -16,7 +16,7 @@ from pygaze import liblog
 disp = libscreen.Display()
 
 # create keyboard object
-kb = libinput.Keyboard(keylist=['left','right'], timeout=2000)
+kb = libinput.Keyboard(keylist=['left','right','escape'], timeout=2000)
 
 # create logfile object
 log = liblog.Logfile()
@@ -55,6 +55,10 @@ for trialnr in range(1,21):
 	
 	# wait for input
 	response, t1 = kb.get_key()
+
+	# end the experiment when 'escape' is pressed
+	if response == 'escape':
+		break
 	
 	# process input
 	if response == trialtype:
