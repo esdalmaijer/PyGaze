@@ -31,7 +31,7 @@ class EyeTracker:
 	Generic EyeTracker class, which morphs into an eye-tracker specific class.
 	"""
 
-	def __init__(self, display, trackertype, **args):
+	def __init__(self, display, trackertype=TRACKERTYPE, **args):
 
 		"""
 		Initializes an EyeTracker object.
@@ -57,7 +57,7 @@ class EyeTracker:
 		# EyeLink
 		if trackertype == u'eyelink':
 			# import libraries
-			from pygaze.eyetrackers.libeyelink import libeyelink
+			from pygaze._eyetracker.libeyelink import libeyelink
 			# morph class
 			self.__class__ = libeyelink
 			# initialize
@@ -66,7 +66,7 @@ class EyeTracker:
 		# SMI
 		elif trackertype == u'smi':
 			# import libraries
-			from pygaze.eyetrackers.libsmi import SMItracker
+			from pygaze._eyetracker.libsmi import SMItracker
 			# morph class
 			self.__class__ = SMItracker
 			# initialize
@@ -75,7 +75,7 @@ class EyeTracker:
 		# Tobii
 		elif trackertype == u'tobii':
 			# import libraries
-			from pygaze.eyetrackers.libtobii import TobiiTracker
+			from pygaze._eyetracker.libtobii import TobiiTracker
 			# morph class
 			self.__class__ = TobiiTracker
 			# initialize
@@ -84,7 +84,7 @@ class EyeTracker:
 		# dummy mode
 		elif trackertype == u'dummy':
 			# import libraries
-			from pygaze.eyetrackers.libdummytracker import Dummy
+			from pygaze._eyetracker.libdummytracker import Dummy
 			# morph class
 			self.__class__ = Dummy
 			# initialize

@@ -32,9 +32,9 @@ except:
 	pass
 
 from pygaze import libtime
-import libscreen
-from libinput import Keyboard
-from libsound import Sound
+from pygaze import libscreen
+from pygaze.libinput import Keyboard
+from pygaze.libsound import Sound
 
 
 ## letobii 

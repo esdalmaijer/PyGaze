@@ -43,14 +43,10 @@ class PyGameDisplay:
 
 	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screen=None, **args):
 
-		"""Initializes the Display object
+		"""
+		Initializes the Display object.
 		
-		arguments
-		None
-
 		keyword arguments
-		disptype	-- type of display: either 'pygame' or 'psychopy'
-				   (default = DISPTYPE)
 		dispsize	-- size of the display in pixels: a (width, height)
 				   tuple (default = DISPSIZE)
 		fgc		-- the foreground colour: a colour name (e.g. 'red') or 
@@ -59,7 +55,6 @@ class PyGameDisplay:
 		bgc		-- the background colour: a colour name (e.g. 'red') or 
 				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
 				   (default = BGC)
-		screennr	-- the screen number: 0, 1 etc. (default = SCREENNR)
 		screen	-- a Screen object to be presented on the new Display
 				   (default=None)
 		"""
@@ -67,7 +62,6 @@ class PyGameDisplay:
 		self.dispsize = dispsize
 		self.fgc = fgc
 		self.bgc = bgc
-		self.screennr = screennr
 		self.mousevis = False
 
 		# initialize PyGame display-module
