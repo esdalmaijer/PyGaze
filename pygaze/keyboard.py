@@ -38,12 +38,15 @@ class Keyboard:
 		"""
 
 		if disptype == u'pygame':
-			from pygaze._keyboard.pygamekeyboard import PyGameKeyboard
-			self.__class__ = PyGameKeyboard
+			from pygaze._keyboard.pygamekeyboard import PyGameKeyboard as \
+				Keyboard
 		elif disptype == u'psychopy':
-			from pygaze._keyboard.psychopykeyboard import PsychoPyKeyboard
-			self.__class__ = PsychoPyKeyboard
+			from pygaze._keyboard.psychopykeyboard import PsychoPyKeyboard as \
+				Keyboard
+		elif disptype == u'opensesame':
+			from pygaze._keyboard.oskeyboard import OSKeyboard as \
+				Keyboard
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Keyboard
 		self.__class__.__init__(self, **args)
-

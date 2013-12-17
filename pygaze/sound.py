@@ -37,9 +37,9 @@ class Sound:
 		TODO: docstring.
 		"""
 
-		if disptype in (u'pygame', u'psychopy'):
-			from pygaze._sound.pygamesound import PyGameSound
-			self.__class__ = PyGameSound
+		if disptype in (u'pygame', u'psychopy', u'opensesame'):
+			from pygaze._sound.pygamesound import PyGameSound as Sound
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Sound
 		self.__class__.__init__(self, **args)

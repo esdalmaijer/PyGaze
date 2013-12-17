@@ -38,11 +38,13 @@ class Display:
 		"""
 
 		if disptype == u'pygame':
-			from pygaze._display.pygamedisplay import PyGameDisplay
-			self.__class__ = PyGameDisplay
+			from pygaze._display.pygamedisplay import PyGameDisplay as Display
 		elif disptype == u'psychopy':
-			from pygaze._display.psychopydisplay import PsychoPyDisplay
-			self.__class__ = PsychoPyDisplay
+			from pygaze._display.psychopydisplay import PsychoPyDisplay  as \
+				Display
+		elif disptype == u'opensesame':
+			from pygaze._display.osdisplay import OSDisplay as Display
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Display
 		self.__class__.__init__(self, **args)

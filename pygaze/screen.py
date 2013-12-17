@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #
 # This file is part of PyGaze - the open-source toolbox for eye tracking
@@ -19,11 +20,16 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze import defaults
+print 'DISPTYPE =', defaults.DISPTYPE
 from pygaze.defaults import *
+print 'DISPTYPE =', DISPTYPE
 try:
 	from constants import *
 except:
 	pass
+
+print 'DISPTYPE =', DISPTYPE
 
 class Screen:
 
@@ -57,13 +63,14 @@ class Screen:
 		"""
 
 		if disptype == u'pygame':
-			from pygaze._screen.pygamescreen import PyGameScreen
-			self.__class__ = PyGameScreen
+			from pygaze._screen.pygamescreen import PyGameScreen as Screen
 		elif disptype == u'psychopy':
-			from pygaze._screen.psychopyscreen import PsychoPyScreen
-			self.__class__ = PsychoPyScreen
+			from pygaze._screen.psychopyscreen import PsychoPyScreen as Screen
+		elif disptype == u'opensesame':
+			from pygaze._screen.osscreen import OSScreen as Screen
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Screen
 		self.__class__.__init__(self, **args)
 
 

@@ -38,11 +38,12 @@ class Mouse:
 		"""
 
 		if disptype == u'pygame':
-			from pygaze._mouse.pygamemouse import PyGameMouse
-			self.__class__ = PyGameMouse
+			from pygaze._mouse.pygamemouse import PyGameMouse as Mouse
 		elif disptype == u'psychopy':
-			from pygaze._mouse.psychopymouse import PsychoPyMouse
-			self.__class__ = PsychoPyMouse
+			from pygaze._mouse.psychopymouse import PsychoPyMouse as Mouse
+		elif disptype == u'opensesame':
+			from pygaze._mouse.osmouse import OSMouse as Mouse
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Mouse
 		self.__class__.__init__(self, **args)
