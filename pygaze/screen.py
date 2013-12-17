@@ -21,15 +21,11 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze import defaults
-print 'DISPTYPE =', defaults.DISPTYPE
 from pygaze.defaults import *
-print 'DISPTYPE =', DISPTYPE
 try:
 	from constants import *
 except:
 	pass
-
-print 'DISPTYPE =', DISPTYPE
 
 class Screen:
 
