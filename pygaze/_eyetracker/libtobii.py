@@ -25,16 +25,16 @@ import copy
 import math
 import numpy
 
-from defaults import *
+from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 
-import libtime
-import libscreen
-from libinput import Keyboard
-from libsound import Sound
+from pygaze import libtime
+from pygaze import libscreen
+from pygaze.libinput import Keyboard
+from pygaze.libsound import Sound
 
 
 ## letobii 

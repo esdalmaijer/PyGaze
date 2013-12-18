@@ -19,20 +19,31 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import sys
-import time
-
 from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 
-if DISPTYPE == u'psychopy':
-	from pygaze._time.psychopytime import *
-elif DISPTYPE == u'pygame':
-	from pygaze._time.pygametime import *
-elif DISPTYPE == u'opensesame':
-	from pygaze._time.ostime import *
-else:
-	raise Exception(u'Unexpected disptype : %s' % disptype)
+class Mouse:
+
+	"""A mouse for collecting responses"""
+
+	def __init__(self, disptype=DISPTYPE, **args):
+
+		"""
+		Initializes the Mouse object.
+		
+		TODO: docstring.
+		"""
+
+		if disptype == u'pygame':
+			from pygaze._mouse.pygamemouse import PyGameMouse as Mouse
+		elif disptype == u'psychopy':
+			from pygaze._mouse.psychopymouse import PsychoPyMouse as Mouse
+		elif disptype == u'opensesame':
+			from pygaze._mouse.osmouse import OSMouse as Mouse
+		else:
+			raise Exception(u'Unexpected disptype : %s' % disptype)
+		self.__class__ = Mouse
+		self.__class__.__init__(self, **args)

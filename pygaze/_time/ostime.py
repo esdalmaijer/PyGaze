@@ -18,6 +18,33 @@
 #
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
- 
-from screen import Screen
-from display import Display
+
+from pygaze.defaults import osexperiment
+try:
+	from constants import osexperiment
+except:
+	pass
+
+def expstart():
+	
+	"""See _time.pygametime"""
+
+	pass
+
+def get_time():
+
+	"""See _time.pygametime"""
+
+	return osexperiment.time()
+
+def pause(pausetime):
+
+	"""See _time.pygametime"""
+
+	return osexperiment.sleep(pausetime)
+
+def expend():
+
+	"""See _time.pygametime"""
+
+	return osexperiment.time()

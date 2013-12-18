@@ -19,17 +19,17 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from defaults import *
+from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 	
-import libtime
-import libscreen
-from libinput import Mouse
-from libinput import Keyboard
-from libsound import Sound
+from pygaze import libtime
+from pygaze import libscreen
+from pygaze.libinput import Mouse
+from pygaze.libinput import Keyboard
+from pygaze.libsound import Sound
 
 class Dummy:
 

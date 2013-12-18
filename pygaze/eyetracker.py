@@ -19,65 +19,77 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from defaults import *
+from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 
-
 class EyeTracker:
 
-	"""EyeTracker class, which morphes into either an Eyelink, SMItracker or DummyTracker object"""
+	"""
+	Generic EyeTracker class, which morphs into an eye-tracker specific class.
+	"""
 
-	def __init__(self, display, trackertype=TRACKERTYPE, resolution=DISPSIZE, eyedatafile=LOGFILENAME, logfile=LOGFILE, fgc=FGC, bgc=BGC, saccvelthresh=SACCVELTHRESH, saccaccthresh=SACCACCTHRESH, ip=SMIIP, sendport=SMISENDPORT, receiveport=SMIRECEIVEPORT):
+	def __init__(self, display, trackertype=TRACKERTYPE, **args):
 
-		"""Initializes an EyeTracker object"""
+		"""
+		Initializes an EyeTracker object.
+		
+		Arguments:
+		display			--	A pygaze.screen.Display object.
+		trackertype		--	The type of eye tracker.
+		
+		Keyword arguments:
+		**args			--	A keyword-argument dictionary that contains
+							eye-tracker-specific options.
+		"""
 
 		# set trackertype to dummy in dummymode
 		if DUMMYMODE:
-			trackertype = 'dummy'
+			trackertype = u'dummy'
 	
 		# correct wrong input
-		if trackertype not in ['eyelink','smi','tobii','dummy']:
-			trackertype = 'dummy'
-			raise Exception("Error in eyetracker.EyeTracker: trackertype not recognized; it should be one of 'eyelink', 'smi', 'tobii', 'dummy'")
+		if trackertype not in [u'eyelink', u'smi', u'tobii', u'dummy']:
+			raise Exception( \
+				u"Error in eyetracker.EyeTracker: trackertype not recognized; it should be one of 'eyelink', 'smi', 'tobii', 'dummy'")
 
 		# EyeLink
-		if trackertype == 'eyelink':
+		if trackertype == u'eyelink':
 			# import libraries
-			from libeyelink import libeyelink
+			from pygaze._eyetracker.libeyelink import libeyelink
 			# morph class
 			self.__class__ = libeyelink
 			# initialize
-			self.__class__.__init__(self, display, resolution=resolution, data_file=eyedatafile+".edf", fg_color=fgc, bg_color=bgc, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
+			self.__class__.__init__(self, display, **args)
 			
 		# SMI
-		elif trackertype == 'smi':
+		elif trackertype == u'smi':
 			# import libraries
-			from libsmi import SMItracker
+			from pygaze._eyetracker.libsmi import SMItracker
 			# morph class
 			self.__class__ = SMItracker
 			# initialize
-			self.__class__.__init__(self, display, ip=ip, sendport=sendport, receiveport=receiveport, logfile=logfile, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
+			self.__class__.__init__(self, display, **args)
 
 		# Tobii
-		elif trackertype == 'tobii':
+		elif trackertype == u'tobii':
 			# import libraries
-			from libtobii import TobiiTracker
+			from pygaze._eyetracker.libtobii import TobiiTracker
 			# morph class
 			self.__class__ = TobiiTracker
 			# initialize
-			self.__class__.__init__(self, display, logfile=logfile, eventdetection=EVENTDETECTION, saccade_velocity_threshold=saccvelthresh, saccade_acceleration_threshold=saccaccthresh)
+			self.__class__.__init__(self, display, **args)
 
 		# dummy mode
-		elif trackertype == 'dummy':
+		elif trackertype == u'dummy':
 			# import libraries
-			from libdummytracker import Dummy
+			from pygaze._eyetracker.libdummytracker import Dummy
 			# morph class
 			self.__class__ = Dummy
 			# initialize
 			self.__class__.__init__(self, display)
 
 		else:
-			raise Exception("Error in eyetracker.EyeTracker.__init__: trackertype not recognized, this should not happen!")
+			raise Exception( \
+				u"Error in eyetracker.EyeTracker.__init__: trackertype not recognized, this should not happen!")

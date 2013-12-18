@@ -1,39 +1,48 @@
 # example script for using PyGaze
 
+from libopensesame.experiment import experiment
+src = '/home/sebastiaan/git/opensesame/resources/templates/default.opensesame'
+exp = experiment(string=src)
+exp.init_display()
+
 # # # # #
 # importing the relevant libraries
 import random
-import constants
 from pygaze import libscreen
 from pygaze import libtime
 from pygaze import libinput
 from pygaze import liblog
+from pygaze import defaults
+defaults.osexperiment = exp
+
+w = 1024
+h = 768
 
 # # # # #
 # setup the experiment
 
 # create display object
-disp = libscreen.Display()
+disp = libscreen.Display(disptype='opensesame')
 
 # create keyboard object
-kb = libinput.Keyboard(keylist=['left','right','escape'], timeout=2000)
+kb = libinput.Keyboard(disptype='opensesame', keylist=['left','right','escape'], timeout=2000)
 
 # create logfile object
 log = liblog.Logfile()
 log.write(["trialnr", "trialtype", "response", "RT", "correct"])
 
 # create screens
-fixscreen = libscreen.Screen()
+fixscreen = libscreen.Screen(disptype='opensesame')
 fixscreen.draw_fixation(fixtype='cross',pw=2)
 targetscreens = {}
-targetscreens['left'] = libscreen.Screen()
-targetscreens['left'].draw_circle(pos=(constants.DISPSIZE[0]*0.25,constants.DISPSIZE[1]/2), fill=True)
-targetscreens['right'] = libscreen.Screen()
-targetscreens['right'].draw_circle(pos=(constants.DISPSIZE[0]*0.75,constants.DISPSIZE[1]/2), fill=True)
+targetscreens['left'] = libscreen.Screen(disptype='opensesame')
+targetscreens['left'].draw_circle(pos=(w*0.25,h/2), fill=True)
+targetscreens['right'] = libscreen.Screen(disptype='opensesame')
+targetscreens['right'].draw_circle(pos=(w*0.75,h/2), fill=True)
 feedbackscreens = {}
-feedbackscreens[1] = libscreen.Screen()
+feedbackscreens[1] = libscreen.Screen(disptype='opensesame')
 feedbackscreens[1].draw_text(text='correct', colour=(0,255,0))
-feedbackscreens[0] = libscreen.Screen()
+feedbackscreens[0] = libscreen.Screen(disptype='opensesame')
 feedbackscreens[0].draw_text(text='incorrect', colour=(255,0,0))
 
 # # # # #
