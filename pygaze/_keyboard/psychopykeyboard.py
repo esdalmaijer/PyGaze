@@ -25,7 +25,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 from pygaze._screen.psychopyscreen import pos2psychopos, psychopos2pos
 import psychopy.event
 
@@ -170,15 +170,15 @@ class PsychoPyKeyboard:
 			psychopy.event.clearEvents(eventType='keyboard')
 
 		# starttime
-		starttime = libtime.get_time()
-		time = libtime.get_time()
+		starttime = pygaze.clock.get_time()
+		time = pygaze.clock.get_time()
 
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
 			keys = psychopy.event.getKeys(keyList=keylist,timeStamped=False)
 			for key in keys:
 				if keylist == None or key in keylist:
-					return key, libtime.get_time()
-			time = libtime.get_time()
+					return key, pygaze.clock.get_time()
+			time = pygaze.clock.get_time()
 
 		return None, time

@@ -26,7 +26,6 @@ except:
 	pass
 
 import pygaze
-from pygaze import libtime
 
 import copy
 import math
@@ -91,7 +90,7 @@ class PyGameDisplay:
 		"""
 
 		pygame.display.flip()
-		return libtime.get_time()
+		return pygaze.clock.get_time()
 
 	def show_part(self, rect, screen=None):
 
@@ -130,7 +129,7 @@ class PyGameDisplay:
 		else:
 			raise Exception("Error in libscreen.Display.show_part: rect should be a single rect (i.e. a (x,y,w,h) tuple) or a list of rects!")
 		
-		return libtime.get_time()
+		return pygaze.clock.get_time()
 
 
 	def fill(self, screen=None):

@@ -25,7 +25,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 import pygame
 from pygame.joystick import Joystick
 
@@ -132,14 +132,14 @@ class PyGameJoystick:
 		if timeout == 'default':
 			timeout = self.timeout
 		# register start time
-		starttime = libtime.get_time()
+		starttime = pygaze.clock.get_time()
 		time = starttime
 		# wait for button press
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBUTTONDOWN:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					if joybuttonlist == None or event.button in joybuttonlist:
 						pressed = event.button
 						return pressed, time
@@ -173,14 +173,14 @@ class PyGameJoystick:
 			timeout = self.timeout
 		# start time and pos
 		pos = []
-		starttime = libtime.get_time()
+		starttime = pygaze.clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYAXISMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					for axis in range(self.js.get_numaxes()):
 						pos.append(self.js.get_axis(axis))
 					return pos, time
@@ -214,14 +214,14 @@ class PyGameJoystick:
 			timeout = self.timeout
 		# start time and pos
 		ballpos = []
-		starttime = libtime.get_time()
+		starttime = pygaze.clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBALLMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					for ball in range(self.js.get_numballs()):
 						ballpos.append(self.js.get_ball(ball))
 					return ballpos, time
@@ -255,14 +255,14 @@ class PyGameJoystick:
 			timeout = self.timeout
 		# start time and pos
 		hatpos = []
-		starttime = libtime.get_time()
+		starttime = pygaze.clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYHATMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					for hat in range(self.js.get_numhats()):
 						hatpos.append(self.js.get_hat(hat))
 					return hatpos, time
@@ -319,32 +319,32 @@ class PyGameJoystick:
 		ballpos = []
 		hatpos = []
 		eventtype = None
-		starttime = libtime.get_time()
+		starttime = pygaze.clock.get_time()
 		time = starttime
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBUTTONDOWN:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					if joybuttonlist == None or event.button in joybuttonlist:
 						eventtype = 'joybuttonpress'
 						pressed = event.button
 						return eventtype, pressed, time
 				if event.type == pygame.JOYAXISMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					eventtype = 'joyaxismotion'
 					for axis in range(self.js.get_numaxes()):
 						pos.append(self.js.get_axis(axis))
 					return eventtype, pos, time
 				if event.type == pygame.JOYBALLMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					eventtype = 'joyballmotion'
 					for ball in range(self.js.get_numballs()):
 						ballpos.append(self.js.get_ball(ball))
 					return eventtype, ballpos, time
 				if event.type == pygame.JOYHATMOTION:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					eventtype = 'joyhatmotion'
 					for hat in range(self.js.get_numhats()):
 						hatpos.append(self.js.get_hat(hat))

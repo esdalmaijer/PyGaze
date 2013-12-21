@@ -26,7 +26,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 from pygaze import libscreen
 from pygaze.libinput import Mouse
 from pygaze.libinput import Keyboard
@@ -251,12 +251,12 @@ class libeyelink:
 		self.scr.clear()
 
 		# wait for a bit, to allow participant to fixate
-		libtime.pause(500)
+		pygaze.clock.pause(500)
 
 		# get samples
 		sl = [self.sample()] # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
-		t0 = libtime.get_time() # starting time
-		while libtime.get_time() - t0 < 1000:
+		t0 = pygaze.clock.get_time() # starting time
+		while pygaze.clock.get_time() - t0 < 1000:
 			s = self.sample() # sample
 			if s != sl[-1] and s != (-1,-1) and s != (0,0):
 				sl.append(s)
@@ -429,7 +429,7 @@ class libeyelink:
 			if i > self.MAX_TRY:
 				raise Exception("Error in libeyelink.libeyelink.start_recording(): Failed to start recording!")
 				self.close()
-				libtime.expend()
+				pygaze.clock.expend()
 			i += 1
 			print("WARNING libeyelink.libeyelink.start_recording(): Failed to start recording (attempt %d of %d)" % (i, self.MAX_TRY))
 			pylink.msecDelay(100)
@@ -639,7 +639,7 @@ class libeyelink:
 			while not self.is_valid_sample(newpos):
 				newpos = self.sample()
 			# get starting time, position, intersampledistance, and velocity
-			t0 = libtime.get_time()
+			t0 = pygaze.clock.get_time()
 			prevpos = newpos[:]
 			s = 0
 			v0 = 0
@@ -649,7 +649,7 @@ class libeyelink:
 			while not saccadic:
 				# get new sample
 				newpos = self.sample()
-				t1 = libtime.get_time()
+				t1 = pygaze.clock.get_time()
 				if self.is_valid_sample(newpos) and newpos != prevpos:
 					# check if distance is larger than precision error
 					sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
@@ -664,7 +664,7 @@ class libeyelink:
 						if v1 > self.pxspdtresh or a > self.pxacctresh:
 							saccadic = True
 							spos = prevpos[:]
-							stime = libtime.get_time()
+							stime = pygaze.clock.get_time()
 						# update previous values
 						t0 = copy.copy(t1)
 						v0 = copy.copy(v1)
@@ -699,7 +699,7 @@ class libeyelink:
 			while not self.is_valid_sample(prevpos):
 				prevpos = self.sample()
 			# get starting time, intersample distance, and velocity
-			t1 = libtime.get_time()
+			t1 = pygaze.clock.get_time()
 			s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
 			v0 = s / (t1-t0)
 	
@@ -708,7 +708,7 @@ class libeyelink:
 			while saccadic:
 				# get new sample
 				newpos = self.sample()
-				t1 = libtime.get_time()
+				t1 = pygaze.clock.get_time()
 				if self.is_valid_sample(newpos) and newpos != prevpos:
 					# calculate distance
 					s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
@@ -720,7 +720,7 @@ class libeyelink:
 					if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 						saccadic = False
 						epos = newpos[:]
-						etime = libtime.get_time()
+						etime = pygaze.clock.get_time()
 					# update previous values
 					t0 = copy.copy(t1)
 					v0 = copy.copy(v1)
@@ -756,7 +756,7 @@ class libeyelink:
 				spos = self.sample()
 			
 			# get starting time
-			t0 = libtime.get_time()
+			t0 = pygaze.clock.get_time()
 	
 			# wait for reasonably stable position
 			moving = True
@@ -769,11 +769,11 @@ class libeyelink:
 					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
 						# if not, reset starting position and time
 						spos = copy.copy(npos)
-						t0 = libtime.get_time()
+						t0 = pygaze.clock.get_time()
 					# if new sample is close to starting sample
 					else:
 						# get timestamp
-						t1 = libtime.get_time()
+						t1 = pygaze.clock.get_time()
 						# check if fixation time threshold has been surpassed
 						if t1 - t0 >= self.fixtimetresh:
 							# return time and starting position
@@ -814,7 +814,7 @@ class libeyelink:
 						# break loop if deviation is too high
 						break
 	
-			return libtime.get_time(), spos	
+			return pygaze.clock.get_time(), spos	
 
 
 	def wait_for_blink_start(self):
@@ -843,11 +843,11 @@ class libeyelink:
 				# check if it's a valid sample
 				if not self.is_valid_sample(gazepos):
 					# get timestamp for possible blink start
-					t0 = libtime.get_time()
+					t0 = pygaze.clock.get_time()
 					# loop until a blink is determined, or a valid sample occurs
 					while not self.is_valid_sample(self.sample()):
 						# check if time has surpassed 150 ms
-						if libtime.get_time()-t0 >= 150:
+						if pygaze.clock.get_time()-t0 >= 150:
 							# return timestamp of blink start
 							return t0
 
@@ -881,7 +881,7 @@ class libeyelink:
 					blinking = False
 			
 			# return timestamp of blink end
-			return libtime.get_time()	
+			return pygaze.clock.get_time()	
 	
 	
 	def is_valid_sample(self, gazepos):

@@ -25,7 +25,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 import pygame
 
 class PyGameMouse:
@@ -192,14 +192,14 @@ class PyGameMouse:
 		if timeout == 'default':
 			timeout = self.timeout
 		# starttime
-		starttime = libtime.get_time()
-		time = libtime.get_time()
+		starttime = pygaze.clock.get_time()
+		time = pygaze.clock.get_time()
 		# wait for mouse clicks
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.MOUSEBUTTONDOWN:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					clickpos = self.get_pos()
 					if mousebuttonlist == None or event.button in mousebuttonlist:
 						pressed = event.button

@@ -45,9 +45,13 @@ if os.path.isdir(FONTDIR):
 
 # Import core modules, so that can be easily ported like
 # `from pygaze import Screen`, etc.
+from display import Display
 from screen import Screen
 from eyetracker import EyeTracker
+from keyboard import Keyboard
 from mouse import Mouse
+from time import Time
 
 # start timing
-libtime.expstart()
+clock = Time()
+clock.expstart()

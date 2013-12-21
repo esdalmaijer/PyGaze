@@ -26,7 +26,7 @@ except:
 	pass
 
 import pygaze
-from pygaze import libtime
+from pygaze.screen import pos2psychopos, psychopos2pos, rgb2psychorgb
 
 import copy
 import math
@@ -36,6 +36,7 @@ import psychopy
 from psychopy.visual import Window
 from psychopy.visual import GratingStim
 from psychopy.visual import Circle
+from psychopy.visual import Rect
 from psychopy.visual import Line
 from psychopy.visual import ShapeStim
 from psychopy.visual import TextStim
@@ -168,9 +169,9 @@ class PsychoPyScreen:
 		pos = pos2psychopos(pos,dispsize=self.dispsize)
 
 		if fill:
-			self.screen.append(Circle(pygaze.expdisplay, radius=r, edges=32, pos=pos, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb'))
+			self.screen.append(Circle(pygaze.expdisplay, radius=r, edges=32, pos=pos, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb'))
 		else:
-			self.screen.append(Circle(pygaze.expdisplay, radius=r-pw, edges=32, pos=pos, lineColor=colour, lineColorSpace='rgb'))
+			self.screen.append(Circle(pygaze.expdisplay, radius=r-pw, edges=32, pos=pos, lineWidth=pw, lineColor=colour, lineColorSpace='rgb'))
 		
 
 	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1, fill=False):
@@ -216,9 +217,13 @@ class PsychoPyScreen:
 		pos = pos2psychopos(pos,dispsize=self.dispsize)
 		pos = pos[0] + w/2, pos[1] - h/2
 
-		self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=pos, size=(w,h), color=colour))
-		if not fill:
-			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=pos, size=(w-2*pw,h-2*pw), color=rgb2psychorgb(self.bgc)))
+		#self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=pos, size=(w,h), color=colour))
+		if fill:
+			self.screen.append(Circle(pygaze.expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb', pos=pos, size=(w,h)))
+		else:
+			self.screen.append(Circle(pygaze.expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=None, pos=pos, size=(w,h)))
+#		if not fill:
+#			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=(pos[0]+pw,pos[1]+pw), size=(w-2*pw,h-2*pw), color=rgb2psychorgb(self.bgc)))
 
 		
 	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1, fill=False):
@@ -260,9 +265,14 @@ class PsychoPyScreen:
 		pos = pos2psychopos(pos,dispsize=self.dispsize)
 		pos = pos[0] + w/2, pos[1] - h/2
 
-		self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=pos, size=[w,h], color=colour))
-		if not fill:
-			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=pos, size=[w-2,h-2], color=rgb2psychorgb(self.bgc)))
+		if fill:
+			self.screen.append(Rect(pygaze.expdisplay, width=w, height=h, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb', pos=pos))
+		else:
+			self.screen.append(Rect(pygaze.expdisplay, width=w, height=h, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=None, pos=pos))
+
+#		self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=pos, size=[w,h], color=colour))
+#		if not fill:
+#			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=(pos[0]+pw,pos[1]+pw), size=[w-2*pw,h-2*pw], color=rgb2psychorgb(self.bgc)))
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
 
@@ -503,81 +513,81 @@ class PsychoPyScreen:
 # functions #
 # # # # # # #
 
-def pos2psychopos(pos, dispsize=None):
+#def pos2psychopos(pos, dispsize=None):
 
-	"""Returns a converted position tuple (x,y) (internal use)
+	#"""Returns a converted position tuple (x,y) (internal use)
 	
-	arguments
-	pos		-- a (x,y) position tuple, assuming (0,0) is top left
+	#arguments
+	#pos		-- a (x,y) position tuple, assuming (0,0) is top left
 	
-	keyword arguments
-	dispsize	-- a (width, height) tuple for the display resolution or None
-			   for autodetecting the size of current active window
-			   (default = None)
+	#keyword arguments
+	#dispsize	-- a (width, height) tuple for the display resolution or None
+			   #for autodetecting the size of current active window
+			   #(default = None)
 	
-	returns
-	pos		-- a (x,y) tuple that makes sense to PsychoPy (i.e. (0,0) is
-			   display center; bottom left is (-,-) and top right is
-			   (+,+))
-	"""
+	#returns
+	#pos		-- a (x,y) tuple that makes sense to PsychoPy (i.e. (0,0) is
+			   #display center; bottom left is (-,-) and top right is
+			   #(+,+))
+	#"""
 
-	if dispsize == None:
-		dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
+	#if dispsize == None:
+		#dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
 
-	x = pos[0] - dispsize[0]/2
-	y = (pos[1] - dispsize[1]/2) * -1
+	#x = pos[0] - dispsize[0]/2
+	#y = (pos[1] - dispsize[1]/2) * -1
 
-	return (x,y)
+	#return (x,y)
 
 
-def psychopos2pos(pos, dispsize=None):
+#def psychopos2pos(pos, dispsize=None):
 
-	"""Returns a converted position tuple (x,y) (internal use)
+	#"""Returns a converted position tuple (x,y) (internal use)
 	
-	arguments
-	pos		-- a (x,y) tuple that makes sense to PsychoPy (i.e. (0,0) is
-			   display center; bottom left is (-,-) and top right is
-			   (+,+))
+	#arguments
+	#pos		-- a (x,y) tuple that makes sense to PsychoPy (i.e. (0,0) is
+			   #display center; bottom left is (-,-) and top right is
+			   #(+,+))
 	
-	keyword arguments
-	dispsize	-- a (width, height) tuple for the display resolution or None
-			   for autodetecting the size of current active window
-			   (default = None)
+	#keyword arguments
+	#dispsize	-- a (width, height) tuple for the display resolution or None
+			   #for autodetecting the size of current active window
+			   #(default = None)
 	
-	returns
-	pos		-- a (x,y) position tuple, assuming (0,0) is top left
-	"""
+	#returns
+	#pos		-- a (x,y) position tuple, assuming (0,0) is top left
+	#"""
 
-	if dispsize == None:
-		dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
+	#if dispsize == None:
+		#dispsize = tuple(psychopy.visual.openWindows[SCREENNR].size)
 
-	x = pos[0] + dispsize[0]/2
-	y = (pos[1] * -1) + dispsize[1]/2
+	#x = pos[0] + dispsize[0]/2
+	#y = (pos[1] * -1) + dispsize[1]/2
 
-	return (x,y)
+	#return (x,y)
 
 
-def rgb2psychorgb(rgbgun):
+#def rgb2psychorgb(rgbgun):
 
-	"""Returns a converted RGB gun
+	#"""Returns a converted RGB gun
 	
-	arguments
-	rgbgun	-- a (R,G,B) or (R,G,B,A) tuple containing values between 0
-			   and 255; other values (e.g. 'red' or hex values) may be
-			   passed as well, but will be returned as they were
-	returns
-	psyrgb	-- a (R,G,B) tuple containing values between -1 and 1; or
-			   rgbgun when passed rgbgun was not a tuple or a list
-	"""
+	#arguments
+	#rgbgun	-- a (R,G,B) or (R,G,B,A) tuple containing values between 0
+			   #and 255; other values (e.g. 'red' or hex values) may be
+			   #passed as well, but will be returned as they were
+	#returns
+	#psyrgb	-- a (R,G,B) tuple containing values between -1 and 1; or
+			   #rgbgun when passed rgbgun was not a tuple or a list
+	#"""
 	
-	if type(rgbgun) not in [tuple,list]:
-		return rgbgun
+	#if type(rgbgun) not in [tuple,list]:
+		#return rgbgun
 
-	psyrgb = []
+	#psyrgb = []
 
-	for val in rgbgun:
-		psyrgb.append((val/127.5)-1)
+	#for val in rgbgun:
+		#psyrgb.append((val/127.5)-1)
 	
-	# return (R,G,B), since PsychoPy does not like alpha channels anymore
+	## return (R,G,B), since PsychoPy does not like alpha channels anymore
 	
-	return tuple(psyrgb[0:3])
+	#return tuple(psyrgb[0:3])

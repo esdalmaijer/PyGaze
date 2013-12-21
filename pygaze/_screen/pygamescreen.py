@@ -27,7 +27,6 @@ except:
 
 import warnings
 import pygaze
-from pygaze import libtime
 
 import copy
 import math
@@ -161,7 +160,7 @@ class PyGameScreen:
 		if fill:
 			pw = 0
 
-		pygame.draw.circle(self.screen, colour, pos, r, pw)
+		pygame.draw.circle(self.screen, colour, (int(pos[0]),int(pos[1])), int(r), int(pw))
 		
 
 	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1, fill=False):
@@ -204,7 +203,7 @@ class PyGameScreen:
 		if fill:
 			pw = 0
 
-		pygame.draw.ellipse(self.screen, colour, [x,y,w,h], pw)
+		pygame.draw.ellipse(self.screen, colour, [int(x),int(y),int(w),int(h)], int(pw))
 
 		
 	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1, fill=False):
@@ -243,7 +242,7 @@ class PyGameScreen:
 		if fill:
 			pw = 0
 
-		pygame.draw.rect(self.screen, colour, [x,y,w,h], pw)
+		pygame.draw.rect(self.screen, colour, [int(x),int(y),int(w),int(h)], int(pw))
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
 
@@ -276,7 +275,7 @@ class PyGameScreen:
 		if epos == None:
 			epos = (int(self.dispsize[0]*0.75), self.dispsize[1]/2)
 
-		pygame.draw.line(self.screen, colour, spos, epos, pw)
+		pygame.draw.line(self.screen, colour, (int(spos[0]),int(spos[1])), (int(epos[0]),int(epos[1])), int(pw))
 
 
 	def draw_polygon(self, pointlist, colour=None, pw=1, fill=True):
@@ -305,8 +304,11 @@ class PyGameScreen:
 			colour = self.fgc
 		if fill:
 			pw = 0
+		
+		for i in range(len(pointlist)):
+			pointlist[i] = [int(pointlist[i][0]),int(pointlist[i][1])]
 
-		pygame.draw.polygon(self.screen, colour, pointlist, pw)
+		pygame.draw.polygon(self.screen, colour, pointlist, int(pw))
 
 
 	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1, diameter=12):
@@ -345,8 +347,11 @@ class PyGameScreen:
 			colour = self.fgc
 		if pos == None:
 			pos = (self.dispsize[0]/2, self.dispsize[1]/2)
+		
+		pos = [int(pos[0]),int(pos[1])]
+		r = int(diameter/2)
+		pw = int(pw)
 
-		r = diameter/2
 		if fixtype == 'cross':
 			pygame.draw.line(self.screen, colour, (pos[0]-r, pos[1]), (pos[0]+r, pos[1]), pw)
 			pygame.draw.line(self.screen, colour, (pos[0], pos[1]-r), (pos[0], pos[1]+r), pw)
@@ -400,6 +405,9 @@ class PyGameScreen:
 			pygame.font.init()
 		
 		fontname = os.path.join(pygaze.FONTDIR, font) + '.ttf'
+		if not os.path.isfile(fontname):
+			print("WARNING: screen.Screen: could not find font '%s'; using default instead" % fontname)
+			fontname = pygame.font.get_default_font()
 		font = pygame.font.Font(fontname, fontsize)
 		
 		lines = text.split("\n")
@@ -413,7 +421,7 @@ class PyGameScreen:
 				linepos = (pos[0] - font.size(lines[lnr])[0]/2, pos[1] + lineh * (2 * (lnr - (len(lines)/2.0) + 0.5)))
 			else:
 				linepos = (pos[0], pos[1] + 2 * lnr)
-			self.screen.blit(txtsurf, linepos)
+			self.screen.blit(txtsurf, (int(linepos[0]),int(linepos[1])))
 	
 	
 	def draw_image(self, image, pos=None, scale=None):
@@ -467,7 +475,7 @@ class PyGameScreen:
 		if scale != None:
 			pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
 		
-		imgpos = (pos[0] - img.get_width()/2, pos[1] - img.get_height()/2)
+		imgpos = (int(pos[0] - img.get_width()/2), int(pos[1] - img.get_height()/2))
 		
 		self.screen.blit(img, imgpos)
 

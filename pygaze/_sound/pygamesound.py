@@ -171,11 +171,19 @@ class PyGameSound:
 		None		-- self.sound is panned
 		"""
 
+		# raise exception on wrong input
 		if type(panning) not in (int, float) and panning not in ['left','right']:
-			raise Exception("Error in libsound.Sound.pan(): panning must be a value between 0.0 and 1.0 or either 'left' or 'right'.")
+			raise Exception("Error in libsound.Sound.pan(): panning must be a value between -1.0 and 1.0 or either 'left' or 'right'.")
 
-		if panning == 0:
-			return
+		# correct wrong inputs
+		if panning < -1:
+			panning = -1
+		elif panning > 1:
+			panning = 1
+		
+		# round off, to prevent too long numbers
+		panning = numpy.round(panning, decimals=8)
+		
 
 		buf = pygame.sndarray.array(self.sound)
 

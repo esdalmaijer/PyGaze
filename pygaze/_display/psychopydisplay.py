@@ -26,7 +26,6 @@ except:
 	pass
 
 import pygaze
-from pygaze import libtime
 from pygaze._screen.psychopyscreen import rgb2psychorgb
 
 import copy
@@ -95,7 +94,7 @@ class PsychoPyDisplay:
 		"""
 
 		pygaze.expdisplay.flip()
-		return libtime.get_time()
+		return pygaze.clock.get_time()
 
 	def show_part(self, rect, screen=None):
 
@@ -121,7 +120,7 @@ class PsychoPyDisplay:
 		self.show()
 		print("WARNING! libscreen.Display.show_part not available for PsychoPy display type; show is used instead")
 		
-		return libtime.get_time()
+		return pygaze.clock.get_time()
 
 
 	def fill(self, screen=None):

@@ -21,67 +21,87 @@
 
 import psychopy.core
 
-def expstart():
-
-	"""Time is set to 0 when calling this
+class PsychoPyTime:
 	
-	arguments
-	None
-
-	returns
-	Nothing
-	"""
-
-	global expbegintime
-
-	expbegintime = psychopy.core.getTime() * 1000
-
-def get_time():
-
-	"""Returns current time in milliseconds
+	"""Class for keeping track of the current time"""
 	
-	arguments
-	None
-	
-	returns
-	time		-- current time in milliseconds, as measured since
-				expbegintime
-	"""
+	def __init__(self):
+		
+		"""Initializes the Time object
+		
+		arguments
+		None
+		
+		keyword arguments
+		None
+		"""
+		
+		pass
 
-	return psychopy.core.getTime() * 1000 - expbegintime
+
+	def expstart(self):
+
+		"""Time is set to 0 when calling this
+		
+		arguments
+		None
+
+		returns
+		Nothing
+		"""
+
+		global expbegintime
+
+		expbegintime = psychopy.core.getTime() * 1000
 
 
-def pause(pausetime):
+	def get_time(self):
 
-	"""Pauses the experiment for given number of milliseconds
-	
-	arguments
-	pausetime	-- time to pause in milliseconds
-	
-	returns
-	pausetime	-- actual time the system paused (in milliseconds)
-	"""
+		"""Returns current time in milliseconds
+		
+		arguments
+		None
+		
+		returns
+		time		-- current time in milliseconds, as measured since
+					expbegintime
+		"""
 
-	t0 = psychopy.core.getTime()
-	psychopy.core.wait(pausetime/1000.0)
-	t1 = psychopy.core.getTime()
+		return psychopy.core.getTime() * 1000 - expbegintime
 
-	return t1-t0
 
-def expend():
+	def pause(self, pausetime):
 
-	"""Completely ends the experiment (only call this at the end!)
-	
-	arguments
-	None
-	
-	returns
-	endtime	-- ending time of the experiment (in milliseconds since
-				expbegintime
-	"""
+		"""Pauses the experiment for given number of milliseconds
+		
+		arguments
+		pausetime	-- time to pause in milliseconds
+		
+		returns
+		pausetime	-- actual time the system paused (in milliseconds)
+		"""
 
-	endtime = get_time() * 1000
+		t0 = psychopy.core.getTime()
+		psychopy.core.wait(pausetime/1000.0)
+		t1 = psychopy.core.getTime()
 
-	psychopy.core.quit()
+		return t1-t0
 
-	return endtime 
+
+	def expend(self):
+
+		"""Completely ends the experiment (only call this at the end!)
+		
+		arguments
+		None
+		
+		returns
+		endtime	-- ending time of the experiment (in milliseconds since
+					expbegintime
+		"""
+
+		endtime = self.get_time() * 1000
+
+		psychopy.core.quit()
+
+		return endtime

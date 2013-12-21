@@ -25,26 +25,49 @@ try:
 except:
 	pass
 
-def expstart():
+class OSTime:
 	
-	"""See _time.pygametime"""
+	"""Class for keeping track of the current time"""
+	
+	def __init__(self):
+		
+		"""Initializes the Time object
+		
+		arguments
+		None
+		
+		keyword arguments
+		None
+		"""
+		
+		pass
 
-	pass
 
-def get_time():
+	def expstart(self):
+		
+		"""See _time.pygametime"""
 
-	"""See _time.pygametime"""
+		global expbegintime
+		
+		expbegintime = 0
 
-	return osexperiment.time()
 
-def pause(pausetime):
+	def get_time(self):
 
-	"""See _time.pygametime"""
+		"""See _time.pygametime"""
 
-	return osexperiment.sleep(pausetime)
+		return osexperiment.time()
 
-def expend():
 
-	"""See _time.pygametime"""
+	def pause(self, pausetime):
 
-	return osexperiment.time()
+		"""See _time.pygametime"""
+
+		return osexperiment.sleep(pausetime)
+
+
+	def expend(self):
+
+		"""See _time.pygametime"""
+
+		return osexperiment.time()

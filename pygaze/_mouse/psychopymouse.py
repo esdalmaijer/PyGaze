@@ -25,8 +25,8 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
-from pygaze.libscreen import pos2psychopos, psychopos2pos
+import pygaze
+from pygaze.screen import pos2psychopos, psychopos2pos
 
 import psychopy.event
 
@@ -195,11 +195,11 @@ class PsychoPyMouse:
 		if timeout == 'default':
 			timeout = self.timeout
 		# starttime
-		starttime = libtime.get_time()
-		time = libtime.get_time()
+		starttime = pygaze.clock.get_time()
+		time = pygaze.clock.get_time()
 		# wait for mouse clicks
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			pressed = self.mouse.getPressed()
 			if sum(pressed) > 0:
 				for b in range(0,len(pressed)):

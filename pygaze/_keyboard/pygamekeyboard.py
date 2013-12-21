@@ -25,7 +25,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 import pygame
 
 class PyGameKeyboard:
@@ -152,15 +152,15 @@ class PyGameKeyboard:
 			pygame.event.get(pygame.KEYDOWN)
 			
 		# starttime
-		starttime = libtime.get_time()
-		time = libtime.get_time()
+		starttime = pygaze.clock.get_time()
+		time = pygaze.clock.get_time()
 
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
-			time = libtime.get_time()
+			time = pygaze.clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.KEYDOWN:
-					time = libtime.get_time()
+					time = pygaze.clock.get_time()
 					key = pygame.key.name(event.key)
 					if keylist == None or key in keylist:
 						return key, time

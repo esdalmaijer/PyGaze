@@ -23,78 +23,95 @@ import pygame
 import time
 import sys
 
-def expstart():
-
-	"""Time is set to 0 when calling this
+class PyGameTime:
 	
-	arguments
-	None
-
-	returns
-	Nothing
-	"""
-
-	global expbegintime
-	global _cpu_time
+	"""Class for keeping track of the current time"""
 	
-	# On Windows, `time.clock()` provides higher accuracy than
-	# `time.time()`.
-	if sys.platform == 'win32':
-		_cpu_time = time.clock
-	else:
-		_cpu_time = time.time
+	def __init__(self):
+		
+		"""Initializes the Time object
+		
+		arguments
+		None
+		
+		keyword arguments
+		None
+		"""
+		
+		# On Windows, `time.clock()` provides higher accuracy than
+		# `time.time()`.
+		if sys.platform == 'win32':
+			self._cpu_time = time.clock
+		else:
+			self._cpu_time = time.time
 
-	pygame.init()
-	expbegintime = _cpu_time()
-
-
-def get_time():
-
-	"""Returns current time in milliseconds
-	
-	arguments
-	None
-	
-	returns
-	time		-- current time in milliseconds, as measured since
-				expbegintime
-	"""
-
-	ctime = _cpu_time() - expbegintime
-
-	return ctime
+		pygame.init()
 
 
-def pause(pausetime):
 
-	"""Pauses the experiment for given number of milliseconds
-	
-	arguments
-	pausetime	-- time to pause in milliseconds
-	
-	returns
-	pausetime	-- actual time the system paused (in milliseconds)
-	"""
+	def expstart(self):
 
-	realpause = pygame.time.delay(pausetime)
+		"""Time is set to 0 when calling this
+		
+		arguments
+		None
 
-	return realpause
+		returns
+		Nothing
+		"""
+
+		global expbegintime
+		
+		expbegintime = self._cpu_time() * 1000
 
 
-def expend():
+	def get_time(self):
 
-	"""Completely ends the experiment (only call this at the end!)
-	
-	arguments
-	None
-	
-	returns
-	endtime	-- ending time of the experiment (in milliseconds since
-				expbegintime
-	"""
+		"""Returns current time in milliseconds
+		
+		arguments
+		None
+		
+		returns
+		time		-- current time in milliseconds, as measured since
+					expbegintime
+		"""
 
-	endtime = get_time()
+		ctime = self._cpu_time()*1000 - expbegintime
 
-	pygame.quit()
+		return ctime
 
-	return endtime
+
+	def pause(self, pausetime):
+
+		"""Pauses the experiment for given number of milliseconds
+		
+		arguments
+		pausetime	-- time to pause in milliseconds
+		
+		returns
+		pausetime	-- actual time the system paused (in milliseconds)
+		"""
+
+		realpause = pygame.time.delay(pausetime)
+
+		return realpause
+
+
+	def expend(self):
+
+		"""Completely ends the experiment (only call this at the end!)
+		
+		arguments
+		None
+		
+		returns
+		endtime	-- ending time of the experiment (in milliseconds since
+					expbegintime
+		"""
+
+		endtime = self.get_time()
+
+		pygame.quit()
+
+		return endtime

@@ -25,7 +25,7 @@ try:
 except:
 	pass
 	
-from pygaze import libtime
+import pygaze
 from pygaze import libscreen
 from pygaze.libinput import Mouse
 from pygaze.libinput import Keyboard
@@ -95,7 +95,7 @@ class Dummy:
 
 		print("Calibration would now take place")
 
-		libtime.pause(1000)
+		pygaze.clock.pause(1000)
 
 
 	def drift_correction(self, pos=None, fix_triggered=False):
@@ -215,7 +215,7 @@ class Dummy:
 		"""Dummy for starting recording, prints what would have been the recording start"""
 
 		self.simulator.set_visible(visible=True)
-		dumrectime = libtime.get_time()
+		dumrectime = pygaze.clock.get_time()
 
 		self.recording = True
 		
@@ -227,7 +227,7 @@ class Dummy:
 		"""Dummy for stopping recording, prints what would have been the recording end"""
 
 		self.simulator.set_visible(visible=False)
-		dumrectime = libtime.get_time()
+		dumrectime = pygaze.clock.get_time()
 
 		self.recording = False
 
@@ -241,7 +241,7 @@ class Dummy:
 		if self.recording:
 			self.stop_recording()
 		
-		closetime = libtime.get_time()
+		closetime = pygaze.clock.get_time()
 
 		print("eyetracker connection would have closed at: " + str(closetime))
 
@@ -307,7 +307,7 @@ class Dummy:
 			if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > maxerr: # Pythagoras
 				break
 
-		return libtime.get_time(), spos
+		return pygaze.clock.get_time(), spos
 
 
 	def wait_for_saccade_end(self):
@@ -337,9 +337,9 @@ class Dummy:
 				# remove oldest sample
 				xl.pop(0); yl.pop(0)
 			# wait for a bit, to avoid immediately returning (runs go faster than mouse moves)
-			libtime.pause(10)
+			pygaze.clock.pause(10)
 
-		return libtime.get_time(), spos, (xl[len(xl)-1],yl[len(yl)-1])
+		return pygaze.clock.get_time(), spos, (xl[len(xl)-1],yl[len(yl)-1])
 
 
 	def wait_for_fixation_start(self):
@@ -366,9 +366,9 @@ class Dummy:
 				# remove oldest sample
 				xl.pop(0); yl.pop(0)
 			# wait for a bit, to avoid immediately returning (runs go faster than mouse moves)
-			libtime.pause(10)
+			pygaze.clock.pause(10)
 
-		return libtime.get_time(), (xl[len(xl)-1],yl[len(yl)-1])
+		return pygaze.clock.get_time(), (xl[len(xl)-1],yl[len(yl)-1])
 
 
 	def wait_for_fixation_end(self):
@@ -386,7 +386,7 @@ class Dummy:
 			if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > maxerr: # Pythagoras
 				break
 
-		return libtime.get_time(), spos
+		return pygaze.clock.get_time(), spos
 
 
 	def wait_for_blink_start(self):
@@ -399,7 +399,7 @@ class Dummy:
 		while not self.blinking:
 			pos = self.sample()
 
-		return libtime.get_time(), pos
+		return pygaze.clock.get_time(), pos
 
 
 	def wait_for_blink_end(self):
@@ -416,4 +416,4 @@ class Dummy:
 		while self.blinking:
 			epos = self.sample()
 
-		return libtime.get_time(), epos
+		return pygaze.clock.get_time(), epos
