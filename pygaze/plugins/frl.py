@@ -27,7 +27,6 @@ except:
 
 if DISPTYPE == 'psychopy':
 	try:
-		import psychopy
 		from psychopy.visual import Aperture
 	except:
 		raise Exception("Error in plugins.frl: PsychoPy could not be loaded!")
@@ -38,6 +37,7 @@ else:
 	except:
 		raise Exception("Error in plugins.frl: PyGame could not be loaded!")
 
+import pygaze
 from pygaze.screen import pos2psychopos, psychopos2pos
 
 
@@ -71,25 +71,25 @@ class FRL:
 		self.size = size
 
 		# FRL distance
-		self.frlxdis = ((FRLDIST**2)/2)**0.5 # horizontal distance between gaze position and FRL-centre
-		self.frlydis = ((FRLDIST**2)/2)**0.5 # vertical distance between gaze position and FRL-centre
+		self.frlxdis = ((self.dist**2)/2)**0.5 # horizontal distance between gaze position and FRL-centre
+		self.frlydis = ((self.dist**2)/2)**0.5 # vertical distance between gaze position and FRL-centre
 		# FRL position
 		if pos in ['center','centre']:
 			self.frlcor = (0, 0)
 		elif pos == 'top':
-			self.frlcor = (0, -FRLDIST)
+			self.frlcor = (0, -self.dist)
 		elif pos == 'topright':
 			self.frlcor = (-self.frlxdis, self.frlydis)
 		elif pos == 'right':
-			self.frlcor = (FRLDIST, 0)
+			self.frlcor = (self.dist, 0)
 		elif pos == 'bottomright':
 			self.frlcor = (-self.frlxdis, -self.frlydis)
 		elif pos == 'bottom':
-			self.frlcor = (0, FRLDIST)
+			self.frlcor = (0, self.dist)
 		elif pos == 'bottomleft':
 			self.frlcor = (self.frlxdis, -self.frlydis)
 		elif pos == 'left':
-			self.frlcor = (-FRLDIST, 0)
+			self.frlcor = (-self.dist, 0)
 		elif pos == 'topleft':
 			self.frlcor = (self.frlxdis, self.frlydis)
 		else:
@@ -105,7 +105,7 @@ class FRL:
 			self.__class__ = PyGameFRL
 		elif self.disptype == 'psychopy':
 			self.__class__ = PsychoPyFRL
-			self.frl = Aperture(psychopy.visual.openWindows[SCREENNR], self.size, pos=pos2psychopos(self.frlcor), shape='circle', units='pix')
+			self.frl = Aperture(pygaze.expdisplay, self.size, pos=pos2psychopos(self.frlcor), shape='circle', units='pix')
 
 
 class PyGameFRL:
@@ -161,8 +161,8 @@ class PyGameFRL:
 			# rectangle coordinates
 			updaterect = [frlpos[0]-x,frlpos[1]-h*y,2*x,h]
 			# update screen part
-			display.expdisplay.set_clip(updaterect)
-			display.expdisplay.blit(stimscreen.screen,(0,0))
+			pygaze.expdisplay.set_clip(updaterect)
+			pygaze.expdisplay.blit(stimscreen.screen,(0,0))
 		# bottom side
 		for y in range(0,r+1):
 			# right end of rectangle
@@ -170,11 +170,11 @@ class PyGameFRL:
 			# rectangle coordinates
 			updaterect = [frlpos[0]-x,frlpos[1]+h*y,2*x,h]
 			# update screen part
-			display.expdisplay.set_clip(updaterect)
-			display.expdisplay.blit(stimscreen.screen,(0,0))
+			pygaze.expdisplay.set_clip(updaterect)
+			pygaze.expdisplay.blit(stimscreen.screen,(0,0))
 
 		# unset clip and update display
-		display.expdisplay.set_clip(None)
+		pygaze.expdisplay.set_clip(None)
 		disptime = display.show()
 		
 		return disptime

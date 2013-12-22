@@ -27,10 +27,10 @@ except:
 	pass
 	
 import pygaze
-from pygaze import libscreen
-from pygaze.libinput import Mouse
-from pygaze.libinput import Keyboard
-from pygaze.libsound import Sound
+from pygaze.screen import Screen
+from pygaze.mouse import Mouse
+from pygaze.keyboard import Keyboard
+from pygaze.sound import Sound
 
 if not DUMMYMODE:
 	import pylink
@@ -96,7 +96,7 @@ class libeyelink:
 		# properties
 		self.data_file = data_file
 		self.screen = display
-		self.scr = libscreen.Screen(mousevisible=False)
+		self.scr = Screen(mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
 		self.recording = False
@@ -908,7 +908,7 @@ class libeyelink:
 
 class eyelink_graphics(custom_display):
 
-	"""A custom graphics environment to use PyGame or PsychoPy graphics (see libscreen) for calibration, rather than PyLink built-in functions"""
+	"""A custom graphics environment to use PyGame or PsychoPy graphics (see screen) for calibration, rather than PyLink built-in functions"""
 
 	def __init__(self, display, tracker):
 
@@ -916,7 +916,7 @@ class eyelink_graphics(custom_display):
 
 		# objects
 		self.display = display
-		self.screen = libscreen.Screen(mousevisible=False)
+		self.screen = Screen(mousevisible=False)
 		self.kb = Keyboard(keylist=None, timeout=1)
 		if display.disptype == 'pygame':
 			self.kb.set_timeout(timeout=0.001)
@@ -927,7 +927,7 @@ class eyelink_graphics(custom_display):
 		self.ld = 40 # line distance
 
 		# menu
-		self.menuscreen = libscreen.Screen(mousevisible=False)
+		self.menuscreen = Screen(mousevisible=False)
 		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos=(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize=12, antialias=True)
 		self.menuscreen.draw_text(text="Press C to calibrate", pos=(self.xc,self.yc-3*self.ld), center=True, font='mono', fontsize=12, antialias=True)
 		self.menuscreen.draw_text(text="Press V to validate", pos=(self.xc,self.yc-2*self.ld), center=True, font='mono', fontsize=12, antialias=True)

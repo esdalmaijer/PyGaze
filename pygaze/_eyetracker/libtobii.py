@@ -32,9 +32,9 @@ except:
 	pass
 
 import pygaze
-from pygaze import libscreen
-from pygaze.libinput import Keyboard
-from pygaze.libsound import Sound
+from pygaze.screen import Screen
+from pygaze.keyboard import Keyboard
+from pygaze.sound import Sound
 
 
 ## letobii 
@@ -95,7 +95,7 @@ class TobiiTracker:
 		"""Initializes a TobiiTracker instance
 		
 		arguments
-		display	--	a libscreen.Display instance
+		display	--	a pygaze.display.Display instance
 		
 		keyword arguments
 		None
@@ -103,7 +103,7 @@ class TobiiTracker:
 
 		# object properties
 		self.disp = display
-		self.screen = libscreen.Screen()
+		self.screen = Screen()
 		self.dispsize = DISPSIZE # display size in pixels
 		self.screensize = SCREENSIZE # display size in cm
 		self.screendist = SCREENDIST # distance between participant and screen in cm
@@ -1160,7 +1160,7 @@ class TobiiController:
 		"""Initializes TobiiController instance
 		
 		arguments
-		disp		--	a libscreen.Display instance
+		disp		--	a pygaze.display.Display instance
 		
 		keyword arguments
 		None
@@ -1168,7 +1168,7 @@ class TobiiController:
 		
 		# visuals and interaction
 		self.disp = disp
-		self.screen = libscreen.Screen()
+		self.screen = Screen()
 		self.kb = Keyboard(keylist=None, timeout=None)
 		
 		# eye tracking

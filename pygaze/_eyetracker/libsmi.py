@@ -27,9 +27,9 @@ except:
 	pass
 
 import pygaze
-from pygaze import libscreen
-from pygaze.libinput import Keyboard
-from pygaze.libsound import Sound
+from pygaze.screen import Screen
+from pygaze.keyboard import Keyboard
+from pygaze.sound import Sound
 
 import copy
 import math
@@ -124,7 +124,7 @@ class SMItracker:
 		"""Initializes the SMItracker object
 		
 		arguments
-		display	-- a libscreen.Display object
+		display	-- a pygaze.display.Display instance
 		
 		keyword arguments
 		ip		-- internal ip address for iViewX (default = 
@@ -138,7 +138,7 @@ class SMItracker:
 
 		# object properties
 		self.disp = display
-		self.screen = libscreen.Screen()
+		self.screen = Screen()
 		self.dispsize = DISPSIZE # display size in pixels
 		self.screensize = SCREENSIZE # display size in cm
 		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)

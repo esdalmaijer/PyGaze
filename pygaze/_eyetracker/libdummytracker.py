@@ -26,30 +26,39 @@ except:
 	pass
 	
 import pygaze
-from pygaze import libscreen
-from pygaze.libinput import Mouse
-from pygaze.libinput import Keyboard
-from pygaze.libsound import Sound
+from pygaze.screen import Screen
+from pygaze.mouse import Mouse
+from pygaze.keyboard import Keyboard
+from pygaze.sound import Sound
+
 
 class Dummy:
 
 	"""A dummy class to run experiments in dummy mode, where eye movements are simulated by the mouse"""
 	
 
-	def __init__(self, display, simulator='mouse'):
+	def __init__(self, display):
 
-		"""Initiates the eyetracker dummy object (keyword argument: simulator='mouse' (default))"""
+		"""Initiates an eyetracker dummy object, that simulates gaze position using the mouse
+		
+		arguments
+		display		--	a pygaze display.Display instance
+		
+		keyword arguments
+		None
+		"""
 
 		self.recording = False
 		self.blinking = False
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
+		self.resolution = DISPSIZE[:]
 
 		self.simulator = Mouse(mousebuttonlist=None,timeout=2,visible=False)
 
 		self.kb = Keyboard(keylist=None, timeout=None)
 		self.angrybeep = Sound(osc='saw',freq=100, length=100, attack=0, decay=0, soundfile=None)
 		self.display = display
-		self.screen = libscreen.Screen(mousevisible=False)
+		self.screen = Screen(mousevisible=False)
 
 
 	def send_command(self, cmd):
@@ -163,6 +172,9 @@ class Dummy:
 		if pos == None:
 			pos = DISPSIZE[0] / 2, DISPSIZE[1] / 2
 
+		# show mouse
+		self.simulator.set_visible(visible=True)
+
 		# show fixation dot
 		self.screen.draw_fixation(fixtype='dot', colour=None, pos=pos, diameter=12)
 		self.display.fill(self.screen)
@@ -179,6 +191,7 @@ class Dummy:
 				if self.kb.get_key(keylist=["escape", "q"], timeout=0)[0] != None:
 					self.recording = False
 					print("libeyetracker.libeyetracker.fix_triggered_drift_correction(): 'q' pressed")
+					self.simulator.set_visible(visible=False)
 					return False
 	
 				# collect a sample
@@ -204,6 +217,7 @@ class Dummy:
 					d = ((avg_x - pos[0]) ** 2 + (avg_y - pos[1]) ** 2)**0.5
 	
 					if d < max_dev:
+						self.simulator.set_visible(visible=False)
 						return True
 					else:
 						lx = []
@@ -253,6 +267,13 @@ class Dummy:
 		pass
 
 
+	def pupil_size(self):
+		
+		"""Returns dummy pupil size"""
+		
+		return 19
+
+
 	def sample(self):
 
 		"""Returns simulated gaze position (=mouse position)"""
@@ -267,7 +288,7 @@ class Dummy:
 		elif not self.blinking:
 			if self.simulator.get_pressed()[2]: # buttondown
 				self.blinking = True # 'blink' started
-				self.bbpos =  self.simulator.get_pos()[0] # position before blinking
+				self.bbpos =  self.simulator.get_pos() # position before blinking
 				self.simulator.set_pos(pos=(self.bbpos[0],self.resolution[1])) # set position to blinking position
 
 		return self.simulator.get_pos()

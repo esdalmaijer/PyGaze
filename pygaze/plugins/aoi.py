@@ -29,7 +29,7 @@ class AOI:
 		"""Initializes an AOI object
 		
 		arguments
-		aoitype	--	string specifying the type of AOI; should be
+		aoitype		--	string specifying the type of AOI; should be
 					'rectangle', 'circle' or 'ellipse'
 		pos		--	a (x,y) position tuple
 		size		--	either a single integer or a [width,height] list
@@ -40,8 +40,8 @@ class AOI:
 		"""
 		
 		# check AOI type
-		if aoitype not in ['rect','circle','ellipse']:
-			raise Exception("Error in libgazecon.AOI.__init__: aoitype %s not recognized; use one of 'rect', 'circle', 'ellipse'" % aoitype)
+		if aoitype not in ['rect','rectangle','circle','ellipse']:
+			raise Exception("Error in libgazecon.AOI.__init__: aoitype %s not recognized; use one of 'rectangle', 'circle', 'ellipse'" % aoitype)
 		self.aoitype = aoitype
 		
 		# check AOI position
@@ -67,6 +67,10 @@ class AOI:
 		
 		# calculate radius (used for circle)
 		self.r = self.size[0]/2
+
+		# equalize 'rect' aoitype input
+		if self.aoitype == 'rect':
+			self.aoitype = 'rectangle'
 
 	
 	def contains(self, pos):

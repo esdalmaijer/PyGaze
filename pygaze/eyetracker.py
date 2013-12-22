@@ -37,12 +37,13 @@ class EyeTracker:
 		Initializes an EyeTracker object.
 		
 		Arguments:
-		display			--	A pygaze.screen.Display object.
-		trackertype		--	The type of eye tracker.
+		display			--	A pygaze.display.Display instance
+		trackertype		--	The type of eye tracker; choose from:
+						'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii'
 		
 		Keyword arguments:
 		**args			--	A keyword-argument dictionary that contains
-							eye-tracker-specific options.
+						eye-tracker-specific options
 		"""
 
 		# set trackertype to dummy in dummymode
@@ -50,9 +51,9 @@ class EyeTracker:
 			trackertype = u'dummy'
 	
 		# correct wrong input
-		if trackertype not in [u'eyelink', u'smi', u'tobii', u'dummy']:
+		if trackertype not in [u'dumbdummy', u'dummy', u'eyelink', u'smi', u'tobii']:
 			raise Exception( \
-				u"Error in eyetracker.EyeTracker: trackertype not recognized; it should be one of 'eyelink', 'smi', 'tobii', 'dummy'")
+				u"Error in eyetracker.EyeTracker: trackertype '%s' not recognized; it should be one of 'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii'" % trackertype)
 
 		# EyeLink
 		if trackertype == u'eyelink':
@@ -90,6 +91,15 @@ class EyeTracker:
 			# initialize
 			self.__class__.__init__(self, display)
 
+		# dumb dummy mode
+		elif trackertype == u'dumbdummy':
+			# import libraries
+			from pygaze._eyetracker.libdumbdummy import DumbDummy
+			# morph class
+			self.__class__ = DumbDummy
+			# initialize
+			self.__class__.__init__(self, display)
+
 		else:
 			raise Exception( \
-				u"Error in eyetracker.EyeTracker.__init__: trackertype not recognized, this should not happen!")
+				u"Error in eyetracker.EyeTracker.__init__: trackertype '%s' not recognized, this should not happen!" % trackertype)
