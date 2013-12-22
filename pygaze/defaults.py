@@ -65,15 +65,3 @@ SMIIP = '127.0.0.1'
 SMISENDPORT = 4444
 SMIRECEIVEPORT = 5555
 
-# FRL
-FRLSIZE = 200 # pixles, FRL-size
-FRLDIST = 125 # distance between fixation point and FRL
-FRLTYPE = 'gauss' # 'circle', 'gauss', 'ramp' or 'raisedCosine'
-FRLPOS = 'center' # 'center', 'top', 'topright', 'right', 'bottomright', 'bottom', 'bottomleft', 'left', or 'topleft'
-
-# CURSOR
-CURSORTYPE = 'cross' # 'rectangle', 'ellipse', 'plus' (+), 'cross' (X), 'arrow'
-CURSORSIZE = 20 # pixels, either an integer value or a tuple for width and height (w,h)
-CURSORCOLOUR = 'pink' # colour name (e.g. 'red'), a tuple RGB-triplet (e.g. (255, 255, 255) for white or (0,0,0) for black), or a RGBA-value (e.g. (255,0,0,255) for red)
-CURSORFILL = True # True for filled cursor, False for non filled cursor
-CURSORPENWIDTH = 3 # cursor edge width in pixels (only if cursor is not filled)

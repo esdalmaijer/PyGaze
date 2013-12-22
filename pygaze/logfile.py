@@ -19,75 +19,24 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-import os
 from pygaze.defaults import *
 try:
 	from constants import *
 except:
 	pass
 
-
 class Logfile:
 
-	"""Logfile object for saving data"""
+	"""A logfile for storing data"""
 
-	def __init__(self, filename=LOGFILE):
+	def __init__(self, **args):
 
-		"""Initiates logfile object
+		"""
+		Initializes the Logfile object.
 		
-		arguments
-		None
-		
-		keyword arguments
-		filename	-- name (possibly including path) for the logfile;
-				   WITHOUT extension! (default = LOGFILE)
-		
-		returns
-		Nothing	-- sets filename and logfile properties
+		TODO: docstring.
 		"""
 
-		self.filename = filename + ".txt"
-		self.logfile = open(self.filename, "w")
-
-
-	def write(self, vallist):
-
-		"""Writes given values to logfile (each value separated with a tab)
-		
-		arguments
-		vallist	-- list of values to be written to logfile
-		
-		returns
-		Nothing	-- writes each value to the logfile, adding tabs between
-				   the values
-		"""
-
-		# empty string
-		line = ""
-
-		# all values to string
-		vallist = map(str, vallist)
-		
-		# insert tabs between values, end with newline character
-		line = "\t".join(vallist) + "\n"
-
-		# write line to file (on disk)
-		self.logfile.write(line) # write to internal buffer
-		self.logfile.flush() # internal buffer to RAM
-		os.fsync(self.logfile.fileno()) # RAM file cache to disk
-
-
-	def close(self):
-
-		"""Closes logfile (do this after writing everything to the file!)
-		
-		arguments
-		None
-		
-		returns
-		Nothing	-- closes logfile; calling write method after calling
-				   close method will result in an error!
-		"""
-
-		self.logfile.close()
-
+		from pygaze._logfile.logfile import Logfile
+		self.__class__ = Logfile
+		self.__class__.__init__(self, **args)
