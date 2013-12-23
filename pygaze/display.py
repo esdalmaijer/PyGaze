@@ -25,26 +25,26 @@ try:
 except:
 	pass
 
-class Display:
+from pygaze._misc.misc import copy_docstr
+from pygaze._display.basedisplay import BaseDisplay
 
-	"""A mouse for collecting responses"""
+
+class Display(BaseDisplay):
+
+	#"""A class for Display objects, to present Screen objects on a monitor"""
 
 	def __init__(self, disptype=DISPTYPE, **args):
 
-		"""
-		Initializes the Mouse object.
-		
-		TODO: docstring.
-		"""
+		# see BaseDisplay
 
 		if disptype == u'pygame':
 			from pygaze._display.pygamedisplay import PyGameDisplay as Display
 		elif disptype == u'psychopy':
-			from pygaze._display.psychopydisplay import PsychoPyDisplay  as \
-				Display
+			from pygaze._display.psychopydisplay import PsychoPyDisplay  as Display
 		elif disptype == u'opensesame':
 			from pygaze._display.osdisplay import OSDisplay as Display
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__ = Display
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseDisplay, Display)

@@ -26,43 +26,38 @@ except:
 	pass
 
 import pygaze
-from pygaze._screen.psychopyscreen import rgb2psychorgb
+from pygaze._misc.misc import rgb2psychorgb
+#from pygaze._display.basedisplay import BaseDisplay
 
-import copy
-import math
-import os.path
+from psychopy.visual import Window
 
-import psychopy
-from psychopy.visual import Window, GratingStim, Circle, Line, ShapeStim, \
-	TextStim, ImageStim
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
+
+#class PsychoPyDisplay(BaseDisplay):
 class PsychoPyDisplay:
 
-	"""A class for Display objects, to present Screen objects on a monitor"""
+	# See _display.basedisplay.BaseDisplay for documentation
 
-	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, \
-		screen=None, **args):
+	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, screen=None, **args):
 
-		"""Initializes the Display object
+		# See _display.basedisplay.BaseDisplay for documentation
 		
-		arguments
-		None
-
-		keyword arguments
-		disptype	-- type of display: either 'pygame' or 'psychopy'
-				   (default = DISPTYPE)
-		dispsize	-- size of the display in pixels: a (width, height)
-				   tuple (default = DISPSIZE)
-		fgc		-- the foreground colour: a colour name (e.g. 'red') or 
-				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = FGC)
-		bgc		-- the background colour: a colour name (e.g. 'red') or 
-				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = BGC)
-		screennr	-- the screen number: 0, 1 etc. (default = SCREENNR)
-		screen	-- a Screen object to be presented on the new Display
-				   (default=None)
-		"""
+		# try to import copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseDisplay, PsychoPyDisplay)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.dispsize = dispsize
 		self.fgc = fgc
@@ -83,59 +78,25 @@ class PsychoPyDisplay:
 
 	def show(self):
 
-		"""Updates ('flips') the display
-		
-		arguments
-		None
-		
-		returns
-		time		-- the exact refresh time when disptype is PsychoPy, an
-				   estimate when disptype is PyGame
-		"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.flip()
 		return pygaze.clock.get_time()
 
 	def show_part(self, rect, screen=None):
 
-		"""Updates part(s) of the screen to given specified screen (only
-		works when disptype is PyGame; when this is set to PsychoPy
-		the entire display is updated)
-		
-		arguments
-		rect		-- a single or a list of rects; a rect is a (x,y,w,h)
-				   tuple or list
-		
-		keyword arguments
-		screen	-- the screen of which the specified rects should be
-				   updated to the display (default = None)
-		
-		returns
-		time		-- the exact refresh time when disptype is PsychoPy, an
-				   estimate when disptype is PyGame
-		"""
-		if screen:
-			for s in screen.screen:
-				s.draw()
+		# See _display.basedisplay.BaseDisplay for documentation
+
+		self.fill(screen)
 		self.show()
-		print("WARNING! libscreen.Display.show_part not available for PsychoPy display type; show is used instead")
+		print("WARNING! screen.Display.show_part not available for PsychoPy display type; fill() and show() are used instead")
 		
 		return pygaze.clock.get_time()
 
 
 	def fill(self, screen=None):
 
-		"""Fills the screen with the background colour or specified screen,
-		NOT updating it (call Display.show() to actually show the new
-		display contents)
-		
-		arguments
-		None
-		
-		keyword arguments
-		screen	-- the screen that should be drawn to the display or
-				   None to fill the display with its background colour
-		"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.clearBuffer()
 		if screen != None:
@@ -144,13 +105,7 @@ class PsychoPyDisplay:
 
 	def close(self):
 
-		"""Closes the display
-		
-		arguments
-		None
-		
-		returns
-		Nothing"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.close()
 

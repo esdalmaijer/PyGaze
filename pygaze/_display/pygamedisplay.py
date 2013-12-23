@@ -36,27 +36,33 @@ import pygame.display
 import pygame.draw
 import pygame.image
 
-class PyGameDisplay:
+from pygaze._display.basedisplay import BaseDisplay
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
-	"""A class for Display objects, to present Screen objects on a monitor"""
+
+class PyGameDisplay(BaseDisplay):
+
+	# See _display.basedisplay.BaseDisplay for documentation
 
 	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screen=None, **args):
 
-		"""
-		Initializes the Display object.
+		# See _display.basedisplay.BaseDisplay for documentation
 		
-		keyword arguments
-		dispsize	-- size of the display in pixels: a (width, height)
-				   tuple (default = DISPSIZE)
-		fgc		-- the foreground colour: a colour name (e.g. 'red') or 
-				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = FGC)
-		bgc		-- the background colour: a colour name (e.g. 'red') or 
-				   a RGB(A) tuple (e.g. (255,0,0) or (255,0,0,255))
-				   (default = BGC)
-		screen	-- a Screen object to be presented on the new Display
-				   (default=None)
-		"""
+		# try to import copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseDisplay, PyGameDisplay)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.dispsize = dispsize
 		self.fgc = fgc
@@ -77,39 +83,18 @@ class PyGameDisplay:
 		else:
 			pygaze.expdisplay.fill(self.bgc)
 
+
 	def show(self):
 
-		"""Updates ('flips') the display
-		
-		arguments
-		None
-		
-		returns
-		time		-- the exact refresh time when disptype is PsychoPy, an
-				   estimate when disptype is PyGame
-		"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygame.display.flip()
 		return pygaze.clock.get_time()
 
+
 	def show_part(self, rect, screen=None):
 
-		"""Updates part(s) of the screen to given specified screen (only
-		works when disptype is PyGame; when this is set to PsychoPy
-		the entire display is updated)
-		
-		arguments
-		rect		-- a single or a list of rects; a rect is a (x,y,w,h)
-				   tuple or list
-		
-		keyword arguments
-		screen	-- the screen of which the specified rects should be
-				   updated to the display (default = None)
-		
-		returns
-		time		-- the exact refresh time when disptype is PsychoPy, an
-				   estimate when disptype is PyGame
-		"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		if len(rect) > 1:
 			for r in rect:
@@ -134,30 +119,15 @@ class PyGameDisplay:
 
 	def fill(self, screen=None):
 
-		"""Fills the screen with the background colour or specified screen,
-		NOT updating it (call Display.show() to actually show the new
-		display contents)
-		
-		arguments
-		None
-		
-		keyword arguments
-		screen	-- the screen that should be drawn to the display or
-				   None to fill the display with its background colour
-		"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.fill(self.bgc)
 		if screen != None:
 			pygaze.expdisplay.blit(screen.screen,(0,0))
 
+
 	def close(self):
 
-		"""Closes the display
-		
-		arguments
-		None
-		
-		returns
-		Nothing"""
+		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygame.display.quit()
