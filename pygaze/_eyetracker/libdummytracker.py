@@ -53,12 +53,13 @@ class Dummy:
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 		self.resolution = DISPSIZE[:]
 
-		self.simulator = Mouse(mousebuttonlist=None,timeout=2,visible=False)
+		self.simulator = Mouse(disptype=DISPTYPE, mousebuttonlist=None, \
+			timeout=2, visible=False)
 
-		self.kb = Keyboard(keylist=None, timeout=None)
+		self.kb = Keyboard(disptype=DISPTYPE, keylist=None, timeout=None)
 		self.angrybeep = Sound(osc='saw',freq=100, length=100, attack=0, decay=0, soundfile=None)
 		self.display = display
-		self.screen = Screen(mousevisible=False)
+		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):

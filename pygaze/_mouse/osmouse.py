@@ -68,7 +68,7 @@ class OSMouse:
 		
 		"""See _mouse.pygamemouse.PyGameMouse"""
 		
-		return self.mouse.get_pos()
+		return self.mouse.get_pos()[0]
 
 	def get_clicked(self, mousebuttonlist='default', timeout='default'):
 
