@@ -1,0 +1,24 @@
+{
+	"category"	: "PyGaze",
+	"priority"	: 10,
+	"controls" : [
+		{
+			"type"		: "line_edit",
+			"var"		: "xpos",
+			"label"		: "X position",
+			"tooltip"	: "X coordinate for drift correction"
+		},
+		{
+			"type"		: "line_edit",
+			"var"		: "ypos",
+			"label"		: "Y position",
+			"tooltip"	: "Y position for drift correction"
+		},
+		{
+			"type"		: "checkbox",
+			"var"		: "fixation_triggered",
+			"label"		: "Fixation triggered (no spacebar press required)",
+			"tooltip"	: "Indicates whether drift correction should be performed as soon as a stable fixation is detected"
+		}
+	]
+}

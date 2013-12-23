@@ -1,0 +1,74 @@
+{
+	"category"	: "PyGaze",
+	"priority"	: 10,
+	"controls" : [
+		{
+			"type"		: "combobox",
+			"var"		: "tracker_type",
+			"label"		: "Select tracker type",
+			"options"	: [
+				"Simple dummy",
+				"Advanced dummy (mouse simulation)",
+				"EyeLink",
+				"SMI",
+				"Tobii"
+			],
+			"tooltip"	: "A list of supported eye trackers"
+		},
+		{
+			"type"		: "checkbox",
+			"var"		: "calibrate",
+			"label"		: "Calibrate tracker",
+			"tooltip"	: "Indicates whether calibration should be started"
+		},
+		{
+			"type"		: "line_edit",
+			"label"		: "Log file",
+			"var"		: "_logfile",
+			"tooltip"	: "The name for the log file"
+		},
+		{
+			"type"		: "spinbox",
+			"var"		: "eyelink_sacc_vel_thr",
+			"label"		: "Saccade velocity threshold",
+			"min_val"	: 0,
+			"max_val"	: 100000,
+			"suffix"	: " °/s",
+			"tooltip"	: "Velocity threshold for saccade detection algorithm"
+		},
+		{
+			"type"		: "spinbox",
+			"var"		: "sacc_acc_thr",
+			"label"		: "Saccade acceleration threshold",
+			"min_val"	: 0,
+			"max_val"	: 100000,
+			"suffix"	: " °/s/s",
+			"tooltip"	: "Acceleration threshold for saccade detection algorithm"
+		},
+		{
+			"type"		: "line_edit",
+			"label"		: "SMI IP address",
+			"var"		: "smi_ip",
+			"name"		: "line_edit_smi_ip",
+			"tooltip"	: "The tracker's IP address"
+		},
+		{
+			"type"		: "spinbox",
+			"var"		: "smi_send_port",
+			"label"		: "SMI send-port number",
+			"min_val"	: 0,
+			"max_val"	: 100000,
+			"name"		: "spinbox_smi_send_port",
+			"tooltip"	: "Port number for sending messages to the SMI tracker"
+		},
+		{
+			"type"		: "spinbox",
+			"var"		: "smi_recv_port",
+			"label"		: "SMI receive-port number",
+			"min_val"	: 0,
+			"max_val"	: 100000,
+			"name"		: "spinbox_smi_recv_port",
+			"tooltip"	: "Port number for receiving messages from the SMI tracker"
+		}
+	]
+}

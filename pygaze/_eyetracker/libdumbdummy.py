@@ -19,8 +19,12 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.defaults import *
+try:
+	from constants import *
+except:
+	pass
 import pygaze
-
 
 def message(msg):
 	
@@ -50,7 +54,7 @@ class DumbDummy:
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 
 		self.display = display
-		self.screen = Screen(mousevisible=False)
+		self.screen = pygaze.Screen(disptype=DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):
