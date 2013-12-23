@@ -26,21 +26,29 @@ except:
 	pass
 
 import pygaze
-from pygaze.screen import pos2psychopos, psychopos2pos, rgb2psychorgb
+from pygaze._misc.misc import pos2psychopos, psychopos2pos, rgb2psychorgb
+
+from pygaze._screen.basescreen import BaseScreen
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
 import copy
 import math
 import os.path
 
 import psychopy
-from psychopy.visual import Window
-from psychopy.visual import GratingStim
 from psychopy.visual import Circle
 from psychopy.visual import Rect
-from psychopy.visual import Line
 from psychopy.visual import ShapeStim
 from psychopy.visual import TextStim
 from psychopy.visual import ImageStim
+# Line seems to be broken; see PsychoPyScreen.draw_line below
+#from psychopy.visual import Line
 
 # try importing PIL
 try:
@@ -54,8 +62,9 @@ except:
 		pilimp = False
 		warnings.warn( \
 			u"PIL's Image class could not be loaded; image scaling with PsychoPy disptype is now impossible!")
-	
-class PsychoPyScreen:
+
+
+class PsychoPyScreen(BaseScreen):
 
 	"""A class for PsychoPy Screen objects, for visual stimuli (to be displayed via a Display object)"""
 	
@@ -67,6 +76,16 @@ class PsychoPyScreen:
 		
 		TODO: docstring
 		"""
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseScreen, PsychoPyScreen)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 		
 		self.dispsize = dispsize
 		self.fgc = fgc
@@ -217,13 +236,10 @@ class PsychoPyScreen:
 		pos = pos2psychopos(pos,dispsize=self.dispsize)
 		pos = pos[0] + w/2, pos[1] - h/2
 
-		#self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=pos, size=(w,h), color=colour))
 		if fill:
 			self.screen.append(Circle(pygaze.expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=colour, fillColorSpace='rgb', pos=pos, size=(w,h)))
 		else:
 			self.screen.append(Circle(pygaze.expdisplay, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=None, pos=pos, size=(w,h)))
-#		if not fill:
-#			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask="circle", pos=(pos[0]+pw,pos[1]+pw), size=(w-2*pw,h-2*pw), color=rgb2psychorgb(self.bgc)))
 
 		
 	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1, fill=False):
@@ -270,9 +286,6 @@ class PsychoPyScreen:
 		else:
 			self.screen.append(Rect(pygaze.expdisplay, width=w, height=h, lineWidth=pw, lineColor=colour, lineColorSpace='rgb', fillColor=None, pos=pos))
 
-#		self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=pos, size=[w,h], color=colour))
-#		if not fill:
-#			self.screen.append(GratingStim(pygaze.expdisplay, tex=None, mask=None, pos=(pos[0]+pw,pos[1]+pw), size=[w-2*pw,h-2*pw], color=rgb2psychorgb(self.bgc)))
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
 

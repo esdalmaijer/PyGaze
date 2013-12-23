@@ -25,18 +25,18 @@ try:
 except:
 	pass
 
-class Logfile:
+from pygaze._misc.misc import copy_docstr
+from pygaze._logfile.baselogfile import BaseLogfile
 
-	"""A logfile for storing data"""
+class Logfile(BaseLogfile):
+
+	# See BaseLogfile
 
 	def __init__(self, **args):
 
-		"""
-		Initializes the Logfile object.
-		
-		TODO: docstring.
-		"""
+		# See BaseLogfile
 
 		from pygaze._logfile.logfile import Logfile
 		self.__class__ = Logfile
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseLogfile, Logfile)

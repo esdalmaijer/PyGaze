@@ -24,7 +24,18 @@ try:
 	from constants import *
 except:
 	pass
+
 import pygaze
+
+from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
 
 def message(msg):
 	
@@ -33,7 +44,7 @@ def message(msg):
 	print("%d\t%s" % (int(pygaze.clock.get_time()), msg))
 
 
-class DumbDummy:
+class DumbDummy(BaseEyeTracker):
 
 	"""A dummy class to run experiments in 'dumb dummy' mode, where nothing happens (NO simulation!)"""
 	
@@ -48,6 +59,16 @@ class DumbDummy:
 		keyword arguments
 		None
 		"""
+
+		# try to copy docstrings (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseEyeTracker, DumbDummy)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.recording = False
 		self.blinking = False

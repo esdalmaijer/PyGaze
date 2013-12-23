@@ -38,7 +38,7 @@ else:
 		raise Exception("Error in plugins.frl: PyGame could not be loaded!")
 
 import pygaze
-from pygaze.screen import pos2psychopos, psychopos2pos
+from pygaze._misc.misc import pos2psychopos, psychopos2pos
 
 
 class FRL:

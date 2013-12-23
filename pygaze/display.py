@@ -31,7 +31,7 @@ from pygaze._display.basedisplay import BaseDisplay
 
 class Display(BaseDisplay):
 
-	#"""A class for Display objects, to present Screen objects on a monitor"""
+	# see BaseDisplay
 
 	def __init__(self, disptype=DISPTYPE, **args):
 

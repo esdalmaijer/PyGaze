@@ -1,26 +1,24 @@
-PyGaze - the open-source toolbox for eye tracking
+[PyGaze - the open-source toolbox for eye tracking](http://www.pygaze.org/)
+===========================================================================
 
 version 0.5 (22-12-2013)
 
 
 IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
 
-Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (2013). PyGaze: an
-	open-source, cross-platform toolbox for minimal-effort programming
-	of eye tracking experiments. Behaviour Research Methods.
-	doi: 10.3758/s13428-013-0422-2
+* Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (2013). PyGaze: an open-source,
+cross-platform toolbox for minimal-effort programming of eye tracking experiments.
+Behaviour Research Methods. doi:[10.3758/s13428-013-0422-2](http://link.springer.com/article/10.3758%2Fs13428-013-0422-2)
 
 
-This toolbox is developed by Edwin Dalmaijer at Utrecht University, but would
-not be here if it wasn't for Sebastiaan Mathot of the Free University in
-Amsterdam (the libeyelink, libsound and libinput resemble parts of the code
-of his OpenSesame experiment builder, see: cogsci.nl/opensesame).
+This toolbox is developed by Edwin Dalmaijer and Sebastiaan Mathot. For more
+information on contributors, see: http://pygaze.org/contributors.html
 
 PyGaze is open source software and therefore free to use and modify at will.
 Warranty, however, is NOT given. If this software fails, causes your computer
 to blow up, your spouse to leave you, your toilet to clog and/or the entire
-supply of nuclear missles on earth to launch, the author(s) CANNOT IN ANY WAY
-be held responsible.
+supply of nuclear missles on earth to launch, or anything else that you might
+want to blame on us, the author(s) CANNOT IN ANY WAY be held responsible.
 
 PyGaze was released under the GNU Public License (version 3), of which you
 should have received a copy of together with the software:

@@ -25,7 +25,11 @@ try:
 except:
 	pass
 
-class EyeTracker:
+from pygaze._misc.misc import copy_docstr
+from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+
+
+class EyeTracker(BaseEyeTracker):
 
 	"""
 	Generic EyeTracker class, which morphs into an eye-tracker specific class.
@@ -36,13 +40,16 @@ class EyeTracker:
 		"""
 		Initializes an EyeTracker object.
 		
-		Arguments:
-		display			--	A pygaze.display.Display instance
-		trackertype		--	The type of eye tracker; choose from:
-						'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii'
+		arguments
 		
-		Keyword arguments:
-		**args			--	A keyword-argument dictionary that contains
+		display		--	a pygaze.display.Display instance
+		
+		keyword arguments
+		
+		trackertype		--	the type of eye tracker; choose from:
+						'dumbdummy', 'dummy', 'eyelink', 'smi',
+						'tobii' (default = TRACKERTYPE)
+		**args		--	A keyword-argument dictionary that contains
 						eye-tracker-specific options
 		"""
 
@@ -103,3 +110,6 @@ class EyeTracker:
 		else:
 			raise Exception( \
 				u"Error in eyetracker.EyeTracker.__init__: trackertype '%s' not recognized, this should not happen!" % trackertype)
+		
+		# copy docstrings
+		copy_docstr(BaseEyeTracker, EyeTracker)

@@ -25,39 +25,38 @@ try:
 except:
 	pass
 
+from pygaze._sound.basesound import BaseSound
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
 import math
 import numpy
 import os.path
 import pygame
 import random
 
-class PyGameSound:
+class PyGameSound(BaseSound):
 
-	"""Sound object"""
+	# see pygaze._sound.basesound.BaseSound
 
 	def __init__(self, osc=SOUNDOSCILLATOR, freq=SOUNDFREQUENCY, length=SOUNDLENGTH, attack=SOUNDATTACK, decay=SOUNDDECAY, soundfile=None):
 		
-		"""Initializes a sound object
-		
-		arguments
-		None
-		
-		keyword arguments
-		osc		-- type of oscillator; allowed: 'sine', 'saw', 'square',
-				   'whitenoise' (default = SOUNDOSCILLATOR)
-		freq		-- sound frequency in Herz, either float or integer
-				   (default = SOUNDFREQUENCY)
-		length	-- sound length in milliseconds (default = 
-				   SOUNDLENGTH)
-		attack	-- sound attack ('fade in') in milliseconds (default = 
-				   SOUNDATTACK)
-		decay		-- sound decay ('fade out') in milliseconds (default =
-				   SOUNDDECAY)
-		soundfile	-- full path to soundfile with .ogg or .wav extension
-				   or None for no file; if a file is specified, all
-				   other keyword arguments will be ignored (default =
-				   None)
-		"""
+		# see pygaze._sound.basesound.BaseSound
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseSound, PyGameSound)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		pygame.mixer.init(frequency=SOUNDSAMPLINGFREQUENCY, size=SOUNDSAMPLESIZE, channels=SOUNDCHANNELS, buffer=SOUNDBUFFERSIZE)
 
@@ -109,13 +108,20 @@ class PyGameSound:
 
 	def saw(self, phase):
 
-		"""Returns a point in a saw wave (for internal use)
+		"""
+		Returns a point in a saw wave (for internal use)
 		
 		arguments
-		phase		-- phase of the wave
+		
+		phase		--	phase of the wave
+		
+		keyword arguments
+		
+		None
 		
 		returns
-		p		-- point in a saw wave
+		
+		p		--	point in a saw wave
 		"""
 
 		phase = phase % math.pi
@@ -125,13 +131,19 @@ class PyGameSound:
 
 	def square(self, phase):
 
-		"""Returns a point in a square wave (for internal use)
+		"""
+		Returns a point in a square wave (for internal use)
 		
 		arguments
-		phase		-- phase of the wave
+		
+		phase		--	phase of the wave
+		
+		keyword arguments
+		
+		None
 		
 		returns
-		p		-- point in a square wave
+		p		--	point in a square wave
 		"""
 
 		if phase < math.pi:
@@ -141,14 +153,21 @@ class PyGameSound:
 
 	def white_noise(self, phase):
 
-		"""Returns a point in random noise (for internal use)
+		"""
+		Returns a point in random noise (for internal use)
 		
 		arguments
-		phase		-- phase of the sound (ignored, but necessary for
-				   internal reasons; see __init__)
+		
+		phase		--	phase of the sound (ignored, but necessary for
+					internal reasons; see __init__)
+		
+		keyword arguments
+		
+		None
 		
 		returns
-		p		-- random number (i.e. a point in white noise sound)
+		
+		p		--	random number (i.e. a point in white noise sound)
 		"""
 
 		return random.random()
@@ -156,20 +175,7 @@ class PyGameSound:
 
 	def pan(self, panning):
 
-		"""Sets the panning of a sound (the volume of the 'unpanned'
-		channel decreases, while the other channel remaines the same)
-		
-		arguments
-		panning	-- either a float between -1 and 1, 'left' or 'right':
-				   'left':	full panning to left (same as -1)
-				   < 0: 	panning to left
-				   0:		no panning
-				   > 0:	panning to right
-				   'right':	full panning to left (same as 1)
-		
-		returns
-		None		-- self.sound is panned
-		"""
+		# see pygaze._sound.basesound.BaseSound
 
 		# raise exception on wrong input
 		if type(panning) not in (int, float) and panning not in ['left','right']:
@@ -209,46 +215,21 @@ class PyGameSound:
 
 	def play(self, repeats=0):
 
-		"""Plays specified sound (keyword argument loops specifies how many
-		repeats after being played once, -1 is infinite); function does not
-		wait for playback end, but returns immediately
-		
-		arguments
-		None
-		
-		keyword arguments
-		repeats	-- specifies the amount of repeats after being played
-				   once (-1 is infinite) (default = 0)
-		
-		returns
-		None		-- self.sound is played"""
+		# see pygaze._sound.basesound.BaseSound
 
 		self.sound.play(loops=repeats)
 
 
 	def stop(self):
 
-		"""Stops sound playback
-		
-		arguments
-		None
-		
-		returns
-		None		-- self.sound stops playing"""
+		# see pygaze._sound.basesound.BaseSound
 
 		self.sound.stop()
 
 
 	def set_volume(self, volume):
 
-		"""Set the playback volume (loudness) to specified value
-		
-		arguments
-		volume	-- float between 0 and 1
-		
-		returns
-		None		-- sets self.sound volume to specified value
-		"""
+		# see pygaze._sound.basesound.BaseSound
 
 		if volume <= 1.0 and volume >= 0.0:
 			self.sound.set_volume(volume)

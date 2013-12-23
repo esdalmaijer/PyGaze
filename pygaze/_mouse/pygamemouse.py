@@ -24,34 +24,38 @@ try:
 	from constants import *
 except:
 	pass
+
+from pygaze._mouse.basemouse import BaseMouse
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 	
 import pygaze
 import pygame
 
-class PyGameMouse:
+class PyGameMouse(BaseMouse):
 
-	"""A mouse for collecting responses"""
+	# See _mouse.basemouse.BaseMouse
 
 	import pygame.mouse
 
 	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT, visible=False):
 
-		"""Initializes mouse object
-		
-		arguments
-		None
-		
-		keyword arguments
-		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
-					   [1,3] for left and right button) or None to
-					   allow all buttons (default =
-					   MOUSEBUTTONLIST)
-		timeout	-- time in milliseconds after which None is returned
-				   on a call to get_clicked method when no click is
-				   registered (default = MOUSETIMEOUT)
-		visible	-- Boolean indicating if mouse should be visible or not
-				   (default = False)
-		"""
+		# See _mouse.basemouse.BaseMouse
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseMouse, PyGameMouse)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		# set mouse characteristics
 		self.set_mousebuttonlist(mousebuttonlist)
@@ -61,19 +65,7 @@ class PyGameMouse:
 
 	def set_mousebuttonlist(self, mousebuttonlist=None):
 
-		"""Set a list of accepted mouse buttons
-		
-		arguments
-		None
-		
-		keyword arguments
-		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
-					   [1,3] for left and right button) or None to
-					   allow all buttons (default = None)
-		
-		returns
-		Nothing	-- sets mbuttonlist property
-		"""
+		# See _mouse.basemouse.BaseMouse
 		
 		if mousebuttonlist == None or mousebuttonlist == []:
 			self.mbuttonlist = None
@@ -85,37 +77,14 @@ class PyGameMouse:
 
 	def set_timeout(self, timeout=None):
 
-		"""Set a timeout (in milliseconds)
-		
-		arguments
-		None
-		
-		keyword arguments
-		timeout	-- time in milliseconds after which None is returned
-				   on a call to get_clicked method when no click is
-				   registered (default = None)
-		
-		returns
-		Nothing	-- sets timeout property
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		self.timeout = timeout
 
 
 	def set_visible(self, visible=True):
 
-		"""Sets the visibility of the cursor
-		
-		arguments
-		None
-		
-		keyword arguments
-		visible	-- Boolean indicating if mouse should be visible or not
-				   (default = False)
-		
-		returns
-		Nothing	-- sets visible property
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		self.visible = visible
 		pygame.mouse.set_visible(visible)
@@ -123,32 +92,14 @@ class PyGameMouse:
 
 	def set_pos(self, pos=(0,0)):
 
-		"""Set the mouse position
-		
-		arguments
-		None
-		
-		keyword arguments
-		pos		-- an (x,y) position tuple, assuming top left is (0,0)
-				   (default = (0,0))
-		
-		returns
-		Nothing	-- sets the mouse position
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		pygame.mouse.set_pos(pos)
 
 
 	def get_pos(self):
 
-		"""Returns mouse position
-		
-		arguments
-		None
-		
-		returns
-		mpos		-- an (x,y) position tuple, assuming top left is (0,0)
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		mpos = pygame.mouse.get_pos()
 
@@ -157,34 +108,7 @@ class PyGameMouse:
 
 	def get_clicked(self, mousebuttonlist='default', timeout='default'):
 
-		"""Waits for mouse clicks
-		
-		arguments
-		None
-		
-		keyword arguments
-		mousebuttonlist	-- list of mouse buttons that are allowed (e.g.
-					   [1,3] for left and right button); None to
-					   allow all buttons or 'default' to use the
-					   mbuttonlist property (default = 'default')
-		timeout	-- time in milliseconds after which None is returned
-				   when no click is registered; None for no timeout or
-				   'default' to use the timeout property (default =
-				   'default')
-		
-		returns
-		mousebutton, clickpos, clicktime	-- mousebutton is an integer,
-								   indicating which button has
-								   been pressed or None when no
-								   button has been pressed;
-								   clickpos is an (x,y) position
-								   tuple or None when no click
-								   was registered;
-								   clicktime is the time
-								   (measured from expbegintime) a
-								   buttonpress or a timeout
-								   occured
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		# set buttonlist and timeout
 		if mousebuttonlist == 'default':
@@ -210,16 +134,7 @@ class PyGameMouse:
 
 	def get_pressed(self):
 
-		"""Returns the current state of the mouse buttons
-		
-		arguments
-		None
-		
-		returns
-		statelist	-- a list of Booleans indicating which mousebutton is
-				   down (e.g. [1,0,0] when only button 1 is pressed on
-				   a three-button-mouse)
-		"""
+		# See _mouse.basemouse.BaseMouse
 
 		pygame.event.get()
 		return pygame.mouse.get_pressed()

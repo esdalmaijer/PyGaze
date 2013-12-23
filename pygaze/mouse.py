@@ -25,7 +25,11 @@ try:
 except:
 	pass
 
-class Mouse:
+from pygaze._misc.misc import copy_docstr
+from pygaze._mouse.basemouse import BaseMouse
+
+
+class Mouse(BaseMouse):
 
 	"""A mouse for collecting responses"""
 
@@ -47,3 +51,4 @@ class Mouse:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__ = Mouse
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseMouse, Mouse)

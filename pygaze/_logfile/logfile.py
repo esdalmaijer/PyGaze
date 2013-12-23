@@ -26,25 +26,33 @@ try:
 except:
 	pass
 
+from pygaze._logfile.baselogfile import BaseLogfile
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
-class Logfile:
 
-	"""Logfile object for saving data"""
+class Logfile(BaseLogfile):
+
+	# See _logfile.baselogfile.BaseLogfile
 
 	def __init__(self, filename=LOGFILE):
 
-		"""Initiates logfile object
-		
-		arguments
-		None
-		
-		keyword arguments
-		filename	-- name (possibly including path) for the logfile;
-				   WITHOUT extension! (default = LOGFILE)
-		
-		returns
-		Nothing	-- sets filename and logfile properties
-		"""
+		# See _logfile.baselogfile.BaseLogfile
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseLogfile, Logfile)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.filename = filename + ".txt"
 		self.logfile = open(self.filename, "w")
@@ -52,15 +60,7 @@ class Logfile:
 
 	def write(self, vallist):
 
-		"""Writes given values to logfile (each value separated with a tab)
-		
-		arguments
-		vallist	-- list of values to be written to logfile
-		
-		returns
-		Nothing	-- writes each value to the logfile, adding tabs between
-				   the values
-		"""
+		# See _logfile.baselogfile.BaseLogfile
 
 		# empty string
 		line = ""
@@ -79,15 +79,7 @@ class Logfile:
 
 	def close(self):
 
-		"""Closes logfile (do this after writing everything to the file!)
-		
-		arguments
-		None
-		
-		returns
-		Nothing	-- closes logfile; calling write method after calling
-				   close method will result in an error!
-		"""
+		# See _logfile.baselogfile.BaseLogfile
 
 		self.logfile.close()
 

@@ -24,12 +24,22 @@ try:
 	from constants import *
 except:
 	pass
-	
+
+from pygaze._joystick.basejoystick import BaseJoystick
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
 import pygaze
 import pygame
 from pygame.joystick import Joystick
 
-class PyGameJoystick:
+
+class PyGameJoystick(BaseJoystick):
 
 	"""A joystick for collecting responses"""
 
@@ -48,6 +58,16 @@ class PyGameJoystick:
 				   on a call to a get_* method when no input is
 				   registered (default = JOYTIMEOUT)
 		"""
+
+		# try to import copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseJoystick, PyGameJoystick)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		# initialize joystick
 		pygame.init()

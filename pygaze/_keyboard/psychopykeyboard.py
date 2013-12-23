@@ -24,30 +24,37 @@ try:
 	from constants import *
 except:
 	pass
+
+from pygaze._keyboard.basekeyboard import BaseKeyboard
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 	
 import pygaze
-from pygaze._screen.psychopyscreen import pos2psychopos, psychopos2pos
 import psychopy.event
 
-class PsychoPyKeyboard:
 
-	"""A keyboard for collecting responses"""
+class PsychoPyKeyboard(BaseKeyboard):
+
+	# See _keyboard.basekeyboard.BaseKeyboard
 
 	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
 
-		"""Initializes the Keyboard object
-		
-		arguments
-		None
-		
-		keyword arguments
-		keylist	-- list of keys that are allowed, e.g. ['1','a','enter']
-				   for the 1, A and Enter keys (default =
-				   KEYLIST)
-		timeout	-- time in milliseconds after which None is returned
-				   on a call to the get_key method when no keypress is
-				   registered (default = KEYTIMEOUT)
-		"""
+		# See _keyboard.basekeyboard.BaseKeyboard
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseKeyboard, PsychoPyKeyboard)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		# keymap
 		self.keymap = {
@@ -85,19 +92,7 @@ class PsychoPyKeyboard:
 
 	def set_keylist(self, keylist=None):
 
-		"""Set a list of accepted keys
-		
-		arguments
-		None
-		
-		keyword arguments
-		keylist	-- list of keys that are allowed (e.g.
-				   ['1','a','enter']) or None to allow all keys
-				   (default = None)
-		
-		returns
-		Nothing	-- sets klist property
-		"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 		
 		if keylist == None or keylist == []:
 			self.klist = None
@@ -112,52 +107,14 @@ class PsychoPyKeyboard:
 
 	def set_timeout(self, timeout=None):
 
-		"""Set a timeout (in milliseconds)
-		
-		arguments
-		None
-		
-		keyword arguments
-		timeout	-- time in milliseconds after which None is returned
-				   on a call to get_key method when no keypress is
-				   registered (default = None)
-		
-		returns
-		Nothing	-- sets timeout property
-		"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 
 		self.timeout = timeout
 
 
 	def get_key(self, keylist='default', timeout='default', flush=False):
 
-		"""Wait for keyboard input
-		
-		arguments
-		None
-		
-		keyword arguments
-		keylist	-- list of keys that are allowed (e.g.
-				   ['1','a','enter']), None to allow all keys or
-				   'default' to use klist property (default = 'default')
-		timeout	-- time in milliseconds after which None is returned
-				   when no keypress is registered (default = None);
-				   None for no timeout or 'default' to use the timeout
-				   property (default = 'default')
-		flush		--	Boolean indicating if all input from before
-					calling get_key should be ignored, if set to
-					False keypresses from before calling this
-					function will be registered, otherwise every
-					keyboard input from before calling this function
-					will be flushed (default = False)
-		
-		returns
-		key, presstime	-- key is a string, indicating which button has
-					   been pressed or None when no key has been
-					   pressed
-					   presstime is the time (measured from
-					   expbegintime) a keypress or a timeout occured
-		"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 		
 		# set keylist and timeout
 		if keylist == 'default':

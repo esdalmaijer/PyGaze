@@ -27,13 +27,32 @@ try:
 except:
 	pass
 
-class OSKeyboard:
+from pygaze._keyboard.basekeyboard import BaseKeyboard
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
-	"""See _keyboard.pygamekeyboard.PyGameKeyboard"""
+class OSKeyboard(BaseKeyboard):
+
+	# See _keyboard.basekeyboard.BaseKeyboard
 
 	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
 
-		"""See _keyboard.pygamekeyboard.PyGameKeyboard"""
+		# See _keyboard.basekeyboard.BaseKeyboard
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseKeyboard, OSKeyboard)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.experiment = osexperiment
 		self.keyboard = keyboard(self.experiment, keylist=keylist, timeout= \
@@ -41,19 +60,19 @@ class OSKeyboard:
 	
 	def set_keylist(self, keylist=None):
 
-		"""See _keyboard.pygamekeyboard.PyGameKeyboard"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 		
 		self.keyboard.set_keylist(keylist)
 
 	def set_timeout(self, timeout=None):
 
-		"""See _keyboard.pygamekeyboard.PyGameKeyboard"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 		
 		self.keyboard.set_timeout(timeout)
 
 	def get_key(self, keylist='default', timeout='default', flush=False):
 		
-		"""See _keyboard.pygamekeyboard.PyGameKeyboard"""
+		# See _keyboard.basekeyboard.BaseKeyboard
 
 		# set keylist and timeout
 		if keylist == 'default':

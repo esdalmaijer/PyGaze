@@ -32,12 +32,18 @@ from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
-if not DUMMYMODE:
-	import pylink
-	import Image
-	custom_display = pylink.EyeLinkCustomDisplay
-else:
-	custom_display = object
+from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
+import pylink
+import Image
+custom_display = pylink.EyeLinkCustomDisplay
 
 if DISPTYPE == 'psychopy':
 	try:
@@ -78,13 +84,23 @@ def deg2pix(cmdist, angle, pixpercm):
 	return cmsize * pixpercm
 
 
-class libeyelink:
+class libeyelink(BaseEyeTracker):
 
 	MAX_TRY = 100
 
-	def __init__(self, display, resolution=DISPSIZE, data_file=LOGFILE+".edf", fg_color=FGC, bg_color=BGC, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
+	def __init__(self, display, resolution=DISPSIZE, data_file=LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
 
 		""""Initializes the connection to the Eyelink"""
+
+		# try to import copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseEyeTracker, libeyelink)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		global _eyelink
 

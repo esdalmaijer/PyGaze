@@ -21,34 +21,40 @@
 
 import psychopy.core
 
-class PsychoPyTime:
+from pygaze._time.basetime import BaseTime
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
+
+class PsychoPyTime(BaseTime):
 	
-	"""Class for keeping track of the current time"""
+	# see pygaze._time.basetime.BaseTime
 	
 	def __init__(self):
 		
-		"""Initializes the Time object
-		
-		arguments
-		None
-		
-		keyword arguments
-		None
-		"""
+		# see pygaze._time.basetime.BaseTime
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseTime, PsychoPyTime)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 		
 		pass
 
 
 	def expstart(self):
 
-		"""Time is set to 0 when calling this
-		
-		arguments
-		None
-
-		returns
-		Nothing
-		"""
+		# see pygaze._time.basetime.BaseTime
 
 		global expbegintime
 
@@ -57,29 +63,14 @@ class PsychoPyTime:
 
 	def get_time(self):
 
-		"""Returns current time in milliseconds
-		
-		arguments
-		None
-		
-		returns
-		time		-- current time in milliseconds, as measured since
-					expbegintime
-		"""
+		# see pygaze._time.basetime.BaseTime
 
 		return psychopy.core.getTime() * 1000 - expbegintime
 
 
 	def pause(self, pausetime):
 
-		"""Pauses the experiment for given number of milliseconds
-		
-		arguments
-		pausetime	-- time to pause in milliseconds
-		
-		returns
-		pausetime	-- actual time the system paused (in milliseconds)
-		"""
+		# see pygaze._time.basetime.BaseTime
 
 		t0 = psychopy.core.getTime()
 		psychopy.core.wait(pausetime/1000.0)
@@ -90,15 +81,7 @@ class PsychoPyTime:
 
 	def expend(self):
 
-		"""Completely ends the experiment (only call this at the end!)
-		
-		arguments
-		None
-		
-		returns
-		endtime	-- ending time of the experiment (in milliseconds since
-					expbegintime
-		"""
+		# see pygaze._time.basetime.BaseTime
 
 		endtime = self.get_time() * 1000
 

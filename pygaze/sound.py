@@ -25,7 +25,11 @@ try:
 except:
 	pass
 
-class Sound:
+from pygaze._misc.misc import copy_docstr
+from pygaze._sound.basesound import BaseSound
+
+
+class Sound(BaseSound):
 
 	"""A mouse for collecting responses"""
 
@@ -43,3 +47,4 @@ class Sound:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__ = Sound
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseSound, Sound)

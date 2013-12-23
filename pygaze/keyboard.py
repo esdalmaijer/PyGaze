@@ -25,17 +25,17 @@ try:
 except:
 	pass
 
-class Keyboard:
+from pygaze._misc.misc import copy_docstr
+from pygaze._keyboard.basekeyboard import BaseKeyboard
 
-	"""A keyboard for collecting responses"""
+
+class Keyboard(BaseKeyboard):
+
+	# see BaseKeyboard
 
 	def __init__(self, disptype=DISPTYPE, **args):
 
-		"""
-		Initializes the Keyboard object.
-		
-		TODO: docstring;
-		"""
+		# see BaseKeyboard
 
 		if disptype == u'pygame':
 			from pygaze._keyboard.pygamekeyboard import PyGameKeyboard as \
@@ -50,3 +50,4 @@ class Keyboard:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__ = Keyboard
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseKeyboard, Keyboard)

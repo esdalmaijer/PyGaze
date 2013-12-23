@@ -25,8 +25,16 @@ try:
 except:
 	pass
 
-import warnings
 import pygaze
+
+from pygaze._screen.basescreen import BaseScreen
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
 import copy
 import math
@@ -47,8 +55,9 @@ except:
 		pilimp = True
 	except:
 		pilimp = False
-	
-class PyGameScreen:
+
+
+class PyGameScreen(BaseScreen):
 
 	"""A class for PyGame Screen objects, for visual stimuli (to be displayed via a Display object)"""
 	
@@ -60,6 +69,16 @@ class PyGameScreen:
 	
 		TODO: docstring
 		"""
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseScreen, PyGameScreen)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 		
 		self.dispsize = dispsize
 		self.fgc = fgc

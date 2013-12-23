@@ -25,27 +25,40 @@ try:
 except:
 	pass
 
-class OSTime:
+from pygaze._time.basetime import BaseTime
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
+
+class OSTime(BaseTime):
 	
-	"""Class for keeping track of the current time"""
+	# see pygaze._time.basetime.BaseTime
 	
 	def __init__(self):
 		
-		"""Initializes the Time object
-		
-		arguments
-		None
-		
-		keyword arguments
-		None
-		"""
+		# see pygaze._time.basetime.BaseTime
+
+		# try to copy docstring (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseTime, OSTime)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 		
 		pass
 
 
 	def expstart(self):
 		
-		"""See _time.pygametime"""
+		# see pygaze._time.basetime.BaseTime
 
 		global expbegintime
 		
@@ -54,20 +67,20 @@ class OSTime:
 
 	def get_time(self):
 
-		"""See _time.pygametime"""
+		# see pygaze._time.basetime.BaseTime
 
 		return osexperiment.time()
 
 
 	def pause(self, pausetime):
 
-		"""See _time.pygametime"""
+		# see pygaze._time.basetime.BaseTime
 
 		return osexperiment.sleep(pausetime)
 
 
 	def expend(self):
 
-		"""See _time.pygametime"""
+		# see pygaze._time.basetime.BaseTime
 
 		return osexperiment.time()

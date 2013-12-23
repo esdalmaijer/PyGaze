@@ -25,7 +25,11 @@ try:
 except:
 	pass
 
-class Time:
+from pygaze._misc.misc import copy_docstr
+from pygaze._time.basetime import BaseTime
+
+
+class Time(BaseTime):
 
 	"""A mouse for collecting responses"""
 
@@ -47,3 +51,4 @@ class Time:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__ = Time
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseTime, Time)

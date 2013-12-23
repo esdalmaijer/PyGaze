@@ -25,17 +25,17 @@ try:
 except:
 	pass
 
-class Joystick:
+from pygaze._misc.misc import copy_docstr
+from pygaze._joystick.basejoystick import BaseJoystick
 
-	"""A mouse for collecting responses"""
+
+class Joystick(BaseJoystick):
+
+	# see BaseJoystick
 
 	def __init__(self, disptype=DISPTYPE, **args):
 
-		"""
-		Initializes the Mouse object.
-		
-		TODO: docstring.
-		"""
+		# see BaseJoystick
 
 		if disptype in (u'pygame', u'psychopy'):
 			from pygaze._joystick.pygamejoystick import PyGameJoystick
@@ -43,3 +43,4 @@ class Joystick:
 		else:
 			raise Exception(u'Unexpected disptype : %s' % disptype)
 		self.__class__.__init__(self, **args)
+		copy_docstr(BaseJoystick, Joystick)

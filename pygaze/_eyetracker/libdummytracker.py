@@ -31,8 +31,18 @@ from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
+from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
 
-class Dummy:
+
+
+class Dummy(BaseEyeTracker):
 
 	"""A dummy class to run experiments in dummy mode, where eye movements are simulated by the mouse"""
 	
@@ -47,6 +57,16 @@ class Dummy:
 		keyword arguments
 		None
 		"""
+
+		# try to copy docstrings (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseEyeTracker, Dummy)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
 
 		self.recording = False
 		self.blinking = False
