@@ -87,6 +87,11 @@ class BaseEyeTracker:
 					support filenames longer than 8 characters (so no
 					path assignment in the logfile name, as is possible
 					for SMI and Tobii) (default = LOGFILENAME)
+		force_drift_correct		--	EyeLink only! Indicates whether an
+					active drift correction should be used. This option is
+					relevant for EyeLink 1000 devices, on which drift correction
+					is by default only a check, and not an actual single-point
+					recalibration.
 		resolution	--	EyeLink only! Specify the display resolution using
 					a (w,h) tuple (default = DISPSIZE)
 		fg_color	--	EyeLink only! Specify the foreground colour using
@@ -296,37 +301,6 @@ class BaseEyeTracker:
 		"""
 
 		pass
-
-
-#	def prepare_backdrop(self):
-#
-#		"""
-#		Prepare the backdrop (image to be displayed on the experimentor PC),
-#		EyeLink only!
-#		"""
-#
-#		pass
-
-	def prepare_drift_correction(self):
-
-		"""
-		Prepares the drift correction (EyeLink specific)
-		
-		arguments
-
-		pos		--	a (x,y) position tuple
-		
-		keyword arguments
-		
-		None
-		
-		returns
-		
-		None		
-		"""
-
-		pass
-
 
 	def pupil_size(self):
 
@@ -732,26 +706,4 @@ class BaseEyeTracker:
 
 		pass
 	
-	
-	def is_valid_sample(self):
-		
-		"""
-		Checks if the sample provided is valid, based on SMI specific
-		criteria (for internal use)
-		
-		arguments
 
-		gazepos		--	a (x,y) gaze position tuple, as returned by
-						self.sample()
-		
-		keyword arguments
-		
-		None
-		
-		returns
-
-		valid			--	a Boolean: True on a valid sample, False on
-						an invalid sample
-		"""
-		
-		pass
