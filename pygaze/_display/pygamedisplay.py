@@ -73,9 +73,12 @@ class PyGameDisplay(BaseDisplay):
 		pygame.display.init()
 		# make mouse invisible (should be so per default, but you never know)
 		pygame.mouse.set_visible(self.mousevis)
-		# create surface for full screen displaying
-		pygaze.expdisplay = pygame.display.set_mode(self.dispsize, \
-			pygame.FULLSCREEN|pygame.HWSURFACE|pygame.DOUBLEBUF)
+		if FULLSCREEN:
+			mode = pygame.FULLSCREEN|pygame.HWSURFACE|pygame.DOUBLEBUF
+		else:
+			mode = pygame.HWSURFACE|pygame.DOUBLEBUF
+		# create surface for full screen displaying		
+		pygaze.expdisplay = pygame.display.set_mode(self.dispsize, mode)
 
 		# blit screen to display surface (if user entered one)
 		if screen:

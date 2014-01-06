@@ -67,8 +67,8 @@ class PsychoPyDisplay:
 
 		# create window
 		pygaze.expdisplay = Window(size=self.dispsize, pos=None, color= \
-			rgb2psychorgb(self.bgc), colorSpace='rgb', fullscr=True, screen= \
-			self.screennr, units='pix')
+			rgb2psychorgb(self.bgc), colorSpace='rgb', fullscr=FULLSCREEN, \
+			screen=self.screennr, units='pix')
 		# set mouse visibility
 		pygaze.expdisplay.setMouseVisible(self.mousevis)
 		# get screen in window
