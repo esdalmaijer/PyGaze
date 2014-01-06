@@ -492,7 +492,7 @@ class PyGameScreen(BaseScreen):
 				raise Exception("Error in libscreen.PyGameScreen.draw_image: image format not recognized!")
 		
 		if scale != None:
-			pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
+			img = pygame.transform.scale(img, (int(img.get_width()*scale), int(img.get_height()*scale)))
 		
 		imgpos = (int(pos[0] - img.get_width()/2), int(pos[1] - img.get_height()/2))
 		
