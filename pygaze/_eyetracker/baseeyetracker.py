@@ -113,7 +113,16 @@ class BaseEyeTracker:
 	def calibrate(self):
 
 		"""
-		Calibrates the eye tracking system
+		Calibrates the eye tracking system. The actual behavior of this function
+		depends on the type of eye tracker and is described below.
+
+		EyeLink:
+
+		This function will activate the camera-setup screen, which allows you
+		to adjust the camera, and peform a calibration/ validation procedure.
+		Pressing 'q' will exit the setup routine. Pressing 'escape' will first
+		trigger a confirmation dialog and then, upon confirmation, raises an
+		Exception.
 		
 		arguments
 		
@@ -179,7 +188,17 @@ class BaseEyeTracker:
 	def drift_correction(self, pos=None, fix_triggered=False):
 
 		"""
-		Performs a drift check
+		Performs a drift-correction procedure. The exact behavior of this
+		function on the type of eye tracker and is described below. Because
+		drift correction may fail, you will generally call this function in a
+		loop.
+
+		EyeLink:
+
+		Pressing 'q' during drift-correction will activate the camera-setup
+		screen. From there, pressing 'q' again will cause drift correction to
+		fail immediately. Pressing 'escape' will give the option to abort the
+		experiment, in which case an Exception is raised.
 		
 		arguments
 		

@@ -139,7 +139,6 @@ class EyelinkGraphics(custom_display):
 			self.tracker.sendCommand("autothreshold_repeat=YES")
 			self.tracker.sendCommand("enable_camera_position_detect=YES")
 
-
 	def setup_cal_display(self):
 
 		"""
@@ -151,13 +150,11 @@ class EyelinkGraphics(custom_display):
 		self.display.fill(self.menuscreen)
 		self.display.show()
 
-
 	def exit_cal_display(self):
 
 		"""Exits calibration display."""
 
 		self.clear_cal_display()
-
 
 	def record_abort_hide(self):
 
@@ -286,11 +283,15 @@ class EyelinkGraphics(custom_display):
 		try:
 			key, time = self.kb.get_key(keylist=None, timeout='default')
 		except:
-			return None
-
+			self.esc_pressed = True
+			key = 'q'
 		if key == None:
 			return None
-
+		# Escape functions as a 'q' with the additional esc_pressed flag
+		if key == 'escape':
+			key = 'q'
+			self.esc_pressed = True
+		# Process regular keys
 		if key == "return":
 			keycode = pylink.ENTER_KEY
 			self.state = None
@@ -317,9 +318,8 @@ class EyelinkGraphics(custom_display):
 			keycode = pylink.CURS_RIGHT
 		else:
 			keycode = 0
-
+		# Convert key to PyLink keycode and return
 		return [pylink.KeyInput(keycode, 0)] # 0 = pygame.KMOD_NONE
-
 
 	def exit_image_display(self):
 
