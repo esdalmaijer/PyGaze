@@ -30,6 +30,7 @@ DISPTYPE = 'psychopy' # either 'psychopy' or 'pygame'
 DISPSIZE = (1280,1024) # canvas size
 SCREENSIZE = (33.8,27.1) # physical screen size in centimeters
 SCREENDIST = 57.0 # centimeters; distance between screen and participant's eyes
+FULLSCREEN = True # Indicates whether the experiment is executed in fullscreen
 MOUSEVISIBLE = False # mouse visibility
 BGC = (125,125,125) # backgroundcolour
 FGC = (0,0,0) # foregroundcolour
@@ -60,6 +61,7 @@ SACCVELTHRESH = 35 # degrees per second, saccade velocity threshold
 SACCACCTHRESH = 9500 # degrees per second, saccade acceleration threshold
 EVENTDETECTION = 'pygaze' # either 'pygaze' for PyGaze detection algorithms, or 'native' for manufacturer's event detection (if available)
 # EyeLink only
+EYELINKCALBEEP = True # Calibration beep with each jump
 # SMI only
 SMIIP = '127.0.0.1'
 SMISENDPORT = 4444

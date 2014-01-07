@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with PyGaze.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import inspect
+from openexp.canvas import canvas
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze import EyeTracker, Display
@@ -43,13 +45,44 @@ class pygaze_drift_correct(item):
 		self.xpos = 0
 		self.ypos = 0
 		self.fixation_triggered = u'no'
+		self.target_color = u'[foreground]'
+		self.target_style = u'default'
 		item.__init__(self, name, experiment, script)
+		
+	def prepare_drift_correction_canvas(self):
+		
+		"""A hook to prepare the canvas with the drift-correction target."""
+		
+		self.dc_canvas = canvas(self.experiment)
+		x = self.get(u'xpos') + self.dc_canvas.xcenter()
+		y = self.get(u'ypos') + self.dc_canvas.ycenter()
+		if u'style' in inspect.getargspec(self.dc_canvas.fixdot).args:
+			self.dc_canvas.fixdot(x, y, color=self.get(u'target_color'), \
+				style=self.get(u'target_style'))
+		else:
+			self.dc_canvas.fixdot(x, y, color=self.get(u'target_color'))
+		
+	def draw_drift_correction_canvas(self, x, y):
+		
+		"""
+		A hook to show the canvas with the drift-correction target.
+		
+		Arguments:
+		x	--	The X coordinate (unused).
+		y	--	The Y coordinate (unused).
+		"""
+		
+		self.dc_canvas.show()
 
 	def prepare(self):
 
 		"""The preparation phase of the plug-in goes here."""
 
 		item.prepare(self)
+		self.prepare_drift_correction_canvas()
+		self.experiment.pygaze_eyetracker \
+			.set_draw_drift_correction_target_func( \
+			self.draw_drift_correction_canvas)
 
 	def run(self):
 

@@ -31,8 +31,9 @@ from pygaze.screen import Screen
 from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
-
+from pygaze._eyetracker.eyelinkgraphics import EyelinkGraphics
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
 # be imported correctly
@@ -43,28 +44,17 @@ except:
 
 import pylink
 import Image
-custom_display = pylink.EyeLinkCustomDisplay
 
 if DISPTYPE == 'psychopy':
-	try:
-		import psychopy.visual
-	except:
-		raise Exception("Error in libeyelink: PsychoPy could not be loaded!")
-
-if DISPTYPE == 'pygame':
-	try:
-		import pygame
-	except:
-		raise Exception("Error in libeyelink: PyGame could not be loaded!")
+	import psychopy.visual
+elif DISPTYPE == 'pygame':
+	import pygame
 
 import copy
 import math
 import os.path
-import array
-from PIL import Image
 
 _eyelink = None
-
 
 def deg2pix(cmdist, angle, pixpercm):
 
@@ -88,9 +78,12 @@ class libeyelink(BaseEyeTracker):
 
 	MAX_TRY = 100
 
-	def __init__(self, display, resolution=DISPSIZE, data_file=LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
+	def __init__(self, display, resolution=DISPSIZE, data_file= \
+		LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC, eventdetection= \
+		EVENTDETECTION, saccade_velocity_threshold=35, \
+		saccade_acceleration_threshold=9500, force_drift_correct=True):
 
-		""""Initializes the connection to the Eyelink"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# try to import copy docstring (but ignore it if it fails, as we do
 		# not need it for actual functioning of the code)
@@ -107,11 +100,12 @@ class libeyelink(BaseEyeTracker):
 		stem, ext = os.path.splitext(data_file)
 		if len(stem) > 8 or len(ext) > 4:
 			data_file = "default.edf"
-			print("WARNING! The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
+			print( \
+				"WARNING! The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
 
 		# properties
 		self.data_file = data_file
-		self.screen = display
+		self.display = display
 		self.scr = Screen(mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
@@ -126,42 +120,56 @@ class libeyelink(BaseEyeTracker):
 		self.prevps = -1
 
 		# event detection properties
-		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
-		self.fixtimetresh = 100 # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
-		self.spdtresh = self.saccade_velocity_treshold # degrees per second; saccade velocity threshold
-		self.accthresh = self.saccade_acceleration_treshold # degrees per second**2; saccade acceleration threshold
+		# degrees; maximal distance from fixation start (if gaze wanders beyond
+		# this, fixation has stopped)
+		self.fixtresh = 1.5
+		# milliseconds; amount of time gaze has to linger within self.fixtresh
+		# to be marked as a fixation
+		self.fixtimetresh = 100
+		# degrees per second; saccade velocity threshold
+		self.spdtresh = self.saccade_velocity_treshold
+		# degrees per second**2; saccade acceleration threshold
+		self.accthresh = self.saccade_acceleration_treshold
 		self.eventdetection = eventdetection
 		self.set_detection_type(self.eventdetection)
-		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
-		self.screendist = SCREENDIST # distance between participant and screen in cm
-		self.screensize = SCREENSIZE # distance between participant and screen in cm
-		self.pixpercm = (self.resolution[0]/float(self.screensize[0]) + self.resolution[1]/float(self.screensize[1])) / 2.0
-
+		# weighted distance, used for determining whether a movement is due to
+		# measurement error (1 is ok, higher is more conservative and will
+		# result in only larger saccades to be detected)
+		self.weightdist = 10
+		# distance between participant and screen in cm
+		self.screendist = SCREENDIST
+		# distance between participant and screen in cm
+		self.screensize = SCREENSIZE
+		self.pixpercm = (self.resolution[0]/float(self.screensize[0]) + \
+			self.resolution[1]/float(self.screensize[1])) / 2.0
 
 		# only initialize eyelink once
 		if _eyelink == None:
 			try:
 				_eyelink = pylink.EyeLink()
 			except:
-				raise Exception("Error in libeyelink.libeyelink.__init__(): Failed to connect to the tracker!")
-
-			graphics_env = eyelink_graphics(self.screen, _eyelink)
-			pylink.openGraphicsEx(graphics_env)
-
+				raise Exception( \
+					"Error in libeyelink.libeyelink.__init__(): Failed to connect to the tracker!")
+			self.eyelink_graphics = EyelinkGraphics(self.display, _eyelink)
+			pylink.openGraphicsEx(self.eyelink_graphics)
+		# Optionally force drift correction. For some reason this must be done
+		# as (one of) the first things, otherwise a segmentation fault occurs.
+		if force_drift_correct:
+			self.send_command('driftcorrect_cr_disable = OFF')
 		pylink.getEYELINK().openDataFile(self.data_file)
 		pylink.flushGetkeyQueue()
 		pylink.getEYELINK().setOfflineMode()
-
 		# notify eyelink of display resolution
-		self.send_command("screen_pixel_coords = 0 0 %d %d" % (self.resolution[0], self.resolution[1]))
-
+		self.send_command("screen_pixel_coords = 0 0 %d %d" % \
+			(self.resolution[0], self.resolution[1]))
 		# determine software version of tracker
 		self.tracker_software_ver = 0
 		self.eyelink_ver = pylink.getEYELINK().getTrackerVersion()
 		if self.eyelink_ver == 3:
 			tvstr = pylink.getEYELINK().getTrackerVersionString()
 			vindex = tvstr.find("EYELINK CL")
-			self.tracker_software_ver = int(float(tvstr[(vindex + len("EYELINK CL")):].strip()))
+			self.tracker_software_ver = int(float(tvstr[(vindex + \
+				len("EYELINK CL")):].strip()))
 
 		# get some configuration stuff
 		if self.eyelink_ver >= 2:
@@ -169,87 +177,108 @@ class libeyelink(BaseEyeTracker):
 			if self.eyelink_ver == 2: # turn off scenelink camera stuff
 				self.send_command("scene_camera_gazemap = NO")
 		else:
-			self.send_command("saccade_velocity_threshold = %d" % self.saccade_velocity_threshold)
-			self.send_command("saccade_acceleration_threshold = %s" % self.saccade_acceleration_threshold)
+			self.send_command("saccade_velocity_threshold = %d" % \
+				self.saccade_velocity_threshold)
+			self.send_command("saccade_acceleration_threshold = %s" % \
+				self.saccade_acceleration_threshold)
 
-		# set EDF file contents (this specifies which data is written to the EDF file)
-		self.send_command("file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON")
+		# set EDF file contents (this specifies which data is written to the EDF
+		# file)
+		self.send_command( \
+			"file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON")
 		if self.tracker_software_ver >= 4:
-			self.send_command("file_sample_data  = LEFT,RIGHT,GAZE,AREA,GAZERES,STATUS,HTARGET")
+			self.send_command( \
+				"file_sample_data  = LEFT,RIGHT,GAZE,AREA,GAZERES,STATUS,HTARGET")
 		else:
-			self.send_command("file_sample_data  = LEFT,RIGHT,GAZE,AREA,GAZERES,STATUS")
-
-		# set link data (this specifies which data is sent through the link and thus can be used in gaze contingent displays)
-		self.send_command("link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,BUTTON")
+			self.send_command( \
+				"file_sample_data  = LEFT,RIGHT,GAZE,AREA,GAZERES,STATUS")
+		# set link data (this specifies which data is sent through the link and 
+		# thus can be used in gaze contingent displays)
+		self.send_command( \
+			"link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,BUTTON")
 		if self.tracker_software_ver >= 4:
-			self.send_command("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,HTARGET")
+			self.send_command( \
+				"link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,HTARGET")
 		else:
-			self.send_command("link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS")
-
-		# not quite sure what this means (according to Sebastiaan Mathot, it might be the button that is used to end drift correction?)
+			self.send_command( \
+				"link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS")
+		# not quite sure what this means (according to Sebastiaan Mathot, it
+		# might be the button that is used to end drift correction?)
 		self.send_command("button_function 5 'accept_target_fixation'")
-
+		
 		if not self.connected():
-			raise Exception("Error in libeyelink.libeyelink.__init__(): Failed to connect to the eyetracker!")
-
+			raise Exception( \
+				"Error in libeyelink.libeyelink.__init__(): Failed to connect to the eyetracker!")
 
 	def send_command(self, cmd):
 
-		"""Sends a command to the eyelink"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		pylink.getEYELINK().sendCommand(cmd)
 
 
 	def log(self, msg):
 
-		"""Writes a message to the eyelink data file"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		pylink.getEYELINK().sendMessage(msg)
 
 
 	def log_var(self, var, val):
 
-		"""Writes a variable to the eyelink data file"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		pylink.getEYELINK().sendMessage("var %s %s" % (var, val))
 
 
 	def status_msg(self, msg):
 
-		"""Sets the eyelink status message (which is displayed on the eyelink experimenter PC)"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		pylink.getEYELINK().sendCommand("record_status_message '%s'" % msg)
 
-
 	def connected(self):
 
-		"""Returns the status of the eyelink connection"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		return pylink.getEYELINK().isConnected()
 
-
 	def calibrate(self):
 
-		"""Starts eyelink calibration"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if self.recording:
-			raise Exception("Error in libeyelink.libeyelink.calibrate(): Trying to calibrate after recording has started!")
+			raise Exception( \
+				"Error in libeyelink.libeyelink.calibrate(): Trying to calibrate after recording has started!")
 
 		# # # # #
 		# EyeLink calibration and validation
 		
-		pylink.getEYELINK().doTrackerSetup()
-		
+		# attempt calibrate; confirm abort when esc pressed
+		while True:
+			self.eyelink_graphics.esc_pressed = False
+			pylink.getEYELINK().doTrackerSetup()
+			if not self.eyelink_graphics.esc_pressed:
+				break
+			self.confirm_abort_experiment()
+
+		# If we are using the built-in EyeLink event detection, we don't need
+		# the RMS calibration routine.
+		if EVENTDETECTION == 'native':
+			return
 		
 		# # # # #
 		# RMS calibration
 		
 		# present instructions
-		self.screen.fill() # clear display
-		self.scr.draw_text(text="Noise calibration: please look at the dot\n\n(press space to start)", pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), center=True)
+		self.display.fill() # clear display
+		self.scr.draw_text(text= \
+			"Noise calibration: please look at the dot\n\n(press space to start)", \
+			pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), center= \
+			True)
 		self.scr.draw_fixation(fixtype='dot')
-		self.screen.fill(self.scr)
-		self.screen.show()
+		self.display.fill(self.scr)
+		self.display.show()
 		self.scr.clear() # clear screen again
 
 		# wait for spacepress
@@ -260,17 +289,19 @@ class libeyelink(BaseEyeTracker):
 		self.start_recording()
 
 		# show fixation
-		self.screen.fill()
+		self.display.fill()
 		self.scr.draw_fixation(fixtype='dot')
-		self.screen.fill(self.scr)
-		self.screen.show()
+		self.display.fill(self.scr)
+		self.display.show()
 		self.scr.clear()
 
 		# wait for a bit, to allow participant to fixate
 		pygaze.clock.pause(500)
 
 		# get samples
-		sl = [self.sample()] # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
+		# samplelist, prefilled with 1 sample to prevent sl[-1] from producing
+		# an error; first sample will be ignored for RMS calculation
+		sl = [self.sample()]
 		t0 = pygaze.clock.get_time() # starting time
 		while pygaze.clock.get_time() - t0 < 1000:
 			s = self.sample() # sample
@@ -293,46 +324,59 @@ class libeyelink(BaseEyeTracker):
 
 		# recalculate thresholds (degrees to pixels)
 		self.pxfixtresh = deg2pix(self.screendist, self.fixtresh, self.pixpercm)
-		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh, self.pixpercm)/1000.0 # in pixels per millisecons
-		self.pxacctresh = deg2pix(self.screendist, self.accthresh, self.pixpercm)/1000.0 # in pixels per millisecond**2
+		self.pxspdtresh = deg2pix(self.screendist, self.spdtresh, \
+			self.pixpercm)/1000.0 # in pixels per millisecons
+		self.pxacctresh = deg2pix(self.screendist, self.accthresh, \
+			self.pixpercm)/1000.0 # in pixels per millisecond**2
 
 
 	def drift_correction(self, pos=None, fix_triggered=False):
 
-		"""Performs drift correction and falls back to calibration screen if necessary"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if self.recording:
-			raise Exception("Error in libeyelink.libeyelink.drift_correction(): Trying to perform drift correction after recording has started!")
-
+			raise Exception( \
+				"Error in libeyelink.libeyelink.drift_correction(): Trying to perform drift correction after recording has started!")
+		if not self.connected():
+			raise Exception( \
+				"Error in libeyelink.libeyelink.drift_correction(): The eyelink is not connected!")				
+		if pos == None:
+			pos = self.resolution[0] / 2, self.resolution[1] / 2				
 		if fix_triggered:
 			return self.fix_triggered_drift_correction(pos)
+		return self.manual_drift_correction(pos)
 
-		if pos == None:
-			pos = self.resolution[0] / 2, self.resolution[1] / 2
+	def manual_drift_correction(self, pos):
 
-		# show fixation
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, diameter=12)
-		self.screen.fill(self.scr)
-		self.screen.show()
-		self.scr.clear()
+		"""
+		Performs a manual, i.e. spacebar-triggered drift correction.
 
-		# perform drift check
-		while True:
-			if not self.connected():
-				raise Exception("Error in libeyelink.libeyelink.drift_correction(): The eyelink is not connected!")
-			try:
-				# Params: x, y, draw fix, allow_setup
-				error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 0, 1)
-				if error != 27:
-					print("libeyelink.libeyelink.drift_correction(): success")
-					return True
-				else:
-					print("libeyelink.drift_correction(): escape pressed")
-					return False
-			except:
-				print("libeyelink.drift_correction(): try again")
-				return False
+		Arguments:
+		pos		--	The positionf or the drift-correction target.
 
+		Returns:
+		True if drift correction was successfull, False otherwise.
+		"""
+
+		self.draw_drift_correction_target(pos[0], pos[1])
+		# Drift correction.
+		self.eyelink_graphics.esc_pressed = False
+		try:
+			# Clear the display (1), but do not allow falling back to setup
+			# screen (0).
+			error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 1, 0)
+		except:
+			error = -1
+		# A 0 exit code means successful drift correction
+		if error == 0:
+			return True
+		# If escape was pressed, we present the confirm abort screen
+		if self.eyelink_graphics.esc_pressed:
+			self.confirm_abort_experiment()
+		# If 'q' was pressed, we drop back to the calibration screen
+		else:
+			self.calibrate()
+		return False
 
 	def prepare_drift_correction(self, pos):
 
@@ -343,98 +387,94 @@ class libeyelink(BaseEyeTracker):
 		self.send_command("drift_correction_targets = %d %d" % pos)
 		self.send_command("start_drift_correction data = 0 0 1 0")
 		pylink.msecDelay(50);
-
-		# wait for a bit until samples start coming in (again, not sure if this is indeed what's going on)
+		# wait for a bit until samples start coming in (again, not sure if this
+		# is indeed what's going on)
 		if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
-			print("WARNING libeyelink.libeyelink.prepare_drift_correction(): Failed to perform drift correction (waitForBlockStart error)")
+			print( \
+				"WARNING libeyelink.libeyelink.prepare_drift_correction(): Failed to perform drift correction (waitForBlockStart error)")
 
+	def fix_triggered_drift_correction(self, pos=None, min_samples=30, \
+		max_dev=60, reset_threshold=10):
 
-	def fix_triggered_drift_correction(self, pos=None, min_samples=30, max_dev=60, reset_threshold=10):
-
-		"""Performs fixation triggered drift correction and falls back to the calibration screen if necessary"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if self.recording:
-			raise Exception("Error in libeyelink.libeyelink.fix_triggered_drift_correction(): Trying to perform drift correction after recording has started!")
+			raise Exception( \
+				"Error in libeyelink.libeyelink.fix_triggered_drift_correction(): Trying to perform drift correction after recording has started!")
 
 		self.recording = True
-
 		if pos == None:
 			pos = self.resolution[0] / 2, self.resolution[1] / 2
-
 		self.prepare_drift_correction(pos)
+		self.draw_drift_correction_target(pos[0], pos[1])
 
-		# show fixation
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, diameter=12)
-		self.screen.fill(self.scr)
-		self.screen.show()
-		self.scr.clear()
-
-		# loop until we have sufficient samples
+		# loop until we have enough samples
 		lx = []
 		ly = []
 		while len(lx) < min_samples:
-
 			# pressing escape enters the calibration screen
-			if self.kb.get_key(keylist=["escape", "q"], timeout=1)[0] != None:
-				self.recording = False
-				print("libeyelink.libeyelink.fix_triggered_drift_correction(): 'q' pressed")
+			resp = self.kb.get_key(keylist=["escape", "q"], timeout=1)[0]
+			if resp == 'escape':
+				self.recording = False			
+				self.confirm_abort_experiment()
+				print( \
+					"libeyelink.libeyelink.fix_triggered_drift_correction(): 'escape' pressed")
 				return False
-
+			elif resp == 'q':
+				self.recording = False			
+				self.calibrate()
+				print( \
+					"libeyelink.libeyelink.fix_triggered_drift_correction(): 'q' pressed")
+				return False				
 			# collect a sample
 			x, y = self.sample()
-
 			if len(lx) == 0 or x != lx[-1] or y != ly[-1]:
-
-				# if present sample deviates too much from previous sample, reset counting
-				if len(lx) > 0 and (abs(x - lx[-1]) > reset_threshold or abs(y - ly[-1]) > reset_threshold):
+				# if present sample deviates too much from previous sample,
+				# start from scratch.
+				if len(lx) > 0 and (abs(x - lx[-1]) > reset_threshold or \
+					abs(y - ly[-1]) > reset_threshold):
 					lx = []
 					ly = []
-
-				# collect samples
+				# Collect a sample
 				else:
 					lx.append(x)
 					ly.append(y)
-
+			# If we have enough samples to perform a drift correction ...
 			if len(lx) == min_samples:
-
 				avg_x = sum(lx) / len(lx)
 				avg_y = sum(ly) / len(ly)
 				d = ((avg_x - pos[0]) ** 2 + (avg_y - pos[1]) ** 2)**0.5
-
 				# emulate spacebar press on succes
 				pylink.getEYELINK().sendKeybutton(32, 0, pylink.KB_PRESS)
-
-				# getCalibrationResult() returns 0 on success and an exception or a non-zero value otherwise
+				# getCalibrationResult() returns 0 on success and an exception
+				# or a non-zero value otherwise
 				result = -1
 				try:
 					result = pylink.getEYELINK().getCalibrationResult()
 				except:
 					lx = []
 					ly = []
-					print("libeyelink.libeyelink.fix_triggered_drift_correction(): try again")
+					print( \
+						"libeyelink.libeyelink.fix_triggered_drift_correction(): try again")
 				if result != 0:
-					
 					try:
 						result = pylink.getEYELINK().getCalibrationResult()
 					except:
 						lx = []
 						ly = []
-						print("libeyelink.libeyelink.fix_triggered_drift_correction(): try again")
-
+						print( \
+							"libeyelink.libeyelink.fix_triggered_drift_correction(): try again")
 		# apply drift correction
 		pylink.getEYELINK().applyDriftCorrect()
 		self.recording = False
 		print("libeyelink.libeyelink.fix_triggered_drift_correction(): success")
-
 		return True
-
 
 	def start_recording(self):
 
-		"""Starts recording of gaze samples"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		self.recording = True
-
 		i = 0
 		while True:
 			# params: write samples, write event, send samples, send events
@@ -443,39 +483,37 @@ class libeyelink(BaseEyeTracker):
 			if not error:
 				break
 			if i > self.MAX_TRY:
-				raise Exception("Error in libeyelink.libeyelink.start_recording(): Failed to start recording!")
+				raise Exception( \
+					"Error in libeyelink.libeyelink.start_recording(): Failed to start recording!")
 				self.close()
 				pygaze.clock.expend()
 			i += 1
-			print("WARNING libeyelink.libeyelink.start_recording(): Failed to start recording (attempt %d of %d)" % (i, self.MAX_TRY))
+			print( \
+				"WARNING libeyelink.libeyelink.start_recording(): Failed to start recording (attempt %d of %d)" \
+				% (i, self.MAX_TRY))
 			pylink.msecDelay(100)
-
 		# don't know what this is
 		pylink.pylink.beginRealTimeMode(100)
-
 		# wait a bit until samples start coming in
 		if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
-			raise Exception("Error in libeyelink.libeyelink.start_recording(): Failed to start recording (waitForBlockStart error)!")
-
+			raise Exception( \
+				"Error in libeyelink.libeyelink.start_recording(): Failed to start recording (waitForBlockStart error)!")
 
 	def stop_recording(self):
 
-		"""Stops recording of gaze samples"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		self.recording = False
-
 		pylink.endRealTimeMode()
 		pylink.getEYELINK().setOfflineMode()
 		pylink.msecDelay(500)
 
-
 	def close(self):
 
-		"""Close the connection with the eyelink"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if self.recording:
 			self.stop_recording()
-
 		# close data file and transfer it to the experimental PC
 		print("libeyelink.libeyelink.close(): Closing data file")
 		pylink.getEYELINK().closeDataFile()
@@ -487,10 +525,9 @@ class libeyelink(BaseEyeTracker):
 		pylink.getEYELINK().close();
 		pylink.msecDelay(100)
 
-
 	def set_eye_used(self):
 
-		"""Sets the eye_used variable, based on the eyelink's report (which specifies which eye is being tracked); if both eyes are being tracked, the left eye is used"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		self.eye_used = pylink.getEYELINK().eyeAvailable()
 		if self.eye_used == self.right_eye:
@@ -499,31 +536,21 @@ class libeyelink(BaseEyeTracker):
 			self.log_var("eye_used", "left")
 			self.eye_used = self.left_eye
 		else:
-			print("WARNING libeyelink.libeyelink.set_eye_used(): Failed to determine which eye is being recorded")
+			print( \
+				"WARNING libeyelink.libeyelink.set_eye_used(): Failed to determine which eye is being recorded")
 	
 	
 	def pupil_size(self):
 
-		"""Return pupil size
-		
-		arguments
-		None
-		
-		returns
-		pupil size	-- returns pupil diameter for the eye that is currently
-				   being tracked (as specified by self.eye_used) or -1
-				   when no data is obtainable
-		"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if not self.recording:
-			raise Exception("Error in libeyelink.libeyelink.pupil_size(): Recording was not started before collecting eyelink data!")
-
+			raise Exception( \
+				"Error in libeyelink.libeyelink.pupil_size(): Recording was not started before collecting eyelink data!")
 		if self.eye_used == None:
 			self.set_eye_used()
-		
 		# get newest sample
 		s = pylink.getEYELINK().getNewestSample()
-		
 		# check if sample is new
 		if s != None:
 			# right eye
@@ -537,24 +564,20 @@ class libeyelink(BaseEyeTracker):
 				ps = -1
 			# set new pupil size as previous pupil size
 			self.prevps = ps
-
 		# if no new sample is available, use old data
 		else:
 			ps = self.prevps
-
 		return ps
-
 
 	def sample(self):
 
-		"""Returns a (x,y) tuple of the most recent gaze sample from the eyelink"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if not self.recording:
-			raise Exception("Error in libeyelink.libeyelink.sample(): Recording was not started before collecting eyelink data!")
-
+			raise Exception( \
+				"Error in libeyelink.libeyelink.sample(): Recording was not started before collecting eyelink data!")
 		if self.eye_used == None:
 			self.set_eye_used()
-
 		s = pylink.getEYELINK().getNewestSample()
 		if s != None:
 			if self.eye_used == self.right_eye and s.isRightSample():
@@ -566,30 +589,11 @@ class libeyelink(BaseEyeTracker):
 			self.prevsample = gaze[:]
 		else:
 			gaze = self.prevsample[:]
-
 		return gaze
-	
 	
 	def set_detection_type(self, eventdetection):
 		
-		"""Set the event detection type to either PyGaze algorithms, or
-		native algorithms as provided by the manufacturer (only if
-		available: detection type will default to PyGaze if no native
-		functions are available)
-		
-		arguments
-		eventdetection	--	a string indicating which detection type
-						should be employed: either 'pygaze' for
-						PyGaze event detection algorithms or
-						'native' for manufacturers algorithms (only
-						if available; will default to 'pygaze' if no
-						native event detection is available)
-		returns		--	detection type for saccades, fixations and
-						blinks in a tuple, e.g. 
-						('pygaze','native','native') when 'native'
-						was passed, but native detection was not
-						available for saccade detection
-		"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 		
 		if eventdetection in ['pygaze','native']:
 			self.eventdetection = eventdetection
@@ -599,43 +603,41 @@ class libeyelink(BaseEyeTracker):
 
 	def wait_for_event(self, event):
 
-		"""Waits until a specified event has occurred"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		if not self.recording:
-			raise Exception("Error in libeyelink.libeyelink.wait_for_event(): Recording was not started before collecting eyelink data!")
+			raise Exception( \
+				"Error in libeyelink.libeyelink.wait_for_event(): Recording was not started before collecting eyelink data!")
 
 		if self.eye_used == None:
 			self.set_eye_used()
-		
 		if self.eventdetection == 'native':
 			d = 0
 			while d != event:
 				d = pylink.getEYELINK().getNextData()
-	
 			return pylink.getEYELINK().getFloatData()
-		
-		else:
-			if event == 5:
-				outcome = self.wait_for_saccade_start()
-			elif event == 6:
-				outcome = self.wait_for_saccade_end()
-			elif event == 7:
-				outcome = self.wait_for_fixation_start()
-			elif event == 8:
-				outcome = self.wait_for_fixation_end()
-			elif event == 3:
-				outcome = self.wait_for_blink_start()
-			elif event == 4:
-				outcome = self.wait_for_blink_end()
-			else:
-				raise Exception("Error in libeyelink.libeyelink.wait_for_event: eventcode %s is not supported" % event)
-	
-			return outcome
 
+		if event == 5:
+			outcome = self.wait_for_saccade_start()
+		elif event == 6:
+			outcome = self.wait_for_saccade_end()
+		elif event == 7:
+			outcome = self.wait_for_fixation_start()
+		elif event == 8:
+			outcome = self.wait_for_fixation_end()
+		elif event == 3:
+			outcome = self.wait_for_blink_start()
+		elif event == 4:
+			outcome = self.wait_for_blink_end()
+		else:
+			raise Exception( \
+				"Error in libeyelink.libeyelink.wait_for_event: eventcode %s is not supported" \
+				% event)
+		return outcome
 
 	def wait_for_saccade_start(self):
 
-		"""Waits for a saccade start  and returns time and start position"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 		
 		# # # # #
 		# EyeLink method
@@ -669,14 +671,19 @@ class libeyelink(BaseEyeTracker):
 				if self.is_valid_sample(newpos) and newpos != prevpos:
 					# check if distance is larger than precision error
 					sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
-					if (sx/self.pxdsttresh[0])**2 + (sy/self.pxdsttresh[1])**2 > self.weightdist: # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
+					# weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means
+					# movement larger than RMS noise
+					if (sx/self.pxdsttresh[0])**2 + (sy/self.pxdsttresh[1])**2 \
+						> self.weightdist:
 						# calculate distance
-						s = ((sx)**2 + (sy)**2)**0.5 # intersampledistance = speed in pixels/ms
+						# intersampledistance = speed in pixels/ms
+						s = ((sx)**2 + (sy)**2)**0.5
 						# calculate velocity
 						v1 = s / (t1-t0)
 						# calculate acceleration
 						a = (v1-v0) / (t1-t0) # acceleration in pixels/ms**2
-						# check if either velocity or acceleration are above threshold values
+						# check if either velocity or acceleration are above
+						# threshold values
 						if v1 > self.pxspdtresh or a > self.pxacctresh:
 							saccadic = True
 							spos = prevpos[:]
@@ -684,16 +691,13 @@ class libeyelink(BaseEyeTracker):
 						# update previous values
 						t0 = copy.copy(t1)
 						v0 = copy.copy(v1)
-	
 					# udate previous sample
 					prevpos = newpos[:]
-	
 			return stime, spos
-
 
 	def wait_for_saccade_end(self):
 
-		"""Waits for a saccade end  and returns time, start position and end position"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# # # # #
 		# EyeLink method
@@ -716,9 +720,9 @@ class libeyelink(BaseEyeTracker):
 				prevpos = self.sample()
 			# get starting time, intersample distance, and velocity
 			t1 = pygaze.clock.get_time()
-			s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
+			# = intersample distance = speed in px/sample
+			s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5
 			v0 = s / (t1-t0)
-	
 			# run until velocity and acceleration go below threshold
 			saccadic = True
 			while saccadic:
@@ -727,13 +731,18 @@ class libeyelink(BaseEyeTracker):
 				t1 = pygaze.clock.get_time()
 				if self.is_valid_sample(newpos) and newpos != prevpos:
 					# calculate distance
-					s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
+					# = speed in pixels/sample
+					s = ((newpos[0]-prevpos[0])**2 + \
+						(newpos[1]-prevpos[1])**2)**0.5
 					# calculate velocity
 					v1 = s / (t1-t0)
 					# calculate acceleration
-					a = (v1-v0) / (t1-t0) # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+					# acceleration in pixels/sample**2 (actually is
+					# v1-v0 / t1-t0; but t1-t0 = 1 sample)
+					a = (v1-v0) / (t1-t0)
 					# check if velocity and acceleration are below threshold
-					if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
+					if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and \
+						a < 0):
 						saccadic = False
 						epos = newpos[:]
 						etime = pygaze.clock.get_time()
@@ -748,7 +757,7 @@ class libeyelink(BaseEyeTracker):
 
 	def wait_for_fixation_start(self):
 
-		"""Waits for a fixation start and returns time and start position"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# # # # #
 		# EyeLink method
@@ -782,7 +791,8 @@ class libeyelink(BaseEyeTracker):
 				# check if sample is valid
 				if self.is_valid_sample(npos):
 					# check if new sample is too far from starting position
-					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > \
+						self.pxfixtresh**2: # Pythagoras
 						# if not, reset starting position and time
 						spos = copy.copy(npos)
 						t0 = pygaze.clock.get_time()
@@ -795,10 +805,9 @@ class libeyelink(BaseEyeTracker):
 							# return time and starting position
 							return t1, spos
 
-
 	def wait_for_fixation_end(self):
 
-		"""Waits for a fixation end and returns ending time and position"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# # # # #
 		# EyeLink method
@@ -813,8 +822,9 @@ class libeyelink(BaseEyeTracker):
 		
 		else:
 			
-			# function assumes that a 'fixation' has ended when a deviation of more than fixtresh
-			# from the initial 'fixation' position has been detected
+			# function assumes that a 'fixation' has ended when a deviation of
+			# more than fixtresh from the initial 'fixation' position has been
+			# detected
 			
 			# get starting time and position
 			stime, spos = self.wait_for_fixation_start()
@@ -826,16 +836,16 @@ class libeyelink(BaseEyeTracker):
 				# check if sample is valid
 				if self.is_valid_sample(npos):
 					# check if sample deviates to much from starting position
-					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
+					if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > \
+						self.pxfixtresh**2: # Pythagoras
 						# break loop if deviation is too high
 						break
-	
-			return pygaze.clock.get_time(), spos	
 
+			return pygaze.clock.get_time(), spos	
 
 	def wait_for_blink_start(self):
 
-		"""Waits for a blink start and returns time"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# # # # #
 		# EyeLink method
@@ -870,7 +880,7 @@ class libeyelink(BaseEyeTracker):
 
 	def wait_for_blink_end(self):
 
-		"""Waits for a blink end and returns time"""
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		# # # # #
 		# EyeLink method
@@ -897,13 +907,31 @@ class libeyelink(BaseEyeTracker):
 					blinking = False
 			
 			# return timestamp of blink end
-			return pygaze.clock.get_time()	
+			return pygaze.clock.get_time()
+		
+	def set_draw_calibration_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.eyelink_graphics.draw_cal_target = func
 	
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.draw_drift_correction_target = func
 	
+	# ***
+	#
+	# Internal functions below
+	#
+	# ***
+		
 	def is_valid_sample(self, gazepos):
 		
-		"""Checks if the sample provided is valid, based on EyeLink specific
-		criteria (for internal use)
+		"""
+		Checks if the sample provided is valid, based on EyeLink specific
+		criteria.
 		
 		arguments
 		gazepos		--	a (x,y) gaze position tuple, as returned by
@@ -922,300 +950,56 @@ class libeyelink(BaseEyeTracker):
 		return True
 
 
-class eyelink_graphics(custom_display):
+	def confirm_abort_experiment(self):
 
-	"""A custom graphics environment to use PyGame or PsychoPy graphics (see screen) for calibration, rather than PyLink built-in functions"""
+		"""
+		Asks for confirmation before aborting the experiment. Displays a
+		confirmation screen, collects the response, and acts accordingly.
 
-	def __init__(self, display, tracker):
+		Exceptions:
+		Raises a response_error upon confirmation.
 
-		pylink.EyeLinkCustomDisplay.__init__(self)
+		Returns:
+		False if no confirmation was given.
+		"""
 
-		# objects
-		self.display = display
-		self.screen = Screen(mousevisible=False)
-		self.kb = Keyboard(keylist=None, timeout=1)
-		if display.disptype == 'pygame':
-			self.kb.set_timeout(timeout=0.001)
-
-		# drawing properties
-		self.xc = self.display.dispsize[0]/2
-		self.yc = self.display.dispsize[1]/2
-		self.ld = 40 # line distance
-
-		# menu
-		self.menuscreen = Screen(mousevisible=False)
-		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos=(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="Press C to calibrate", pos=(self.xc,self.yc-3*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="Press V to validate", pos=(self.xc,self.yc-2*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="Press A to auto-threshold", pos=(self.xc,self.yc-1*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="Press Enter to show camera image", pos=(self.xc,self.yc+1*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="(then change between images using the arrow keys)", pos=(self.xc,self.yc+2*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text="Press Q to exit menu", pos=(self.xc,self.yc+5*self.ld), center=True, font='mono', fontsize=12, antialias=True)
-
-		# beeps
-		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, attack=0, decay=0, soundfile=None)
-		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200, attack=0, decay=0, soundfile=None)
-		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200, attack=0, decay=0, soundfile=None)
-
-		# further properties
-		self.state = None
-
-		self.imagebuffer = array.array('l')
-		self.pal = None
-		self.size = (0,0)
-
-		self.set_tracker(tracker)
-		self.last_mouse_state = -1
-
-
-	def set_tracker(self, tracker):
-
-		"""Connect the tracker to the graphics environment"""
-
-		self.tracker = tracker
-		self.tracker_version = tracker.getTrackerVersion()
-		if(self.tracker_version >=3):
-			self.tracker.sendCommand("enable_search_limits=YES")
-			self.tracker.sendCommand("track_search_limits=YES")
-			self.tracker.sendCommand("autothreshold_click=YES")
-			self.tracker.sendCommand("autothreshold_repeat=YES")
-			self.tracker.sendCommand("enable_camera_position_detect=YES")
-
-
-	def setup_cal_display(self):
-
-		"""Setup the calibration display, which contains some instructions"""
-		
-		# show instructions
-		self.display.fill(self.menuscreen)
+		# Display the confirmation screen
+		scr = Screen()
+		kb = Keyboard(timeout=5000)
+		yc = DISPSIZE[1]/2
+		xc = DISPSIZE[0]/2
+		ld = 40 # Line height
+		scr.draw_text(u'Really abort experiment?', pos=(xc, yc-3*ld))
+		scr.draw_text(u'Press \'Y\' to abort', pos=(xc, yc-0.5*ld))
+		scr.draw_text(u'Press any other key or wait 5s to go to setup', \
+			pos=(xc, yc+0.5*ld))
+		self.display.fill(scr)
 		self.display.show()
-
-
-	def exit_cal_display(self):
-
-		"""Clear calibration display"""
-
-		self.display.fill()
-		self.display.show()
-
-
-	def record_abort_hide(self):
-
-		"""No clue what this is supposed to do..."""
-
-		pass
-
-
-	def clear_cal_display(self):
-
-		"""Clear the calibration display"""
-
-		self.display.fill()
-		self.display.show()
-
-
-	def erase_cal_target(self):
-
-		"""Is done before drawing"""
-
-		pass
-
-
-	def draw_cal_target(self, x, y):
-
-		"""Draw calibration target at (x,y)"""
-		
-		# show fixation dot
-		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, diameter=12)
-		self.display.fill(screen=self.screen)
-		self.display.show()
-		
-		# clear screen
-		self.screen.clear()
-
-
-	def play_beep(self, beepid):
-
-		"""Play a sound"""
-
-		if beepid == pylink.CAL_TARG_BEEP:
-			self.__target_beep__.play()
-		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
-			# show a picture
-			self.screen.draw_text(text="calibration unsuccesfull, press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
-			self.display.fill(self.screen)
-			self.display.show()
-			self.screen.clear()
-			# play beep
-			self.__target_beep__error__.play()
-		elif beepid == pylink.CAL_GOOD_BEEP:
-			if self.state == "calibration":
-				self.screen.draw_text(text="calibration succesfull, press 'v' to validate", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
-				pass
-			elif self.state == "validation":
-				self.screen.draw_text(text="calibration succesfull, press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
-				pass
-			else:
-				self.screen.draw_text(text="press 'q' to return to menu", pos=(self.xc,self.yc), center=True, font='mono', fontsize=12, antialias=True)
-				pass
-			# show screen
-			self.display.fill(self.screen)
-			self.display.show()
-			self.screen.clear()
-			# play beep
-			self.__target_beep__done__.play()
-		else: #	DC_GOOD_BEEP	or DC_TARG_BEEP
-			pass
-
-
-	def getColorFromIndex(self,colorindex):
-
-		"""Unused"""
-
-		pass
-
-
-	def draw_line(self, x1, y1, x2, y2, colorindex):
-
-		"""Unused"""
-
-		pass
-
-
-	def draw_lozenge(self,x,y,width,height,colorindex):
-
-		"""Unused"""
-
-		pass
-
-
-	def get_mouse_state(self):
-
-		"""Unused"""
-
-		pass
-
-
-	def get_input_key(self):
-
-		"""Get an input key"""
-
+		# process the response:
 		try:
-			key, time = self.kb.get_key(keylist=None,timeout='default')
+			key, time = kb.get_key()
 		except:
-			return None
+			return False
+		# if confirmation, close experiment
+		if key == u'y':
+			raise Exception(u'The experiment was aborted')
+		self.eyelink_graphics.esc_pressed = False
+		return False
 
-		if key == None:
-			return None
-
-		if key == "return":
-			keycode = pylink.ENTER_KEY
-			self.state = None
-		elif key == "space":
-			keycode = ord(" ")
-		elif key == "q":
-			keycode = pylink.ESC_KEY
-			self.state = None
-		elif key == "c":
-			keycode = ord("c")
-			self.state = "calibration"
-		elif key == "v":
-			keycode = ord("v")
-			self.state = "validation"
-		elif key == "a":
-			keycode = ord("a")
-		elif key == "up":
-			keycode = pylink.CURS_UP
-		elif key == "down":
-			keycode = pylink.CURS_DOWN
-		elif key == "left":
-			keycode = pylink.CURS_LEFT
-		elif key == "right":
-			keycode = pylink.CURS_RIGHT
-		else:
-			keycode = 0
-
-		return [pylink.KeyInput(keycode, 0)] # 0 = pygame.KMOD_NONE
-
-
-	def exit_image_display(self):
-
-		"""Exit the image display"""
-
-		self.clear_cal_display()
-
-
-	def alert_printf(self,msg):
-
-		"""Print alert message"""
-
-		print "eyelink_graphics.alert_printf(): %s" % msg
-
-
-	def setup_image_display(self, width, height):
-
-		"""Setup the image display"""
-
-		self.size = (width,height)
-		self.clear_cal_display()
-		self.last_mouse_state = -1
-		self.imagebuffer = array.array('l')
-
-
-	def image_title(self, text):
-
-		"""Unused"""
-
-		pass
-
-
-	def draw_image_line(self, width, line, totlines, buff):
-
-		"""Draw a single eye video frame (keyword arguments: with=width of the video; line=line nr of current line, totlines=total lines in video; buff=frame buffer
-		imagesize: 192x160 px"""
-
-		i = 0
-		while i < width:
-			try:
-				self.imagebuffer.append(self.pal[buff[i]])
-			except:
-				pass
-			i = i + 1
-
-		if line == totlines:
-
-			bufferv = self.imagebuffer.tostring()
-			img =Image.new("RGBX",self.size)
-			imgsz = self.xc, self.yc
-			img.fromstring(bufferv)
-			img = img.resize(imgsz)
-
-			if DISPTYPE == 'pygame':
-				img = pygame.image.fromstring(img.tostring(),imgsz,"RGBX")
-				self.display.fill()
-				self.display.expdisplay.blit(img,((self.display.expdisplay.get_rect().w-imgsz[0])/2,(self.display.expdisplay.get_rect().h-imgsz[1])/2))
-				self.display.show()
-			elif DISPTYPE == 'psychopy':
-				img = psychopy.visual.SimpleImageStim(self.display.expdisplay, image=img)
-				self.display.fill()
-				img.draw()
-				self.display.show()
-
-			self.imagebuffer = array.array('l')
-
-
-	def set_image_palette(self, r, g, b):
-
-		"""Set the image palette"""
-
-		self.imagebuffer = array.array('l')
-		self.clear_cal_display()
-		sz = len(r)
-		i = 0
-		self.pal = []
-		while i < sz:
-			rf = int(b[i])
-			gf = int(g[i])
-			bf = int(r[i])
-			self.pal.append((rf<<16) | (gf<<8) | (bf))
-			i += 1
+	def draw_drift_correction_target(self, x, y):
+		
+		"""
+		Draws the drift-correction target.
+		
+		arguments
+		
+		x		--	The X coordinate
+		y		--	The Y coordinate
+		"""
+		
+		self.scr.clear()
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
+			diameter=12)
+		self.display.fill(self.scr)
+		self.display.show()
+		

@@ -15,6 +15,27 @@
 			"tooltip"	: "Y position for drift correction"
 		},
 		{
+			"type"		: "line_edit",
+			"var"		: "target_color",
+			"label"		: "Target color",
+			"tooltip"	: "Color for the drift-correction target"
+		},
+		{
+			"type"		: "combobox",
+			"var"		: "target_style",
+			"label"		: "Target style (OpenSesame >= 2.8.0)",
+			"options"	: [
+				"default",
+				"large-filled",
+				"small-filled",
+				"large-open",
+				"small-open",
+				"large-cross",
+				"small-cross"
+			],
+			"tooltip"	: "Style for the drift-correction target"
+		},
+		{
 			"type"		: "checkbox",
 			"var"		: "fixation_triggered",
 			"label"		: "Fixation triggered (no spacebar press required)",

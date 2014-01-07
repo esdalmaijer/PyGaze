@@ -1,48 +1,42 @@
 # example script for using PyGaze
-
+import random
+from pygaze import Display, Screen, Keyboard, defaults, EyeTracker, libtime
 from libopensesame.experiment import experiment
+
 src = '/home/sebastiaan/git/opensesame/resources/templates/default.opensesame'
 exp = experiment(string=src)
 exp.init_display()
-
-# # # # #
-# importing the relevant libraries
-import random
-from pygaze import libscreen
-from pygaze import libtime
-from pygaze import libinput
-from pygaze import liblog
-from pygaze import defaults
+defaults.DISPTYPE = 'opensesame'
 defaults.osexperiment = exp
-
-w = 1024
-h = 768
+defaults.FGC = 255,255,255
+defaults.BGC = 0,0,0
+w, h = defaults.DISPSIZE = exp.resolution()
 
 # # # # #
 # setup the experiment
 
 # create display object
-disp = libscreen.Display(disptype='opensesame')
+disp = Display(disptype='opensesame')
+
+tracker = EyeTracker(disp, trackertype='dummy')
+tracker.calibrate()
 
 # create keyboard object
-kb = libinput.Keyboard(disptype='opensesame', keylist=['left','right','escape'], timeout=2000)
-
-# create logfile object
-log = liblog.Logfile()
-log.write(["trialnr", "trialtype", "response", "RT", "correct"])
+kb = Keyboard(disptype='opensesame', keylist=['left','right', \
+	'escape'], timeout=2000)
 
 # create screens
-fixscreen = libscreen.Screen(disptype='opensesame')
+fixscreen = Screen(disptype='opensesame')
 fixscreen.draw_fixation(fixtype='cross',pw=2)
 targetscreens = {}
-targetscreens['left'] = libscreen.Screen(disptype='opensesame')
+targetscreens['left'] = Screen(disptype='opensesame')
 targetscreens['left'].draw_circle(pos=(w*0.25,h/2), fill=True)
-targetscreens['right'] = libscreen.Screen(disptype='opensesame')
+targetscreens['right'] = Screen(disptype='opensesame')
 targetscreens['right'].draw_circle(pos=(w*0.75,h/2), fill=True)
 feedbackscreens = {}
-feedbackscreens[1] = libscreen.Screen(disptype='opensesame')
+feedbackscreens[1] = Screen(disptype='opensesame')
 feedbackscreens[1].draw_text(text='correct', colour=(0,255,0))
-feedbackscreens[0] = libscreen.Screen(disptype='opensesame')
+feedbackscreens[0] = Screen(disptype='opensesame')
 feedbackscreens[0].draw_text(text='incorrect', colour=(255,0,0))
 
 # # # # #
@@ -52,6 +46,11 @@ feedbackscreens[0].draw_text(text='incorrect', colour=(255,0,0))
 for trialnr in range(1,21):
 	# prepare trial
 	trialtype = random.choice(['left','right'])
+	
+	# Drift correction
+	tracker.drift_correction()
+	
+	tracker.start_recording()
 	
 	# present fixation
 	disp.fill(screen=fixscreen)
@@ -80,10 +79,9 @@ for trialnr in range(1,21):
 	disp.show()
 	libtime.pause(500)
 	
-	# log stuff
-	log.write([trialnr, trialtype, response, t1-t0, correct])
+	tracker.stop_recording()
+	
 
 # end the experiment
-log.close()
 disp.close()
 libtime.expend() 

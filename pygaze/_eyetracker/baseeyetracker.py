@@ -87,6 +87,11 @@ class BaseEyeTracker:
 					support filenames longer than 8 characters (so no
 					path assignment in the logfile name, as is possible
 					for SMI and Tobii) (default = LOGFILENAME)
+		force_drift_correct		--	EyeLink only! Indicates whether an
+					active drift correction should be used. This option is
+					relevant for EyeLink 1000 devices, on which drift correction
+					is by default only a check, and not an actual single-point
+					recalibration.
 		resolution	--	EyeLink only! Specify the display resolution using
 					a (w,h) tuple (default = DISPSIZE)
 		fg_color	--	EyeLink only! Specify the foreground colour using
@@ -108,7 +113,16 @@ class BaseEyeTracker:
 	def calibrate(self):
 
 		"""
-		Calibrates the eye tracking system
+		Calibrates the eye tracking system. The actual behavior of this function
+		depends on the type of eye tracker and is described below.
+
+		EyeLink:
+
+		This function will activate the camera-setup screen, which allows you
+		to adjust the camera, and peform a calibration/ validation procedure.
+		Pressing 'q' will exit the setup routine. Pressing 'escape' will first
+		trigger a confirmation dialog and then, upon confirmation, raises an
+		Exception.
 		
 		arguments
 		
@@ -174,7 +188,17 @@ class BaseEyeTracker:
 	def drift_correction(self, pos=None, fix_triggered=False):
 
 		"""
-		Performs a drift check
+		Performs a drift-correction procedure. The exact behavior of this
+		function on the type of eye tracker and is described below. Because
+		drift correction may fail, you will generally call this function in a
+		loop.
+
+		EyeLink:
+
+		Pressing 'q' during drift-correction will activate the camera-setup
+		screen. From there, pressing 'q' again will cause drift correction to
+		fail immediately. Pressing 'escape' will give the option to abort the
+		experiment, in which case an Exception is raised.
 		
 		arguments
 		
@@ -297,37 +321,6 @@ class BaseEyeTracker:
 
 		pass
 
-
-#	def prepare_backdrop(self):
-#
-#		"""
-#		Prepare the backdrop (image to be displayed on the experimentor PC),
-#		EyeLink only!
-#		"""
-#
-#		pass
-
-	def prepare_drift_correction(self):
-
-		"""
-		Prepares the drift correction (EyeLink specific)
-		
-		arguments
-
-		pos		--	a (x,y) position tuple
-		
-		keyword arguments
-		
-		None
-		
-		returns
-		
-		None		
-		"""
-
-		pass
-
-
 	def pupil_size(self):
 
 		"""
@@ -429,6 +422,33 @@ class BaseEyeTracker:
 
 		pass
 
+	def set_draw_calibration_target_func(self, func):
+		
+		"""
+		Specifies a custom function to draw the calibration target.
+		
+		arguments
+		
+		func		--	The function to draw a calibration target. This function
+					should accept two parameters, for the x and y coordinate of
+					the target.
+		"""
+		
+		pass
+	
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""
+		Specifies a custom function to draw the drift-correction target.
+		
+		arguments
+		
+		func		--	The function to draw a drift-correction target. This
+					function should accept two parameters, for the x and y
+					coordinate of the target.
+		"""
+		
+		pass
 
 	def start_recording(self):
 
@@ -705,7 +725,6 @@ class BaseEyeTracker:
 
 		pass
 
-
 	def wait_for_saccade_start(self):
 
 		"""
@@ -732,26 +751,4 @@ class BaseEyeTracker:
 
 		pass
 	
-	
-	def is_valid_sample(self):
-		
-		"""
-		Checks if the sample provided is valid, based on SMI specific
-		criteria (for internal use)
-		
-		arguments
 
-		gazepos		--	a (x,y) gaze position tuple, as returned by
-						self.sample()
-		
-		keyword arguments
-		
-		None
-		
-		returns
-
-		valid			--	a Boolean: True on a valid sample, False on
-						an invalid sample
-		"""
-		
-		pass
