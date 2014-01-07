@@ -21,6 +21,7 @@
 
 from libopensesame.exceptions import osexception
 from openexp.canvas import canvas
+from openexp.keyboard import keyboard
 
 from pygaze.defaults import osexperiment
 try:
@@ -58,6 +59,7 @@ class OSDisplay(BaseDisplay):
 		
 		self.experiment = osexperiment
 		self.canvas = canvas(self.experiment)
+		self.dispsize = self.experiment.resolution()
 
 	def show(self):
 
@@ -75,7 +77,10 @@ class OSDisplay(BaseDisplay):
 
 		# See _display.basedisplay.BaseDisplay for documentation
 
-		self.canvas = screen.canvas
+		if screen != None:
+			self.canvas = screen.canvas
+		else:
+			self.canvas = canvas(self.experiment)
 
 	def close(self):
 
