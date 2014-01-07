@@ -191,7 +191,7 @@ class EyelinkGraphics(custom_display):
 		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
 			diameter=12)
 		self.display.fill(screen=self.screen)
-		self.display.show()		
+		self.display.show()
 		# clear screen
 		self.screen.clear()
 

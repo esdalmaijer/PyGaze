@@ -48,6 +48,9 @@ class pygaze_init(item):
 		self.sacc_vel_thr = 35
 		self.sacc_acc_thr = 9500
 		self._logfile = u'automatic'
+		# EyeLink-specific settings
+		self.eyelink_calbeep = u'yes'
+		self.eyelink_force_drift_correct = u'yes'
 		# SMI-specific settings
 		self.smi_ip = u'127.0.0.1'
 		self.smi_send_port = 4444
@@ -60,6 +63,22 @@ class pygaze_init(item):
 		"""The preparation phase of the plug-in goes here."""
 
 		item.prepare(self)
+		if self.get(u'eyelink_calbeep'):
+			from openexp.synth import synth
+			self.beep = synth(self.experiment)
+		
+	def draw_calibration_canvas(self, x, y):
+		
+		"""A hook to prepare the canvas with the clibration target."""
+		
+		if self.get(u'eyelink_calbeep'):
+			self.beep.play()
+		dc_canvas = canvas(self.experiment)
+		if u'style' in inspect.getargspec(self.dc_canvas.fixdot).args:
+			dc_canvas.fixdot(x, y, style=u'large-open')
+		else:
+			dc_canvas.fixdot(x, y)
+		dc_canvas.show()
 		
 	def reload_pygaze(self):
 		
@@ -128,7 +147,11 @@ class pygaze_init(item):
 			saccade_velocity_threshold=self.get(u'sacc_vel_thr'), \
 			saccade_acceleration_threshold=self.get(u'sacc_acc_thr'), \
 			ip=self.get(u'smi_ip'), sendport=self.get(u'smi_send_port'), \
-			receiveport=self.get(u'smi_recv_port'), logfile=logfile)
+			receiveport=self.get(u'smi_recv_port'), logfile=logfile,
+			eyelink_force_drift_correct= \
+			self.get(u'eyelink_force_drift_correct'))
+		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func( \
+			self.draw_calibration_canvas)
 		if self.calibrate == u'yes':
 			self.experiment.pygaze_eyetracker.calibrate()
 
@@ -161,7 +184,7 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			return False
 		self.custom_interactions()
 		return True
-	
+			
 	def custom_interactions(self):
 		
 		"""Activates the relevant controls for each tracker."""
@@ -169,4 +192,7 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		smi = self.get(u'tracker_type') == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
 		self.spinbox_smi_send_port.setEnabled(smi)
-		self.spinbox_smi_recv_port.setEnabled(smi)		
+		self.spinbox_smi_recv_port.setEnabled(smi)
+		eyelink = self.get(u'tracker_type') == u'EyeLink'
+		self.checkbox_eyelink_calbeep.setEnabled(eyelink)
+		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)

@@ -29,7 +29,7 @@
 		},
 		{
 			"type"		: "spinbox",
-			"var"		: "eyelink_sacc_vel_thr",
+			"var"		: "sacc_vel_thr",
 			"label"		: "Saccade velocity threshold",
 			"min_val"	: 0,
 			"max_val"	: 100000,
@@ -44,6 +44,20 @@
 			"max_val"	: 100000,
 			"suffix"	: " °/s/s",
 			"tooltip"	: "Acceleration threshold for saccade detection algorithm"
+		},
+		{
+			"type"		: "checkbox",
+			"var"		: "eyelink_calbeep",
+			"label"		: "Calibration beep",
+			"tooltip"	: "Play a beep when the calibration target jumps",
+			"name"		: "checkbox_eyelink_calbeep"
+		},
+		{
+			"type"		: "checkbox",
+			"var"		: "eyelink_force_drift_correct",
+			"label"		: "Force drift correction (for EyeLink 1000)",
+			"tooltip"	: "Turn on active drift correction",
+			"name"		: "checkbox_eyelink_force_drift_correct"
 		},
 		{
 			"type"		: "line_edit",

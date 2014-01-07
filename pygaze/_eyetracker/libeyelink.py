@@ -358,12 +358,7 @@ class libeyelink(BaseEyeTracker):
 		True if drift correction was successfull, False otherwise.
 		"""
 
-		# show fixation
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
-			diameter=12)
-		self.display.fill(self.scr)
-		self.display.show()
-		self.scr.clear()
+		self.draw_drift_correction_target(pos[0], pos[1])
 		# Drift correction.
 		self.eyelink_graphics.esc_pressed = False
 		try:
@@ -411,12 +406,7 @@ class libeyelink(BaseEyeTracker):
 		if pos == None:
 			pos = self.resolution[0] / 2, self.resolution[1] / 2
 		self.prepare_drift_correction(pos)
-		# show fixation
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
-			diameter=12)
-		self.display.fill(self.scr)
-		self.display.show()
-		self.scr.clear()
+		self.draw_drift_correction_target(pos[0], pos[1])
 
 		# loop until we have enough samples
 		lx = []
@@ -917,7 +907,25 @@ class libeyelink(BaseEyeTracker):
 					blinking = False
 			
 			# return timestamp of blink end
-			return pygaze.clock.get_time()	
+			return pygaze.clock.get_time()
+		
+	def set_draw_calibration_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.eyelink_graphics.draw_cal_target = func
+	
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.draw_drift_correction_target = func
+	
+	# ***
+	#
+	# Internal functions below
+	#
+	# ***
 		
 	def is_valid_sample(self, gazepos):
 		
@@ -977,3 +985,21 @@ class libeyelink(BaseEyeTracker):
 			raise Exception(u'The experiment was aborted')
 		self.eyelink_graphics.esc_pressed = False
 		return False
+
+	def draw_drift_correction_target(self, x, y):
+		
+		"""
+		Draws the drift-correction target.
+		
+		arguments
+		
+		x		--	The X coordinate
+		y		--	The Y coordinate
+		"""
+		
+		self.scr.clear()
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
+			diameter=12)
+		self.display.fill(self.scr)
+		self.display.show()
+		

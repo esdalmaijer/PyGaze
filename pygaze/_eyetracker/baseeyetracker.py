@@ -422,6 +422,33 @@ class BaseEyeTracker:
 
 		pass
 
+	def set_draw_calibration_target_func(self, func):
+		
+		"""
+		Specifies a custom function to draw the calibration target.
+		
+		arguments
+		
+		func		--	The function to draw a calibration target. This function
+					should accept two parameters, for the x and y coordinate of
+					the target.
+		"""
+		
+		pass
+	
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""
+		Specifies a custom function to draw the drift-correction target.
+		
+		arguments
+		
+		func		--	The function to draw a drift-correction target. This
+					function should accept two parameters, for the x and y
+					coordinate of the target.
+		"""
+		
+		pass
 
 	def start_recording(self):
 
@@ -697,7 +724,6 @@ class BaseEyeTracker:
 		"""
 
 		pass
-
 
 	def wait_for_saccade_start(self):
 

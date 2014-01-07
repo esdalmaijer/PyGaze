@@ -144,10 +144,7 @@ class Dummy(BaseEyeTracker):
 		self.simulator.set_visible(visible=True)
 		
 		# show fixation dot
-		self.screen.draw_fixation(fixtype='dot', colour=None, pos=pos, diameter=12)
-		self.display.fill(self.screen)
-		self.display.show()
-		self.screen.clear()
+		self.draw_drift_correction_target(pos[0], pos[1])
 
 		# perform drift check
 		errdist = 60 # pixels (on a 1024x768px and 39.9x29.9cm monitor at 67 cm, this is about 2 degrees of visual angle)
@@ -197,10 +194,7 @@ class Dummy(BaseEyeTracker):
 		self.simulator.set_visible(visible=True)
 
 		# show fixation dot
-		self.screen.draw_fixation(fixtype='dot', colour=None, pos=pos, diameter=12)
-		self.display.fill(self.screen)
-		self.display.show()
-		self.screen.clear()
+		self.draw_drift_correction_target(pos[0], pos[1])
 
 		while True:
 			# loop until we have sufficient samples
@@ -459,3 +453,33 @@ class Dummy(BaseEyeTracker):
 			epos = self.sample()
 
 		return pygaze.clock.get_time(), epos
+	
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.draw_drift_correction_target = func
+	
+	# ***
+	#
+	# Internal functions below
+	#
+	# ***
+
+	def draw_drift_correction_target(self, x, y):
+		
+		"""
+		Draws the drift-correction target.
+		
+		arguments
+		
+		x		--	The X coordinate
+		y		--	The Y coordinate
+		"""
+		
+		self.scr.clear()
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
+			diameter=12)
+		self.display.fill(self.scr)
+		self.display.show()
+		
