@@ -26,11 +26,11 @@ except:
 	pass
 
 if DISPTYPE == u'psychopy':
-	from pygaze._time.psychopytime import *
+	from pygaze._time.psychopytime import PsychoPyTime as Time
 elif DISPTYPE == u'pygame':
-	from pygaze._time.pygametime import *
+	from pygaze._time.pygametime import PyGameTime as Time
 elif DISPTYPE == u'opensesame':
-	from pygaze._time.ostime import *
+	from pygaze._time.ostime import OSTime as Time
 else:
 	raise Exception(u'Unexpected disptype : %s' % disptype)
 
@@ -45,7 +45,7 @@ def expstart():
 	
 	"""Time is set to 0 upon calling this"""
 	
-	pygaze.clock.expstart()
+	clock.expstart()
 
 	
 def get_time():
@@ -63,7 +63,7 @@ def get_time():
 				expbegintime
 	"""
 	
-	return pygaze.clock.get_time()
+	return clock.get_time()
 
 
 def pause(pausetime):
@@ -80,7 +80,7 @@ def pause(pausetime):
 	pausetime	--	the actual duration of the pause in milliseconds
 	"""
 	
-	return pygaze.clock.pause(pausetime)
+	return clock.pause(pausetime)
 
 
 def expend():
@@ -98,4 +98,8 @@ def expend():
 				from expbegintime
 	"""
 	
-	return pygaze.clock.expend()
+	return clock.expend()
+
+# Create a singleton clock 
+clock = Time()
+clock.expstart()
