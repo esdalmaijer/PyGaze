@@ -99,7 +99,9 @@ class TobiiTracker(BaseEyeTracker):
 	
 	"""A class for Tobii EyeTracker objects"""
 	
-	def __init__(self, display, logfile=LOGFILE, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
+	def __init__(self, display, logfile=LOGFILE, eventdetection= \
+		EVENTDETECTION, saccade_velocity_threshold=35, \
+		saccade_acceleration_threshold=9500, **args):
 		
 		"""Initializes a TobiiTracker instance
 		

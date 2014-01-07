@@ -128,7 +128,10 @@ class SMItracker(BaseEyeTracker):
 
 	"""A class for SMI eye tracker objects"""
 
-	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport=5555, logfile=LOGFILE, eventdetection=EVENTDETECTION, saccade_velocity_threshold=35, saccade_acceleration_threshold=9500):
+	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport= \
+		5555, logfile=LOGFILE, eventdetection=EVENTDETECTION, \
+		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500, \
+		**args):
 
 		"""Initializes the SMItracker object
 		
