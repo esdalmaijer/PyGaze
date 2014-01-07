@@ -477,9 +477,9 @@ class Dummy(BaseEyeTracker):
 		y		--	The Y coordinate
 		"""
 		
-		self.scr.clear()
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
+		self.screen.clear()
+		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
 			diameter=12)
-		self.display.fill(self.scr)
+		self.display.fill(self.screen)
 		self.display.show()
 		

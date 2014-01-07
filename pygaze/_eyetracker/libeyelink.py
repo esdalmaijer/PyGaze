@@ -998,7 +998,7 @@ class libeyelink(BaseEyeTracker):
 		"""
 		
 		self.scr.clear()
-		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=pos, pw=0, \
+		self.scr.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
 			diameter=12)
 		self.display.fill(self.scr)
 		self.display.show()
