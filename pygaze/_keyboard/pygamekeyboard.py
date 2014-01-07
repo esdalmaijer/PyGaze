@@ -19,6 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.libtime import clock
 from pygaze.defaults import *
 try:
 	from constants import *
@@ -109,15 +110,15 @@ class PyGameKeyboard(BaseKeyboard):
 			pygame.event.get(pygame.KEYDOWN)
 			
 		# starttime
-		starttime = pygaze.clock.get_time()
-		time = pygaze.clock.get_time()
+		starttime = clock.get_time()
+		time = clock.get_time()
 
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.KEYDOWN:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					key = pygame.key.name(event.key)
 					if keylist == None or key in keylist:
 						return key, time

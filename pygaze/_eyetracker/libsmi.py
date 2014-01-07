@@ -21,6 +21,7 @@
 
 
 from pygaze.defaults import *
+from pygaze.libtime import clock
 try:
 	from constants import *
 except:
@@ -322,12 +323,12 @@ class SMItracker(BaseEyeTracker):
 				self.screen.clear()
 
 				# wait for a bit, to allow participant to fixate
-				pygaze.clock.pause(500)
+				clock.pause(500)
 
 				# get samples
 				sl = [self.sample()] # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
-				t0 = pygaze.clock.get_time() # starting time
-				while pygaze.clock.get_time() - t0 < 1000:
+				t0 = clock.get_time() # starting time
+				while clock.get_time() - t0 < 1000:
 					s = self.sample() # sample
 					if s != sl[-1] and s != (-1,-1) and s != (0,0):
 						sl.append(s)
@@ -348,7 +349,7 @@ class SMItracker(BaseEyeTracker):
 				while res != 1 and i < self.maxtries: # multiple tries, in case no (valid) sample is available
 					res = iViewXAPI.iV_GetAccuracy(byref(accuracyData),0) # 0 is for 'no visualization'
 					i += 1
-					pygaze.clock.pause(int(self.sampletime)) # wait for sampletime
+					clock.pause(int(self.sampletime)) # wait for sampletime
 				if res == 1:
 					self.accuracy = ((accuracyData.deviationLX,accuracyData.deviationLY), (accuracyData.deviationLX,accuracyData.deviationLY)) # dsttresh = (left tuple, right tuple); tuple = (horizontal deviation, vertical deviation) in degrees of visual angle
 				else:
@@ -361,7 +362,7 @@ class SMItracker(BaseEyeTracker):
 				while res != 1 and i < self.maxtries: # multiple tries, in case no (valid) sample is available
 					res = iViewXAPI.iV_GetSample(byref(sampleData))
 					i += 1
-					pygaze.clock.pause(int(self.sampletime)) # wait for sampletime
+					clock.pause(int(self.sampletime)) # wait for sampletime
 				if res == 1:
 					screendist = sampleData.leftEye.eyePositionZ / 10.0 # eyePositionZ is in mm; screendist is in cm
 				else:
@@ -880,7 +881,7 @@ class SMItracker(BaseEyeTracker):
 				blinking = False
 		
 		# return timestamp of blink end
-		return pygaze.clock.get_time()		
+		return clock.get_time()		
 		
 
 	def wait_for_blink_start(self):
@@ -919,11 +920,11 @@ class SMItracker(BaseEyeTracker):
 			# check if it's a valid sample
 			if not self.is_valid_sample(gazepos):
 				# get timestamp for possible blink start
-				t0 = pygaze.clock.get_time()
+				t0 = clock.get_time()
 				# loop until a blink is determined, or a valid sample occurs
 				while not self.is_valid_sample(self.sample()):
 					# check if time has surpassed 150 ms
-					if pygaze.clock.get_time()-t0 >= 150:
+					if clock.get_time()-t0 >= 150:
 						# return timestamp of blink start
 						return t0
 		
@@ -957,7 +958,7 @@ class SMItracker(BaseEyeTracker):
 				res = 0
 				while res != 1:
 					res = iViewXAPI.iV_GetEvent(byref(eventData))
-					stime = pygaze.clock.get_time()
+					stime = clock.get_time()
 				# check if event is a fixation (SMI only supports
 				# fixations at the moment)
 				if eventData.eventType == 'F':
@@ -990,7 +991,7 @@ class SMItracker(BaseEyeTracker):
 						# break loop if deviation is too high
 						break
 	
-			return pygaze.clock.get_time(), spos
+			return clock.get_time(), spos
 
 
 	def wait_for_fixation_start(self):
@@ -1037,7 +1038,7 @@ class SMItracker(BaseEyeTracker):
 			spos = self.sample()
 		
 		# get starting time
-		t0 = pygaze.clock.get_time()
+		t0 = clock.get_time()
 
 		# wait for reasonably stable position
 		moving = True
@@ -1050,11 +1051,11 @@ class SMItracker(BaseEyeTracker):
 				if (npos[0]-spos[0])**2 + (npos[1]-spos[1])**2 > self.pxfixtresh**2: # Pythagoras
 					# if not, reset starting position and time
 					spos = copy.copy(npos)
-					t0 = pygaze.clock.get_time()
+					t0 = clock.get_time()
 				# if new sample is close to starting sample
 				else:
 					# get timestamp
-					t1 = pygaze.clock.get_time()
+					t1 = clock.get_time()
 					# check if fixation time threshold has been surpassed
 					if t1 - t0 >= self.fixtimetresh:
 						# return time and starting position
@@ -1098,7 +1099,7 @@ class SMItracker(BaseEyeTracker):
 		while not self.is_valid_sample(prevpos):
 			prevpos = self.sample()
 		# get starting time, intersample distance, and velocity
-		t1 = pygaze.clock.get_time()
+		t1 = clock.get_time()
 		s = ((prevpos[0]-spos[0])**2 + (prevpos[1]-spos[1])**2)**0.5 # = intersample distance = speed in px/sample
 		v0 = s / (t1-t0)
 
@@ -1107,7 +1108,7 @@ class SMItracker(BaseEyeTracker):
 		while saccadic:
 			# get new sample
 			newpos = self.sample()
-			t1 = pygaze.clock.get_time()
+			t1 = clock.get_time()
 			if self.is_valid_sample(newpos) and newpos != prevpos:
 				# calculate distance
 				s = ((newpos[0]-prevpos[0])**2 + (newpos[1]-prevpos[1])**2)**0.5 # = speed in pixels/sample
@@ -1119,7 +1120,7 @@ class SMItracker(BaseEyeTracker):
 				if v1 < self.pxspdtresh and (a > -1*self.pxacctresh and a < 0):
 					saccadic = False
 					epos = newpos[:]
-					etime = pygaze.clock.get_time()
+					etime = clock.get_time()
 				# update previous values
 				t0 = copy.copy(t1)
 				v0 = copy.copy(v1)
@@ -1163,7 +1164,7 @@ class SMItracker(BaseEyeTracker):
 		while not self.is_valid_sample(newpos):
 			newpos = self.sample()
 		# get starting time, position, intersampledistance, and velocity
-		t0 = pygaze.clock.get_time()
+		t0 = clock.get_time()
 		prevpos = newpos[:]
 		s = 0
 		v0 = 0
@@ -1173,7 +1174,7 @@ class SMItracker(BaseEyeTracker):
 		while not saccadic:
 			# get new sample
 			newpos = self.sample()
-			t1 = pygaze.clock.get_time()
+			t1 = clock.get_time()
 			if self.is_valid_sample(newpos) and newpos != prevpos:
 				# check if distance is larger than precision error
 				sx = newpos[0]-prevpos[0]; sy = newpos[1]-prevpos[1]
@@ -1188,7 +1189,7 @@ class SMItracker(BaseEyeTracker):
 					if v1 > self.pxspdtresh or a > self.pxacctresh:
 						saccadic = True
 						spos = prevpos[:]
-						stime = pygaze.clock.get_time()
+						stime = clock.get_time()
 					# update previous values
 					t0 = copy.copy(t1)
 					v0 = copy.copy(v1)

@@ -19,6 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.libtime import clock
 from pygaze.defaults import *
 try:
 	from constants import *
@@ -127,15 +128,15 @@ class PsychoPyKeyboard(BaseKeyboard):
 			psychopy.event.clearEvents(eventType='keyboard')
 
 		# starttime
-		starttime = pygaze.clock.get_time()
-		time = pygaze.clock.get_time()
+		starttime = clock.get_time()
+		time = clock.get_time()
 
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
 			keys = psychopy.event.getKeys(keyList=keylist,timeStamped=False)
 			for key in keys:
 				if keylist == None or key in keylist:
-					return key, pygaze.clock.get_time()
-			time = pygaze.clock.get_time()
+					return key, clock.get_time()
+			time = clock.get_time()
 
 		return None, time

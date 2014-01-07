@@ -27,6 +27,7 @@ except:
 
 import pygaze
 from pygaze._misc.misc import rgb2psychorgb
+from pygaze.libtime import clock
 #from pygaze._display.basedisplay import BaseDisplay
 
 from psychopy.visual import Window
@@ -81,7 +82,7 @@ class PsychoPyDisplay:
 		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.flip()
-		return pygaze.clock.get_time()
+		return clock.get_time()
 
 	def show_part(self, rect, screen=None):
 
@@ -91,7 +92,7 @@ class PsychoPyDisplay:
 		self.show()
 		print("WARNING! screen.Display.show_part not available for PsychoPy display type; fill() and show() are used instead")
 		
-		return pygaze.clock.get_time()
+		return clock.get_time()
 
 
 	def fill(self, screen=None):
