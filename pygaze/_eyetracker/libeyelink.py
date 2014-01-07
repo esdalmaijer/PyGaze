@@ -44,12 +44,6 @@ except:
 
 import pylink
 import Image
-
-if DISPTYPE == 'psychopy':
-	import psychopy.visual
-elif DISPTYPE == 'pygame':
-	import pygame
-
 import copy
 import math
 import os.path
@@ -73,7 +67,6 @@ def deg2pix(cmdist, angle, pixpercm):
 	cmsize = math.tan(math.radians(angle)) * float(cmdist)
 	return cmsize * pixpercm
 
-
 class libeyelink(BaseEyeTracker):
 
 	MAX_TRY = 100
@@ -81,7 +74,7 @@ class libeyelink(BaseEyeTracker):
 	def __init__(self, display, resolution=DISPSIZE, data_file= \
 		LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC, eventdetection= \
 		EVENTDETECTION, saccade_velocity_threshold=35, \
-		saccade_acceleration_threshold=9500, force_drift_correct=True):
+		saccade_acceleration_threshold=9500, force_drift_correct=True, **args):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
@@ -106,7 +99,7 @@ class libeyelink(BaseEyeTracker):
 		# properties
 		self.data_file = data_file
 		self.display = display
-		self.scr = Screen(mousevisible=False)
+		self.scr = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
 		self.recording = False
@@ -130,8 +123,7 @@ class libeyelink(BaseEyeTracker):
 		self.spdtresh = self.saccade_velocity_treshold
 		# degrees per second**2; saccade acceleration threshold
 		self.accthresh = self.saccade_acceleration_treshold
-		self.eventdetection = eventdetection
-		self.set_detection_type(self.eventdetection)
+		self.set_detection_type(eventdetection)
 		# weighted distance, used for determining whether a movement is due to
 		# measurement error (1 is ok, higher is more conservative and will
 		# result in only larger saccades to be detected)
@@ -264,7 +256,7 @@ class libeyelink(BaseEyeTracker):
 
 		# If we are using the built-in EyeLink event detection, we don't need
 		# the RMS calibration routine.
-		if EVENTDETECTION == 'native':
+		if self.eventdetection == 'native':
 			return
 		
 		# # # # #
@@ -359,12 +351,11 @@ class libeyelink(BaseEyeTracker):
 		"""
 
 		self.draw_drift_correction_target(pos[0], pos[1])
-		# Drift correction.
 		self.eyelink_graphics.esc_pressed = False
 		try:
-			# Clear the display (1), but do not allow falling back to setup
-			# screen (0).
-			error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 1, 0)
+			# The 0 parameters indicate that the display should not be cleared
+			# and we should not be allowed to fall back to the set-up screen.
+			error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 0, 0)			
 		except:
 			error = -1
 		# A 0 exit code means successful drift correction
@@ -964,7 +955,7 @@ class libeyelink(BaseEyeTracker):
 		"""
 
 		# Display the confirmation screen
-		scr = Screen()
+		scr = Screen(disptype=DISPTYPE)
 		kb = Keyboard(timeout=5000)
 		yc = DISPSIZE[1]/2
 		xc = DISPSIZE[0]/2
