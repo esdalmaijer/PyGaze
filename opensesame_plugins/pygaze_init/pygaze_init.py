@@ -18,10 +18,13 @@ along with PyGaze.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+import inspect
+from openexp.canvas import canvas
 from libopensesame.exceptions import osexception
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
-from pygaze import EyeTracker, Display
+from pygaze.eyetracker import EyeTracker
+from pygaze.display import Display
 
 class pygaze_init(item):
 	
@@ -70,11 +73,11 @@ class pygaze_init(item):
 	def draw_calibration_canvas(self, x, y):
 		
 		"""A hook to prepare the canvas with the clibration target."""
-		
+
 		if self.get(u'eyelink_calbeep'):
 			self.beep.play()
 		dc_canvas = canvas(self.experiment)
-		if u'style' in inspect.getargspec(self.dc_canvas.fixdot).args:
+		if u'style' in inspect.getargspec(dc_canvas.fixdot).args:
 			dc_canvas.fixdot(x, y, style=u'large-open')
 		else:
 			dc_canvas.fixdot(x, y)
@@ -143,7 +146,7 @@ class pygaze_init(item):
 		self.experiment.pygaze_display = Display(u'opensesame')
 		self.experiment.pygaze_eyetracker = EyeTracker( \
 			self.experiment.pygaze_display, trackertype=tracker_type, \
-			data_file=logfile, event_detection=event_detection, \
+			data_file=logfile, eventdetection=event_detection, \
 			saccade_velocity_threshold=self.get(u'sacc_vel_thr'), \
 			saccade_acceleration_threshold=self.get(u'sacc_acc_thr'), \
 			ip=self.get(u'smi_ip'), sendport=self.get(u'smi_send_port'), \

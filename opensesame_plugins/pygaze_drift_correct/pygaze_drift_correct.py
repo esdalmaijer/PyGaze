@@ -21,7 +21,7 @@ import inspect
 from openexp.canvas import canvas
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
-from pygaze import EyeTracker, Display
+from pygaze.display import Display
 
 class pygaze_drift_correct(item):
 	

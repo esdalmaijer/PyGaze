@@ -19,7 +19,7 @@ along with PyGaze.  If not, see <http://www.gnu.org/licenses/>.
 
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
-from pygaze import EyeTracker, Display
+from pygaze.display import Display
 
 class pygaze_log(item):
 	
