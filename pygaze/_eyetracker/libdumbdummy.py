@@ -27,7 +27,7 @@ except:
 	pass
 
 import pygaze
-
+from pygaze.screen import Screen
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -76,7 +76,7 @@ class DumbDummy(BaseEyeTracker):
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 
 		self.display = display
-		self.screen = pygaze.Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):
