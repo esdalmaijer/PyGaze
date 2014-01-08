@@ -19,6 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.libtime import clock
 from pygaze.defaults import *
 try:
 	from constants import *
@@ -117,11 +118,11 @@ class PsychoPyMouse(BaseMouse):
 		if timeout == 'default':
 			timeout = self.timeout
 		# starttime
-		starttime = pygaze.clock.get_time()
-		time = pygaze.clock.get_time()
+		starttime = clock.get_time()
+		time = clock.get_time()
 		# wait for mouse clicks
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			pressed = self.mouse.getPressed()
 			if sum(pressed) > 0:
 				for b in range(0,len(pressed)):

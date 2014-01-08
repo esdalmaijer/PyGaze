@@ -42,15 +42,3 @@ if os.path.isdir(FONTDIR):
 	for fontfile in os.listdir(FONTDIR):
 		FONTFILES.append(os.path.join(FONTDIR, fontfile))
 
-# Import core modules, so that can be easily ported like
-# `from pygaze import Screen`, etc.
-from display import Display
-from screen import Screen
-from eyetracker import EyeTracker
-from keyboard import Keyboard
-from mouse import Mouse
-from time import Time
-
-# start timing
-clock = Time()
-clock.expstart()

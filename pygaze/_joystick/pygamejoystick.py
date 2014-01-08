@@ -19,6 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.libtime import clock
 from pygaze.defaults import *
 try:
 	from constants import *
@@ -152,14 +153,14 @@ class PyGameJoystick(BaseJoystick):
 		if timeout == 'default':
 			timeout = self.timeout
 		# register start time
-		starttime = pygaze.clock.get_time()
+		starttime = clock.get_time()
 		time = starttime
 		# wait for button press
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBUTTONDOWN:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					if joybuttonlist == None or event.button in joybuttonlist:
 						pressed = event.button
 						return pressed, time
@@ -193,14 +194,14 @@ class PyGameJoystick(BaseJoystick):
 			timeout = self.timeout
 		# start time and pos
 		pos = []
-		starttime = pygaze.clock.get_time()
+		starttime = clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYAXISMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					for axis in range(self.js.get_numaxes()):
 						pos.append(self.js.get_axis(axis))
 					return pos, time
@@ -234,14 +235,14 @@ class PyGameJoystick(BaseJoystick):
 			timeout = self.timeout
 		# start time and pos
 		ballpos = []
-		starttime = pygaze.clock.get_time()
+		starttime = clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBALLMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					for ball in range(self.js.get_numballs()):
 						ballpos.append(self.js.get_ball(ball))
 					return ballpos, time
@@ -275,14 +276,14 @@ class PyGameJoystick(BaseJoystick):
 			timeout = self.timeout
 		# start time and pos
 		hatpos = []
-		starttime = pygaze.clock.get_time()
+		starttime = clock.get_time()
 		time = starttime
 		# wait for axis movement
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYHATMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					for hat in range(self.js.get_numhats()):
 						hatpos.append(self.js.get_hat(hat))
 					return hatpos, time
@@ -339,32 +340,32 @@ class PyGameJoystick(BaseJoystick):
 		ballpos = []
 		hatpos = []
 		eventtype = None
-		starttime = pygaze.clock.get_time()
+		starttime = clock.get_time()
 		time = starttime
 		# wait for input
 		while timeout == None or time - starttime <= timeout:
-			time = pygaze.clock.get_time()
+			time = clock.get_time()
 			for event in pygame.event.get():
 				if event.type == pygame.JOYBUTTONDOWN:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					if joybuttonlist == None or event.button in joybuttonlist:
 						eventtype = 'joybuttonpress'
 						pressed = event.button
 						return eventtype, pressed, time
 				if event.type == pygame.JOYAXISMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					eventtype = 'joyaxismotion'
 					for axis in range(self.js.get_numaxes()):
 						pos.append(self.js.get_axis(axis))
 					return eventtype, pos, time
 				if event.type == pygame.JOYBALLMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					eventtype = 'joyballmotion'
 					for ball in range(self.js.get_numballs()):
 						ballpos.append(self.js.get_ball(ball))
 					return eventtype, ballpos, time
 				if event.type == pygame.JOYHATMOTION:
-					time = pygaze.clock.get_time()
+					time = clock.get_time()
 					eventtype = 'joyhatmotion'
 					for hat in range(self.js.get_numhats()):
 						hatpos.append(self.js.get_hat(hat))

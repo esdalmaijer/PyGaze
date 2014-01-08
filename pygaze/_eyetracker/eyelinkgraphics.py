@@ -67,7 +67,7 @@ class EyelinkGraphics(custom_display):
 
 		# objects
 		self.display = display
-		self.screen = Screen(mousevisible=False)
+		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=None, timeout=1)
 		if DISPTYPE == 'pygame':
 			self.kb.set_timeout(timeout=0.001)
@@ -83,7 +83,7 @@ class EyelinkGraphics(custom_display):
 		self.yc = self.display.dispsize[1]/2
 		self.ld = 40 # line distance
 		# menu
-		self.menuscreen = Screen(mousevisible=False)
+		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos= \
 			(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize= \
 			12, antialias=True)
@@ -132,7 +132,7 @@ class EyelinkGraphics(custom_display):
 
 		self.tracker = tracker
 		self.tracker_version = tracker.getTrackerVersion()
-		if(self.tracker_version >=3):
+		if self.tracker_version >= 3:
 			self.tracker.sendCommand("enable_search_limits=YES")
 			self.tracker.sendCommand("track_search_limits=YES")
 			self.tracker.sendCommand("autothreshold_click=YES")
@@ -173,7 +173,7 @@ class EyelinkGraphics(custom_display):
 
 		"""TODO: What does this do?"""
 
-		pass
+		self.clear_cal_display()
 
 	def draw_cal_target(self, x, y):
 
@@ -185,15 +185,11 @@ class EyelinkGraphics(custom_display):
 		y		--	The Y coordinate of the target.
 		"""
 
-		# Play beep
 		self.play_beep(pylink.CAL_TARG_BEEP)
-		# show fixation dot
-		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
-			diameter=12)
+		self.screen.clear()		
+		self.screen.draw_fixation(fixtype='dot', pos=(x,y))
 		self.display.fill(screen=self.screen)
 		self.display.show()
-		# clear screen
-		self.screen.clear()
 
 	def play_beep(self, beepid):
 
@@ -211,59 +207,80 @@ class EyelinkGraphics(custom_display):
 				self.__target_beep__.play()			
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
+			self.screen.clear()
 			self.screen.draw_text(text= \
-				"calibration unsuccesfull, press 'q' to return to menu", pos= \
+				"calibration lost, press 'q' to return to menu", pos= \
 				(self.xc,self.yc), center=True, font='mono', fontsize=12, \
 				antialias=True)
 			self.display.fill(self.screen)
 			self.display.show()
-			self.screen.clear()
 			# play beep
 			self.__target_beep__error__.play()
 		elif beepid == pylink.CAL_GOOD_BEEP:
+			self.screen.clear()
 			if self.state == "calibration":
 				self.screen.draw_text(text= \
-					"calibration succesfull, press 'v' to validate", pos= \
+					"Calibration succesfull, press 'v' to validate", pos= \
 					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
 					antialias=True)
 				pass
 			elif self.state == "validation":
 				self.screen.draw_text(text= \
-					"calibration succesfull, press 'q' to return to menu", \
+					"Validation succesfull, press 'q' to return to menu", \
 					pos=(self.xc,self.yc), center=True, font='mono', fontsize= \
 					12, antialias=True)
 				pass
 			else:
-				self.screen.draw_text(text="press 'q' to return to menu", pos= \
+				self.screen.draw_text(text="Press 'q' to return to menu", pos= \
 					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
 					antialias=True)
 				pass
 			# show screen
 			self.display.fill(self.screen)
 			self.display.show()
-			self.screen.clear()
 			# play beep
 			self.__target_beep__done__.play()
 		else: #	DC_GOOD_BEEP	or DC_TARG_BEEP
 			pass
 
-	def getColorFromIndex(self,colorindex):
+	def getColorFromIndex(self, i):
 
-		"""Unused"""
+		"""
+		Maps a PyLink color code onto a color-name string.
 
-		pass
+		Arguments:
+		i		--	A PyLink color code.
+
+		Returns:
+		A color-name string.
+		"""
+
+		print 'getColorFromIndex(%s)' % i
+		if i == pylink.CR_HAIR_COLOR:
+			return 'white'
+		if i == pylink.PUPIL_HAIR_COLOR:
+			return 'yellow'
+		if i == pylink.PUPIL_BOX_COLOR:
+			return 'green'
+		if i == pylink.SEARCH_LIMIT_BOX_COLOR:
+			return 'red'
+		if i == pylink.MOUSE_CURSOR_COLOR:
+			return 'blue'
+		return 'black'
 
 	def draw_line(self, x1, y1, x2, y2, colorindex):
 
 		"""Unused"""
 
-		pass
-
-	def draw_lozenge(self,x,y,width,height,colorindex):
+		# Find out how this can be used
+		print 'draw_line() %s %s %s %s' % (x1, y1, x2, y2)
+		
+	def draw_lozenge(self, x, y, width, height, colorindex):
 
 		"""Unused"""
 
-		pass
+		# Find out how this can be used
+		print 'draw_lozenge() %s %s %s %s' % (x, y, width, height)
 
 	def get_mouse_state(self):
 
@@ -400,6 +417,7 @@ class EyelinkGraphics(custom_display):
 			img = pygame.image.fromstring(img.tostring(), imgsz, 'RGBX')
 			pygame.image.save(img, self.tmp_file)
 			# ... and then show the image.
+			self.screen.clear()
 			self.screen.draw_image(self.tmp_file)
 			self.display.fill(self.screen)
 			self.display.show()

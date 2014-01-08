@@ -20,6 +20,7 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze.defaults import *
+from pygaze.libtime import clock
 try:
 	from constants import *
 except:
@@ -125,7 +126,7 @@ class Dummy(BaseEyeTracker):
 
 		print("Calibration would now take place")
 
-		pygaze.clock.pause(1000)
+		clock.pause(1000)
 
 
 	def drift_correction(self, pos=None, fix_triggered=False):
@@ -244,7 +245,7 @@ class Dummy(BaseEyeTracker):
 		"""Dummy for starting recording, prints what would have been the recording start"""
 
 		self.simulator.set_visible(visible=True)
-		dumrectime = pygaze.clock.get_time()
+		dumrectime = clock.get_time()
 
 		self.recording = True
 		
@@ -256,7 +257,7 @@ class Dummy(BaseEyeTracker):
 		"""Dummy for stopping recording, prints what would have been the recording end"""
 
 		self.simulator.set_visible(visible=False)
-		dumrectime = pygaze.clock.get_time()
+		dumrectime = clock.get_time()
 
 		self.recording = False
 
@@ -270,7 +271,7 @@ class Dummy(BaseEyeTracker):
 		if self.recording:
 			self.stop_recording()
 		
-		closetime = pygaze.clock.get_time()
+		closetime = clock.get_time()
 
 		print("eyetracker connection would have closed at: " + str(closetime))
 
@@ -343,7 +344,7 @@ class Dummy(BaseEyeTracker):
 			if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > maxerr: # Pythagoras
 				break
 
-		return pygaze.clock.get_time(), spos
+		return clock.get_time(), spos
 
 
 	def wait_for_saccade_end(self):
@@ -373,9 +374,9 @@ class Dummy(BaseEyeTracker):
 				# remove oldest sample
 				xl.pop(0); yl.pop(0)
 			# wait for a bit, to avoid immediately returning (runs go faster than mouse moves)
-			pygaze.clock.pause(10)
+			clock.pause(10)
 
-		return pygaze.clock.get_time(), spos, (xl[len(xl)-1],yl[len(yl)-1])
+		return clock.get_time(), spos, (xl[len(xl)-1],yl[len(yl)-1])
 
 
 	def wait_for_fixation_start(self):
@@ -402,9 +403,9 @@ class Dummy(BaseEyeTracker):
 				# remove oldest sample
 				xl.pop(0); yl.pop(0)
 			# wait for a bit, to avoid immediately returning (runs go faster than mouse moves)
-			pygaze.clock.pause(10)
+			clock.pause(10)
 
-		return pygaze.clock.get_time(), (xl[len(xl)-1],yl[len(yl)-1])
+		return clock.get_time(), (xl[len(xl)-1],yl[len(yl)-1])
 
 
 	def wait_for_fixation_end(self):
@@ -422,7 +423,7 @@ class Dummy(BaseEyeTracker):
 			if ((spos[0]-npos[0])**2  + (spos[1]-npos[1])**2)**0.5 > maxerr: # Pythagoras
 				break
 
-		return pygaze.clock.get_time(), spos
+		return clock.get_time(), spos
 
 
 	def wait_for_blink_start(self):
@@ -435,7 +436,7 @@ class Dummy(BaseEyeTracker):
 		while not self.blinking:
 			pos = self.sample()
 
-		return pygaze.clock.get_time(), pos
+		return clock.get_time(), pos
 
 
 	def wait_for_blink_end(self):
@@ -452,7 +453,7 @@ class Dummy(BaseEyeTracker):
 		while self.blinking:
 			epos = self.sample()
 
-		return pygaze.clock.get_time(), epos
+		return clock.get_time(), epos
 	
 	def set_draw_drift_correction_target_func(self, func):
 		

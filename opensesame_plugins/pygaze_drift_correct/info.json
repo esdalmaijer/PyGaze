@@ -18,7 +18,8 @@
 			"type"		: "line_edit",
 			"var"		: "target_color",
 			"label"		: "Target color",
-			"tooltip"	: "Color for the drift-correction target"
+			"tooltip"	: "Color for the drift-correction target",
+			"name"		: "line_edit_target_color"
 		},
 		{
 			"type"		: "combobox",
@@ -33,7 +34,14 @@
 				"large-cross",
 				"small-cross"
 			],
-			"tooltip"	: "Style for the drift-correction target"
+			"tooltip"	: "Style for the drift-correction target",
+			"name"		: "combobox_target_style"
+		},
+		{
+			"type"		: "checkbox",
+			"var"		: "draw_target",
+			"label"		: "Show display with drift-correction target",
+			"tooltip"	: "Indicates whether a drift-correction display should be shown"
 		},
 		{
 			"type"		: "checkbox",

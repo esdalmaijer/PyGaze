@@ -44,7 +44,7 @@
 #		# note that here no docstring is provided, as it is copied from
 #		# the parent class
 #		
-#		print("Display.show call at %d" % int(pygaze.clock.get_time()))
+#		print("Display.show call at %d" % int(clock.get_time()))
 #
 
 class BaseEyeTracker:

@@ -20,13 +20,14 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze.defaults import *
+from pygaze.libtime import clock
 try:
 	from constants import *
 except:
 	pass
 
 import pygaze
-
+from pygaze.screen import Screen
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -41,7 +42,7 @@ def message(msg):
 	
 	"""Prints a timestamp and message to the console"""
 	
-	print("%d\t%s" % (int(pygaze.clock.get_time()), msg))
+	print("%d\t%s" % (int(clock.get_time()), msg))
 
 
 class DumbDummy(BaseEyeTracker):
@@ -75,7 +76,7 @@ class DumbDummy(BaseEyeTracker):
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 
 		self.display = display
-		self.screen = pygaze.Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):
@@ -220,7 +221,7 @@ class DumbDummy(BaseEyeTracker):
 
 		"""Returns starting time and starting position when a simulated saccade is started"""
 
-		return pygaze.clock.get_time(), (19,19)
+		return clock.get_time(), (19,19)
 
 
 	def wait_for_saccade_end(self):
@@ -233,14 +234,14 @@ class DumbDummy(BaseEyeTracker):
 
 		stime, spos = self.wait_for_saccade_start()
 
-		return pygaze.clock.get_time(), spos, (190,190)
+		return clock.get_time(), spos, (190,190)
 
 
 	def wait_for_fixation_start(self):
 
 		"""Returns starting time and position when a simulated fixation is started"""
 
-		return pygaze.clock.get_time(), (19,19)
+		return clock.get_time(), (19,19)
 
 
 	def wait_for_fixation_end(self):
@@ -249,18 +250,18 @@ class DumbDummy(BaseEyeTracker):
 
 		stime, spos = self.wait_for_fixation_start()
 
-		return pygaze.clock.get_time(), spos
+		return clock.get_time(), spos
 
 
 	def wait_for_blink_start(self):
 
 		"""Returns starting time and position of a simulated blink"""
 
-		return pygaze.clock.get_time(), (19,19)
+		return clock.get_time(), (19,19)
 
 
 	def wait_for_blink_end(self):
 
 		"""Returns ending time and position of a simulated blink (mousebuttonup)"""
 		
-		return pygaze.clock.get_time(), (19,19)
+		return clock.get_time(), (19,19)
