@@ -60,15 +60,15 @@ class pygaze_init(item):
 		self.smi_recv_port = 5555
 		item.__init__(self, name, experiment, script)
 		self.reload_pygaze()
-
-	def prepare(self):
-
-		"""The preparation phase of the plug-in goes here."""
-
-		item.prepare(self)
-		if self.get(u'eyelink_calbeep'):
-			from openexp.synth import synth
-			self.beep = synth(self.experiment)
+		
+	def close(self):
+		
+		"""
+		Closes the connection with the eye tracker when the experiment is
+		finished.
+		"""
+		
+		self.experiment.pygaze_eyetracker.close()
 		
 	def draw_calibration_canvas(self, x, y):
 		
@@ -82,6 +82,12 @@ class pygaze_init(item):
 		else:
 			dc_canvas.fixdot(x, y)
 		dc_canvas.show()
+		
+	def prepare(self):
+
+		"""The preparation phase of the plug-in goes here."""
+
+		item.prepare(self)
 		
 	def reload_pygaze(self):
 		
@@ -113,13 +119,21 @@ class pygaze_init(item):
 
 		"""The run phase of the plug-in goes here."""
 
+		if hasattr(self.experiment, u'pygaze_eyetracker'):
+			raise osexception( \
+				u'You should have only one instance of `pygaze_init` in your experiment')
 		self.set_item_onset()
+		# Determine the tracker type and perform certain tracker-specific
+		# operations.
 		if self.tracker_type == u'Simple dummy':
 			tracker_type = u'dumbdummy'
 		elif self.tracker_type == u'Advanced dummy (mouse simulation)':
 			tracker_type = u'dummy'
 		elif self.tracker_type == u'EyeLink':
 			tracker_type = u'eyelink'
+			if self.get(u'eyelink_calbeep'):
+				from openexp.synth import synth
+				self.beep = synth(self.experiment)
 		elif self.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 		elif self.tracker_type == u'SMI':
@@ -143,6 +157,7 @@ class pygaze_init(item):
 			event_detection = u'native'
 		else:
 			event_detection = u'pygaze'
+		# Initialize pygaze and the eye-tracker object
 		self.experiment.pygaze_display = Display(u'opensesame')
 		self.experiment.pygaze_eyetracker = EyeTracker( \
 			self.experiment.pygaze_display, trackertype=tracker_type, \
@@ -155,6 +170,7 @@ class pygaze_init(item):
 			self.get(u'eyelink_force_drift_correct'))
 		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func( \
 			self.draw_calibration_canvas)
+		self.experiment.cleanup_functions.append(self.close)
 		if self.calibrate == u'yes':
 			self.experiment.pygaze_eyetracker.calibrate()
 
