@@ -20,6 +20,7 @@ along with PyGaze.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import inspect
 from openexp.canvas import canvas
+from libopensesame import debug
 from libopensesame.exceptions import osexception
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
@@ -67,9 +68,14 @@ class pygaze_init(item):
 		Closes the connection with the eye tracker when the experiment is
 		finished.
 		"""
-		
+
+		debug.msg(u'Starting PyGaze deinitialisation')
+		self.sleep(1000)
 		self.experiment.pygaze_eyetracker.close()
-		
+		self.experiment.pygaze_eyetracker = None
+		debug.msg(u'Finished PyGaze deinitialisation')
+		self.sleep(1000)	
+
 	def draw_calibration_canvas(self, x, y):
 		
 		"""A hook to prepare the canvas with the clibration target."""
@@ -142,16 +148,11 @@ class pygaze_init(item):
 			raise osexception(u'Unknown tracker type: %s' % self.tracker_type)
 		# Determine logfile
 		if self.get(u'_logfile') == u'automatic':
-			logfile = os.path.splitext(os.path.basename(self.get( \
-				u'logfile')))[0]
+			logfile = os.path.splitext(self.get(u'logfile'))[0]
 			if tracker_type == u'eyelink':
 				logfile = logfile + u'.edf'
 		else:
 			logfile = self.get(u'_logfile')
-		if tracker_type == u'eyelink' and len(logfile) > 12:
-			raise osexception( \
-				u'The name for the EyeLink logfile must contain at most eight characters (not counting the .edf extension), not "%s"' \
-				% logfile)
 		# Determine event detection
 		if tracker_type == u'eyelink':
 			event_detection = u'native'
