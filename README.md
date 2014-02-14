@@ -12,7 +12,7 @@ Behaviour Research Methods. doi:[10.3758/s13428-013-0422-2](http://link.springer
 
 
 This toolbox is developed by Edwin Dalmaijer and Sebastiaan Mathot. For more
-information on contributors, see: http://pygaze.org/contributors.html
+information on contributors, see: http://pygaze.org/contributors
 
 PyGaze is open source software and therefore free to use and modify at will.
 Warranty, however, is NOT given. If this software fails, causes your computer
