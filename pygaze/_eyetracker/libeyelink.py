@@ -44,7 +44,7 @@ except:
 	pass
 
 import pylink
-import Image
+from PIL import Image
 import copy
 import math
 import os.path
@@ -91,14 +91,18 @@ class libeyelink(BaseEyeTracker):
 
 		global _eyelink
 
-		stem, ext = os.path.splitext(data_file)
-		if len(stem) > 8 or len(ext) > 4:
-			data_file = "default.edf"
-			print( \
-				"WARNING! The Eyelink cannot handle filenames longer than 8 characters (excluding '.EDF' extension). Filename set to 'default.EDF'.")
+		# Make sure that we have a valid data file. The local_data_file may
+		# contain a folder. The eyelink_data_file is only a basename, i.e.
+		# without folder. The eyelink_data_file must be at most eight characters
+		# and end with a `.edf` extension.
+		self.local_data_file = data_file
+		self.eyelink_data_file = os.path.basename(data_file)
+		stem, ext = os.path.splitext(self.eyelink_data_file)
+		if len(stem) > 8 or ext.lower() != '.edf':
+			raise Exception( \
+				"The EyeLink cannot handle filenames longer than eight characters (excluding '.edf' extension).")
 
 		# properties
-		self.data_file = data_file
 		self.display = display
 		self.scr = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
@@ -149,7 +153,7 @@ class libeyelink(BaseEyeTracker):
 		# as (one of) the first things, otherwise a segmentation fault occurs.
 		if force_drift_correct:
 			self.send_command('driftcorrect_cr_disable = OFF')
-		pylink.getEYELINK().openDataFile(self.data_file)
+		pylink.getEYELINK().openDataFile(self.eyelink_data_file)
 		pylink.flushGetkeyQueue()
 		pylink.getEYELINK().setOfflineMode()
 		# notify eyelink of display resolution
@@ -509,13 +513,15 @@ class libeyelink(BaseEyeTracker):
 		# close data file and transfer it to the experimental PC
 		print("libeyelink.libeyelink.close(): Closing data file")
 		pylink.getEYELINK().closeDataFile()
-		pylink.msecDelay(100)
-		print("libeyelink.libeyelink.close(): Transferring data file")
-		pylink.getEYELINK().receiveDataFile(self.data_file, self.data_file)
-		pylink.msecDelay(100)
+		pylink.msecDelay(500)
+		print("libeyelink.libeyelink.close(): Transferring %s to %s" \
+			% (self.eyelink_data_file, self.local_data_file))
+		pylink.getEYELINK().receiveDataFile(self.eyelink_data_file, \
+			self.local_data_file)
+		pylink.msecDelay(500)
 		print("libeyelink.libeyelink.close(): Closing eyelink")
 		pylink.getEYELINK().close();
-		pylink.msecDelay(100)
+		pylink.msecDelay(500)
 
 	def set_eye_used(self):
 
