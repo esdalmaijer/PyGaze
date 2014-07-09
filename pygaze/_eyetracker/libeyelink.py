@@ -104,6 +104,7 @@ class libeyelink(BaseEyeTracker):
 
 		# properties
 		self.display = display
+		self.fontsize = 18
 		self.scr = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
@@ -147,7 +148,8 @@ class libeyelink(BaseEyeTracker):
 			except:
 				raise Exception( \
 					"Error in libeyelink.libeyelink.__init__(): Failed to connect to the tracker!")
-			self.eyelink_graphics = EyelinkGraphics(self.display, _eyelink)
+			self.eyelink_graphics = EyelinkGraphics(self.display,
+				self.fontsize, _eyelink)
 			pylink.openGraphicsEx(self.eyelink_graphics)
 		# Optionally force drift correction. For some reason this must be done
 		# as (one of) the first things, otherwise a segmentation fault occurs.
@@ -270,9 +272,9 @@ class libeyelink(BaseEyeTracker):
 		# present instructions
 		self.display.fill() # clear display
 		self.scr.draw_text(text= \
-			"Noise calibration: please look at the dot\n\n(press space to start)", \
-			pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), center= \
-			True)
+			"Noise calibration: please look at the dot\n\n(press space to start)",
+			pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)),
+			center=True, fontsize=self.fontsize)
 		self.scr.draw_fixation(fixtype='dot')
 		self.display.fill(self.scr)
 		self.display.show()
@@ -967,10 +969,12 @@ class libeyelink(BaseEyeTracker):
 		yc = DISPSIZE[1]/2
 		xc = DISPSIZE[0]/2
 		ld = 40 # Line height
-		scr.draw_text(u'Really abort experiment?', pos=(xc, yc-3*ld))
-		scr.draw_text(u'Press \'Y\' to abort', pos=(xc, yc-0.5*ld))
-		scr.draw_text(u'Press any other key or wait 5s to go to setup', \
-			pos=(xc, yc+0.5*ld))
+		scr.draw_text(u'Really abort experiment?', pos=(xc, yc-3*ld),
+			fontsize=self.fontsize)
+		scr.draw_text(u'Press \'Y\' to abort', pos=(xc, yc-0.5*ld),
+			fontsize=self.fontsize)
+		scr.draw_text(u'Press any other key or wait 5s to go to setup',
+			pos=(xc, yc+0.5*ld), fontsize=self.fontsize)
 		self.display.fill(scr)
 		self.display.show()
 		# process the response:

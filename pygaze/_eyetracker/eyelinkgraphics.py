@@ -55,13 +55,14 @@ class EyelinkGraphics(custom_display):
 	which is implemented in PyLink.
 	"""
 
-	def __init__(self, display, tracker):
+	def __init__(self, display, fontsize, tracker):
 
 		"""
 		Constructor.
 
 		Arguments:
 		display		--	A PyGaze Display object.
+		fontsize	--	The font size for the text messages.
 		tracker		--	An tracker object as returned by pylink.EyeLink().
 		"""
 
@@ -83,30 +84,32 @@ class EyelinkGraphics(custom_display):
 		self.xc = self.display.dispsize[0]/2
 		self.yc = self.display.dispsize[1]/2
 		self.ld = 40 # line distance
+		self.fontsize = fontsize
+		self.title = ""
 		# menu
 		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.menuscreen.draw_text(text="== Eyelink calibration menu ==",
 			pos=(self.xc,self.yc-5*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press C to calibrate", 
 			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press V to validate",
 			pos=(self.xc, self.yc-2*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press A to auto-threshold",
 			pos=(self.xc,self.yc-1*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press Enter to show camera image",
 			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(
 			text="(then change between images using the arrow keys)",
 			pos=(self.xc, self.yc+2*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press Q to exit menu",
 			pos=(self.xc, self.yc+5*self.ld), center=True, font='mono',
-			fontsize=12, antialias=True)
+			fontsize=self.fontsize, antialias=True)
 		# beeps
 		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, 
 			attack=0, decay=0, soundfile=None)
@@ -226,10 +229,10 @@ class EyelinkGraphics(custom_display):
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
 			self.screen.clear()
-			self.screen.draw_text(text= \
-				"calibration lost, press 'q' to return to menu", pos= \
-				(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-				antialias=True)
+			self.screen.draw_text(
+				text="calibration lost, press 'q' to return to menu",
+				pos=(self.xc,self.yc), center=True, font='mono',
+				fontsize=self.fontsize, antialias=True)
 			self.display.fill(self.screen)
 			self.display.show()
 			# play beep
@@ -237,22 +240,19 @@ class EyelinkGraphics(custom_display):
 		elif beepid == pylink.CAL_GOOD_BEEP:
 			self.screen.clear()
 			if self.state == "calibration":
-				self.screen.draw_text(text= \
-					"Calibration succesfull, press 'v' to validate", pos= \
-					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-					antialias=True)
-				pass
+				self.screen.draw_text(
+					text="Calibration succesfull, press 'v' to validate",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=self.fontsize, antialias=True)
 			elif self.state == "validation":
-				self.screen.draw_text(text= \
-					"Validation succesfull, press 'q' to return to menu", \
-					pos=(self.xc,self.yc), center=True, font='mono', fontsize= \
-					12, antialias=True)
-				pass
+				self.screen.draw_text(
+					text="Validation succesfull, press 'q' to return to menu",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=12, antialias=True)				
 			else:
-				self.screen.draw_text(text="Press 'q' to return to menu", pos= \
-					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-					antialias=True)
-				pass
+				self.screen.draw_text(text="Press 'q' to return to menu",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=self.fontsize, antialias=True)
 			# show screen
 			self.display.fill(self.screen)
 			self.display.show()
@@ -273,32 +273,36 @@ class EyelinkGraphics(custom_display):
 		A color-name string.
 		"""
 
-		print 'getColorFromIndex(%s)' % i
-		if i == pylink.CR_HAIR_COLOR:
-			return 'white'
-		if i == pylink.PUPIL_HAIR_COLOR:
-			return 'yellow'
-		if i == pylink.PUPIL_BOX_COLOR:
-			return 'green'
-		if i == pylink.SEARCH_LIMIT_BOX_COLOR:
-			return 'red'
-		if i == pylink.MOUSE_CURSOR_COLOR:
-			return 'blue'
-		return 'black'
+		# Currently unused
+		return 0
 
 	def draw_line(self, x1, y1, x2, y2, colorindex):
 
-		"""Unused"""
-
-		# Find out how this can be used
-		print 'draw_line() %s %s %s %s' % (x1, y1, x2, y2)
+		"""
+		Unlike the function name suggests, this draws a single pixel. I.e.
+		the end coordinates are always exactly one pixel away from the start
+		coordinates.
+		
+		Arguments:
+		x1			--	The starting x.
+		y1			--	The starting y.
+		x2			--	The end x.
+		y2			--	The end y.
+		colorIndex	--	A color index.
+		"""
+	
+		i = y1*self.size[0]+x1
+		if i > 0 and len(self.imagebuffer):
+			# Use Tango orange
+			self.imagebuffer[i] = 255 << 8
 		
 	def draw_lozenge(self, x, y, width, height, colorindex):
 
 		"""Unused"""
 
-		# Find out how this can be used
-		print 'draw_lozenge() %s %s %s %s' % (x, y, width, height)
+		# According to the Pylink documentation (pylink.csm), this function
+		# is currently unused.
+		pass
 
 	def get_mouse_state(self):
 
@@ -391,14 +395,14 @@ class EyelinkGraphics(custom_display):
 	def image_title(self, text):
 
 		"""
-		TODO: What does this do?
+		Sets the current image title.
 
 		Arguments:
-		text	--	Unknown.
+		text	--	An image title.
 		"""
 
-		pass
-
+		self.title = text
+		
 	def draw_image_line(self, width, line, totlines, buff):
 
 		"""
@@ -421,24 +425,19 @@ class EyelinkGraphics(custom_display):
 				pass
 		# If the buffer is full, push it to the display.
 		if line == totlines:
-			# First create a PIL image, then convert it to a PyGame image, and
-			# then save it to a temporary file on disk. This juggling with
-			# formats is necessary to show the image without distortions under
-			# (so far) all conditions. Surprisingly, it doesn't cause any
-			# appreciable delays, relative to directly invoking PyGame or
-			# PsychoPy functions.
-			bufferv = self.imagebuffer.tostring()
-			img = Image.new("RGBX", self.size)
-			imgsz = self.xc, self.yc
-			img.fromstring(bufferv)
-			img = img.resize(imgsz)
-			img = pygame.image.fromstring(img.tostring(), imgsz, 'RGBX')
+			self.draw_cross_hair()			
+			# Convert the image buffer to a pygame image, save it ...			
+			img = pygame.image.fromstring(self.imagebuffer.tostring(),
+				self.size, 'RGBX')
 			pygame.image.save(img, self.tmp_file)
 			# ... and then show the image.
 			self.screen.clear()
-			self.screen.draw_image(self.tmp_file)
+			self.screen.draw_image(self.tmp_file, scale=2)
+			self.screen.draw_text(text=self.title,
+				pos=(self.xc, 2*self.fontsize), fontsize=self.fontsize,
+				colour='#729fcf')
 			self.display.fill(self.screen)
-			self.display.show()
+			self.display.show()			
 			# Clear the buffer for the next round!
 			self.imagebuffer = self.new_array()
 
@@ -467,4 +466,5 @@ class EyelinkGraphics(custom_display):
 			bf = int(r[i])
 			self.pal.append((rf<<16) | (gf<<8) | (bf))
 			i += 1
+
 
