@@ -32,6 +32,8 @@ from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
+import os
+import platform
 import array
 from PIL import Image
 
@@ -76,50 +78,66 @@ class EyelinkGraphics(custom_display):
 		#if DISPTYPE not in ('pygame', 'psychopy'):
 		import tempfile
 		import os
-		self.tmp_file = os.path.join(tempfile.gettempdir(), \
-			'__eyelink__.jpg')
+		self.tmp_file = os.path.join(tempfile.gettempdir(), '__eyelink__.jpg')
 		# drawing properties
 		self.xc = self.display.dispsize[0]/2
 		self.yc = self.display.dispsize[1]/2
 		self.ld = 40 # line distance
 		# menu
 		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
-		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos= \
-			(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize= \
-			12, antialias=True)
-		self.menuscreen.draw_text(text="Press C to calibrate", pos=(self.xc, \
-			self.yc-3*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press V to validate", pos=(self.xc, \
-			self.yc-2*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press A to auto-threshold", pos=( \
-			self.xc,self.yc-1*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press Enter to show camera image", \
-			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono', \
+		self.menuscreen.draw_text(text="== Eyelink calibration menu ==",
+			pos=(self.xc,self.yc-5*self.ld), center=True, font='mono',
 			fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text= \
-			"(then change between images using the arrow keys)", pos=(self.xc, \
-			self.yc+2*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press Q to exit menu", pos=(self.xc, \
-			self.yc+5*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
+		self.menuscreen.draw_text(text="Press C to calibrate", 
+			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press V to validate",
+			pos=(self.xc, self.yc-2*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press A to auto-threshold",
+			pos=(self.xc,self.yc-1*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press Enter to show camera image",
+			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
+		self.menuscreen.draw_text(
+			text="(then change between images using the arrow keys)",
+			pos=(self.xc, self.yc+2*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
+		self.menuscreen.draw_text(text="Press Q to exit menu",
+			pos=(self.xc, self.yc+5*self.ld), center=True, font='mono',
+			fontsize=12, antialias=True)
 		# beeps
-		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, attack= \
-			0, decay=0, soundfile=None)
-		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200, \
+		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, 
 			attack=0, decay=0, soundfile=None)
-		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200, \
+		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200,
+			attack=0, decay=0, soundfile=None)
+		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200,
 			attack=0, decay=0, soundfile=None)
 		# further properties
 		self.state = None
-		self.imagebuffer = array.array('l')
 		self.pal = None
 		self.size = (0,0)
 		self.set_tracker(tracker)
 		self.last_mouse_state = -1
+		self.bit64 = '64bit' in platform.architecture()
+		self.imagebuffer = self.new_array()		
+		
+	def new_array(self):
+	
+		"""
+		Creates a new array with a system-specific format.
+		
+		Returns:
+		An array.
+		"""
+		
+		# On 64 bit Linux, we need to use an unsigned int data format.
+		# <https://www.sr-support.com/showthread.php?3215-Visual-glitch-when-/
+		# sending-eye-image-to-display-PC&highlight=ubuntu+pylink>
+		if os.name == 'posix' and self.bit64:
+			return array.array('I')
+		return array.array('L')
 
 	def set_tracker(self, tracker):
 
@@ -368,7 +386,7 @@ class EyelinkGraphics(custom_display):
 		self.size = (width,height)
 		self.clear_cal_display()
 		self.last_mouse_state = -1
-		self.imagebuffer = array.array('l')
+		self.imagebuffer = self.new_array()
 
 	def image_title(self, text):
 
@@ -422,7 +440,7 @@ class EyelinkGraphics(custom_display):
 			self.display.fill(self.screen)
 			self.display.show()
 			# Clear the buffer for the next round!
-			self.imagebuffer = array.array('l')
+			self.imagebuffer = self.new_array()
 
 	def set_image_palette(self, r, g, b):
 
@@ -438,7 +456,7 @@ class EyelinkGraphics(custom_display):
 		b		--	The blue channel.
 		"""
 
-		self.imagebuffer = array.array('l')
+		self.imagebuffer = self.new_array()
 		self.clear_cal_display()
 		sz = len(r)
 		i = 0
