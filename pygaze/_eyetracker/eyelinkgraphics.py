@@ -86,6 +86,7 @@ class EyelinkGraphics(custom_display):
 		self.ld = 40 # line distance
 		self.fontsize = fontsize
 		self.title = ""
+		self.display_open = True
 		# menu
 		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.menuscreen.draw_text(text="== Eyelink calibration menu ==",
@@ -125,6 +126,14 @@ class EyelinkGraphics(custom_display):
 		self.last_mouse_state = -1
 		self.bit64 = '64bit' in platform.architecture()
 		self.imagebuffer = self.new_array()		
+		
+	def close(self):
+	
+		"""
+		Is called when the connection and display are shutting down.		
+		"""
+		
+		self.display_open = False
 		
 	def new_array(self):
 	
@@ -292,9 +301,9 @@ class EyelinkGraphics(custom_display):
 		"""
 	
 		i = y1*self.size[0]+x1
-		if i > 0 and len(self.imagebuffer):
-			# Use Tango orange
-			self.imagebuffer[i] = 255 << 8
+		if i > 0 and i < len(self.imagebuffer):
+			# Use green
+			self.imagebuffer[i] = 65280
 		
 	def draw_lozenge(self, x, y, width, height, colorindex):
 
@@ -319,6 +328,12 @@ class EyelinkGraphics(custom_display):
 		A list containing a single pylink key identifier.
 		"""
 
+		# Don't try to collect key presses when the display is no longer
+		# available. This is necessary, because pylink polls key presses during
+		# file transfer, which generally occurs after the display has been
+		# closed.
+		if not self.display_open:
+			return None
 		try:
 			key, time = self.kb.get_key(keylist=None, timeout='default')
 		except:
