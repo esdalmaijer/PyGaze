@@ -237,6 +237,7 @@ class libeyelink(BaseEyeTracker):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
+		print('status message: %s' % msg)
 		pylink.getEYELINK().sendCommand("record_status_message '%s'" % msg)
 
 	def connected(self):
@@ -488,8 +489,9 @@ class libeyelink(BaseEyeTracker):
 		i = 0
 		while True:
 			# params: write samples, write event, send samples, send events
-			error = pylink.getEYELINK().startRecording(1, 1, 1, 1)
-			
+			print(u'starting recording ...')
+			error = pylink.getEYELINK().startRecording(1, 1, 1, 1)			
+			print(u'returned %s' % error)
 			if not error:
 				break
 			if i > self.MAX_TRY:
@@ -504,24 +506,30 @@ class libeyelink(BaseEyeTracker):
 				"start recording (attempt %d of %d)") % (i, self.MAX_TRY))
 			pylink.msecDelay(100)
 		# don't know what this is
-		pylink.pylink.beginRealTimeMode(100)
+		print(u'Start realtime mode ...')
+		pylink.msecDelay(100)
+		pylink.beginRealTimeMode(100)
 		# wait a bit until samples start coming in
+		print(u'Wait for block start ...')
+		pylink.msecDelay(100)
 		if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
 			raise Exception(
 				"Error in libeyelink.libeyelink.start_recording(): Failed to "
 				"start recording (waitForBlockStart error)!")
+		print(u'done ...')
 
 	def stop_recording(self):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
+		print(u'stopping recording ...')
 		self.recording = False
 		pylink.endRealTimeMode()
 		pylink.getEYELINK().setOfflineMode()
 		pylink.msecDelay(500)
+		print(u'done ...')
 
 	def close(self):
-
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
@@ -555,8 +563,7 @@ class libeyelink(BaseEyeTracker):
 			print(
 				"WARNING libeyelink.libeyelink.set_eye_used(): Failed to "
 				"determine which eye is being recorded")
-	
-	
+		
 	def pupil_size(self):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
