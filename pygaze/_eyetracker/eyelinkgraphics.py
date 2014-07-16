@@ -83,15 +83,19 @@ class EyelinkGraphics(custom_display):
 		# drawing properties
 		self.xc = self.display.dispsize[0]/2
 		self.yc = self.display.dispsize[1]/2
+		self.extra_info = False
 		self.ld = 40 # line distance
 		self.fontsize = fontsize
 		self.title = ""
 		self.display_open = True
 		# menu
-		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
-		self.menuscreen.draw_text(text="== Eyelink calibration menu ==",
-			pos=(self.xc,self.yc-5*self.ld), center=True, font='mono',
-			fontsize=self.fontsize, antialias=True)
+		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)		
+		self.menuscreen.draw_text(text="Eyelink calibration menu",
+			pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
+			fontsize=int(2*self.fontsize), antialias=True)
+		self.menuscreen.draw_text(text="pygaze %s, pylink %s" % (pygaze.version,
+			pylink.__version__), pos=(self.xc,self.yc-5*self.ld), center=True,
+			font='mono', fontsize=int(.8*self.fontsize), antialias=True)
 		self.menuscreen.draw_text(text="Press C to calibrate", 
 			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
@@ -101,6 +105,9 @@ class EyelinkGraphics(custom_display):
 		self.menuscreen.draw_text(text="Press A to auto-threshold",
 			pos=(self.xc,self.yc-1*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press I for extra info in camera image",
+			pos=(self.xc,self.yc-0*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press Enter to show camera image",
 			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
@@ -108,6 +115,9 @@ class EyelinkGraphics(custom_display):
 			text="(then change between images using the arrow keys)",
 			pos=(self.xc, self.yc+2*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press Escape to abort experiment",
+			pos=(self.xc, self.yc+4*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)			
 		self.menuscreen.draw_text(text="Press Q to exit menu",
 			pos=(self.xc, self.yc+5*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
@@ -257,7 +267,7 @@ class EyelinkGraphics(custom_display):
 				self.screen.draw_text(
 					text="Validation succesfull, press 'q' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
-					fontsize=12, antialias=True)				
+					fontsize=self.fontsize, antialias=True)				
 			else:
 				self.screen.draw_text(text="Press 'q' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
@@ -362,6 +372,9 @@ class EyelinkGraphics(custom_display):
 			self.state = "validation"
 		elif key == "a":
 			keycode = ord("a")
+		elif key == "i":
+			self.extra_info = not self.extra_info
+			keycode = 0
 		elif key == "up":
 			keycode = pylink.CURS_UP
 		elif key == "down":
@@ -440,7 +453,8 @@ class EyelinkGraphics(custom_display):
 				pass
 		# If the buffer is full, push it to the display.
 		if line == totlines:
-			self.draw_cross_hair()			
+			if self.extra_info:
+				self.draw_cross_hair()			
 			# Convert the image buffer to a pygame image, save it ...			
 			img = pygame.image.fromstring(self.imagebuffer.tostring(),
 				self.size, 'RGBX')
@@ -448,9 +462,10 @@ class EyelinkGraphics(custom_display):
 			# ... and then show the image.
 			self.screen.clear()
 			self.screen.draw_image(self.tmp_file, scale=2)
-			self.screen.draw_text(text=self.title,
-				pos=(self.xc, 2*self.fontsize), fontsize=self.fontsize,
-				colour='#729fcf')
+			if self.extra_info:
+				self.screen.draw_text(text=self.title,
+					pos=(self.xc, 2*self.fontsize), fontsize=self.fontsize,
+					colour='#729fcf')
 			self.display.fill(self.screen)
 			self.display.show()			
 			# Clear the buffer for the next round!
