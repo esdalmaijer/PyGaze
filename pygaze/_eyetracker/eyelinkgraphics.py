@@ -32,6 +32,8 @@ from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
+import os
+import platform
 import array
 from PIL import Image
 
@@ -53,13 +55,14 @@ class EyelinkGraphics(custom_display):
 	which is implemented in PyLink.
 	"""
 
-	def __init__(self, display, tracker):
+	def __init__(self, display, fontsize, tracker):
 
 		"""
 		Constructor.
 
 		Arguments:
 		display		--	A PyGaze Display object.
+		fontsize	--	The font size for the text messages.
 		tracker		--	An tracker object as returned by pylink.EyeLink().
 		"""
 
@@ -76,50 +79,87 @@ class EyelinkGraphics(custom_display):
 		#if DISPTYPE not in ('pygame', 'psychopy'):
 		import tempfile
 		import os
-		self.tmp_file = os.path.join(tempfile.gettempdir(), \
-			'__eyelink__.jpg')
+		self.tmp_file = os.path.join(tempfile.gettempdir(), '__eyelink__.jpg')
 		# drawing properties
 		self.xc = self.display.dispsize[0]/2
 		self.yc = self.display.dispsize[1]/2
+		self.extra_info = False
 		self.ld = 40 # line distance
+		self.fontsize = fontsize
+		self.title = ""
+		self.display_open = True
 		# menu
-		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
-		self.menuscreen.draw_text(text="== Eyelink calibration menu ==", pos= \
-			(self.xc,self.yc-5*self.ld), center=True, font='mono', fontsize= \
-			12, antialias=True)
-		self.menuscreen.draw_text(text="Press C to calibrate", pos=(self.xc, \
-			self.yc-3*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press V to validate", pos=(self.xc, \
-			self.yc-2*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press A to auto-threshold", pos=( \
-			self.xc,self.yc-1*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press Enter to show camera image", \
-			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono', \
-			fontsize=12, antialias=True)
-		self.menuscreen.draw_text(text= \
-			"(then change between images using the arrow keys)", pos=(self.xc, \
-			self.yc+2*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
-		self.menuscreen.draw_text(text="Press Q to exit menu", pos=(self.xc, \
-			self.yc+5*self.ld), center=True, font='mono', fontsize=12, \
-			antialias=True)
+		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)		
+		self.menuscreen.draw_text(text="Eyelink calibration menu",
+			pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
+			fontsize=int(2*self.fontsize), antialias=True)
+		self.menuscreen.draw_text(text="pygaze %s, pylink %s" % (pygaze.version,
+			pylink.__version__), pos=(self.xc,self.yc-5*self.ld), center=True,
+			font='mono', fontsize=int(.8*self.fontsize), antialias=True)
+		self.menuscreen.draw_text(text="Press C to calibrate", 
+			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press V to validate",
+			pos=(self.xc, self.yc-2*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press A to auto-threshold",
+			pos=(self.xc,self.yc-1*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press I for extra info in camera image",
+			pos=(self.xc,self.yc-0*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press Enter to show camera image",
+			pos=(self.xc,self.yc+1*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(
+			text="(then change between images using the arrow keys)",
+			pos=(self.xc, self.yc+2*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
+		self.menuscreen.draw_text(text="Press Escape to abort experiment",
+			pos=(self.xc, self.yc+4*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)			
+		self.menuscreen.draw_text(text="Press Q to exit menu",
+			pos=(self.xc, self.yc+5*self.ld), center=True, font='mono',
+			fontsize=self.fontsize, antialias=True)
 		# beeps
-		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, attack= \
-			0, decay=0, soundfile=None)
-		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200, \
+		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, 
 			attack=0, decay=0, soundfile=None)
-		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200, \
+		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200,
+			attack=0, decay=0, soundfile=None)
+		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200,
 			attack=0, decay=0, soundfile=None)
 		# further properties
 		self.state = None
-		self.imagebuffer = array.array('l')
 		self.pal = None
 		self.size = (0,0)
 		self.set_tracker(tracker)
 		self.last_mouse_state = -1
+		self.bit64 = '64bit' in platform.architecture()
+		self.imagebuffer = self.new_array()		
+		
+	def close(self):
+	
+		"""
+		Is called when the connection and display are shutting down.		
+		"""
+		
+		self.display_open = False
+		
+	def new_array(self):
+	
+		"""
+		Creates a new array with a system-specific format.
+		
+		Returns:
+		An array.
+		"""
+		
+		# On 64 bit Linux, we need to use an unsigned int data format.
+		# <https://www.sr-support.com/showthread.php?3215-Visual-glitch-when-/
+		# sending-eye-image-to-display-PC&highlight=ubuntu+pylink>
+		if os.name == 'posix' and self.bit64:
+			return array.array('I')
+		return array.array('L')
 
 	def set_tracker(self, tracker):
 
@@ -208,10 +248,10 @@ class EyelinkGraphics(custom_display):
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
 			self.screen.clear()
-			self.screen.draw_text(text= \
-				"calibration lost, press 'q' to return to menu", pos= \
-				(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-				antialias=True)
+			self.screen.draw_text(
+				text="calibration lost, press 'q' to return to menu",
+				pos=(self.xc,self.yc), center=True, font='mono',
+				fontsize=self.fontsize, antialias=True)
 			self.display.fill(self.screen)
 			self.display.show()
 			# play beep
@@ -219,22 +259,19 @@ class EyelinkGraphics(custom_display):
 		elif beepid == pylink.CAL_GOOD_BEEP:
 			self.screen.clear()
 			if self.state == "calibration":
-				self.screen.draw_text(text= \
-					"Calibration succesfull, press 'v' to validate", pos= \
-					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-					antialias=True)
-				pass
+				self.screen.draw_text(
+					text="Calibration succesfull, press 'v' to validate",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=self.fontsize, antialias=True)
 			elif self.state == "validation":
-				self.screen.draw_text(text= \
-					"Validation succesfull, press 'q' to return to menu", \
-					pos=(self.xc,self.yc), center=True, font='mono', fontsize= \
-					12, antialias=True)
-				pass
+				self.screen.draw_text(
+					text="Validation succesfull, press 'q' to return to menu",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=self.fontsize, antialias=True)				
 			else:
-				self.screen.draw_text(text="Press 'q' to return to menu", pos= \
-					(self.xc,self.yc), center=True, font='mono', fontsize=12, \
-					antialias=True)
-				pass
+				self.screen.draw_text(text="Press 'q' to return to menu",
+					pos=(self.xc,self.yc), center=True, font='mono',
+					fontsize=self.fontsize, antialias=True)
 			# show screen
 			self.display.fill(self.screen)
 			self.display.show()
@@ -255,32 +292,36 @@ class EyelinkGraphics(custom_display):
 		A color-name string.
 		"""
 
-		print 'getColorFromIndex(%s)' % i
-		if i == pylink.CR_HAIR_COLOR:
-			return 'white'
-		if i == pylink.PUPIL_HAIR_COLOR:
-			return 'yellow'
-		if i == pylink.PUPIL_BOX_COLOR:
-			return 'green'
-		if i == pylink.SEARCH_LIMIT_BOX_COLOR:
-			return 'red'
-		if i == pylink.MOUSE_CURSOR_COLOR:
-			return 'blue'
-		return 'black'
+		# Currently unused
+		return 0
 
 	def draw_line(self, x1, y1, x2, y2, colorindex):
 
-		"""Unused"""
-
-		# Find out how this can be used
-		print 'draw_line() %s %s %s %s' % (x1, y1, x2, y2)
+		"""
+		Unlike the function name suggests, this draws a single pixel. I.e.
+		the end coordinates are always exactly one pixel away from the start
+		coordinates.
+		
+		Arguments:
+		x1			--	The starting x.
+		y1			--	The starting y.
+		x2			--	The end x.
+		y2			--	The end y.
+		colorIndex	--	A color index.
+		"""
+	
+		i = y1*self.size[0]+x1
+		if i > 0 and i < len(self.imagebuffer):
+			# Use green
+			self.imagebuffer[i] = 65280
 		
 	def draw_lozenge(self, x, y, width, height, colorindex):
 
 		"""Unused"""
 
-		# Find out how this can be used
-		print 'draw_lozenge() %s %s %s %s' % (x, y, width, height)
+		# According to the Pylink documentation (pylink.csm), this function
+		# is currently unused.
+		pass
 
 	def get_mouse_state(self):
 
@@ -297,6 +338,12 @@ class EyelinkGraphics(custom_display):
 		A list containing a single pylink key identifier.
 		"""
 
+		# Don't try to collect key presses when the display is no longer
+		# available. This is necessary, because pylink polls key presses during
+		# file transfer, which generally occurs after the display has been
+		# closed.
+		if not self.display_open:
+			return None
 		try:
 			key, time = self.kb.get_key(keylist=None, timeout='default')
 		except:
@@ -325,6 +372,9 @@ class EyelinkGraphics(custom_display):
 			self.state = "validation"
 		elif key == "a":
 			keycode = ord("a")
+		elif key == "i":
+			self.extra_info = not self.extra_info
+			keycode = 0
 		elif key == "up":
 			keycode = pylink.CURS_UP
 		elif key == "down":
@@ -368,19 +418,19 @@ class EyelinkGraphics(custom_display):
 		self.size = (width,height)
 		self.clear_cal_display()
 		self.last_mouse_state = -1
-		self.imagebuffer = array.array('l')
+		self.imagebuffer = self.new_array()
 
 	def image_title(self, text):
 
 		"""
-		TODO: What does this do?
+		Sets the current image title.
 
 		Arguments:
-		text	--	Unknown.
+		text	--	An image title.
 		"""
 
-		pass
-
+		self.title = text
+		
 	def draw_image_line(self, width, line, totlines, buff):
 
 		"""
@@ -403,26 +453,23 @@ class EyelinkGraphics(custom_display):
 				pass
 		# If the buffer is full, push it to the display.
 		if line == totlines:
-			# First create a PIL image, then convert it to a PyGame image, and
-			# then save it to a temporary file on disk. This juggling with
-			# formats is necessary to show the image without distortions under
-			# (so far) all conditions. Surprisingly, it doesn't cause any
-			# appreciable delays, relative to directly invoking PyGame or
-			# PsychoPy functions.
-			bufferv = self.imagebuffer.tostring()
-			img = Image.new("RGBX", self.size)
-			imgsz = self.xc, self.yc
-			img.fromstring(bufferv)
-			img = img.resize(imgsz)
-			img = pygame.image.fromstring(img.tostring(), imgsz, 'RGBX')
+			if self.extra_info:
+				self.draw_cross_hair()			
+			# Convert the image buffer to a pygame image, save it ...			
+			img = pygame.image.fromstring(self.imagebuffer.tostring(),
+				self.size, 'RGBX')
 			pygame.image.save(img, self.tmp_file)
 			# ... and then show the image.
 			self.screen.clear()
-			self.screen.draw_image(self.tmp_file)
+			self.screen.draw_image(self.tmp_file, scale=2)
+			if self.extra_info:
+				self.screen.draw_text(text=self.title,
+					pos=(self.xc, 2*self.fontsize), fontsize=self.fontsize,
+					colour='#729fcf')
 			self.display.fill(self.screen)
-			self.display.show()
+			self.display.show()			
 			# Clear the buffer for the next round!
-			self.imagebuffer = array.array('l')
+			self.imagebuffer = self.new_array()
 
 	def set_image_palette(self, r, g, b):
 
@@ -438,7 +485,7 @@ class EyelinkGraphics(custom_display):
 		b		--	The blue channel.
 		"""
 
-		self.imagebuffer = array.array('l')
+		self.imagebuffer = self.new_array()
 		self.clear_cal_display()
 		sz = len(r)
 		i = 0
@@ -449,4 +496,5 @@ class EyelinkGraphics(custom_display):
 			bf = int(r[i])
 			self.pal.append((rf<<16) | (gf<<8) | (bf))
 			i += 1
+
 
