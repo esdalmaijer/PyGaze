@@ -263,7 +263,7 @@ class EyelinkGraphics(custom_display):
 			# show a picture
 			self.screen.clear()
 			self.screen.draw_text(
-				text="calibration lost, press 'q' to return to menu",
+				text="calibration lost, press 'Enter' to return to menu",
 				pos=(self.xc,self.yc), center=True, font='mono',
 				fontsize=self.fontsize, antialias=True)
 			self.display.fill(self.screen)
@@ -279,11 +279,11 @@ class EyelinkGraphics(custom_display):
 					fontsize=self.fontsize, antialias=True)
 			elif self.state == "validation":
 				self.screen.draw_text(
-					text="Validation succesfull, press 'q' to return to menu",
+					text="Validation succesfull, press 'Enter' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
 					fontsize=self.fontsize, antialias=True)				
 			else:
-				self.screen.draw_text(text="Press 'q' to return to menu",
+				self.screen.draw_text(text="Press 'Enter' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
 					fontsize=self.fontsize, antialias=True)
 			# show screen
