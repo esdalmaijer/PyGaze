@@ -55,21 +55,21 @@ class EyelinkGraphics(custom_display):
 	which is implemented in PyLink.
 	"""
 
-	def __init__(self, display, fontsize, tracker):
+	def __init__(self, libeyelink, tracker):
 
 		"""
 		Constructor.
 
 		Arguments:
-		display		--	A PyGaze Display object.
-		fontsize	--	The font size for the text messages.
+		libeyelink	--	A libeyelink object.
 		tracker		--	An tracker object as returned by pylink.EyeLink().
 		"""
 
 		pylink.EyeLinkCustomDisplay.__init__(self)
 
 		# objects
-		self.display = display
+		self.libeyelink = libeyelink
+		self.display = libeyelink.display
 		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=None, timeout=0)
 		self.mouse = Mouse(timeout=0)
@@ -86,7 +86,7 @@ class EyelinkGraphics(custom_display):
 		self.yc = self.display.dispsize[1]/2
 		self.extra_info = True
 		self.ld = 40 # line distance
-		self.fontsize = fontsize
+		self.fontsize = libeyelink.fontsize
 		self.title = ""
 		self.display_open = True
 		# menu
@@ -94,8 +94,9 @@ class EyelinkGraphics(custom_display):
 		self.menuscreen.draw_text(text="Eyelink calibration menu",
 			pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
 			fontsize=int(2*self.fontsize), antialias=True)
-		self.menuscreen.draw_text(text="pygaze %s, pylink %s" % (pygaze.version,
-			pylink.__version__), pos=(self.xc,self.yc-5*self.ld), center=True,
+		self.menuscreen.draw_text(text="%s (pygaze %s, pylink %s)" \
+			% (libeyelink.eyelink_model, pygaze.version, pylink.__version__),
+			pos=(self.xc,self.yc-5*self.ld), center=True,
 			font='mono', fontsize=int(.8*self.fontsize), antialias=True)
 		self.menuscreen.draw_text(text="Press C to calibrate", 
 			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
@@ -504,8 +505,8 @@ class EyelinkGraphics(custom_display):
 		# If the buffer is full, push it to the display.
 		if line == totlines:
 			self.scale = totlines/320.
-			self._size = int(self.scale*self.size[0]), \
-				int(self.scale*self.size[1])
+			self._size = int(self.scale*self.size[0]), int(
+				self.scale*self.size[1])
 			# Convert the image buffer to a pygame image, save it ...			
 			self.cam_img = pygame.image.fromstring(self.imagebuffer.tostring(),
 				self._size, 'RGBX')
@@ -546,6 +547,4 @@ class EyelinkGraphics(custom_display):
 			bf = int(r[i])
 			self.pal.append((rf<<16) | (gf<<8) | (bf))
 			i += 1
-
-
 

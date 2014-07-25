@@ -62,6 +62,7 @@ SACCACCTHRESH = 9500 # degrees per second, saccade acceleration threshold
 EVENTDETECTION = 'pygaze' # either 'pygaze' for PyGaze detection algorithms, or 'native' for manufacturer's event detection (if available)
 # EyeLink only
 EYELINKCALBEEP = True # Calibration beep with each jump
+EYELINKPUPILSIZEMODE = 'area'
 # SMI only
 SMIIP = '127.0.0.1'
 SMISENDPORT = 4444

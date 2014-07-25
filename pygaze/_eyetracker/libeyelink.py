@@ -72,10 +72,11 @@ class libeyelink(BaseEyeTracker):
 
 	MAX_TRY = 100
 
-	def __init__(self, display, resolution=DISPSIZE, data_file= \
-		LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC, eventdetection= \
-		EVENTDETECTION, saccade_velocity_threshold=35, \
-		saccade_acceleration_threshold=9500, force_drift_correct=True, **args):
+	def __init__(self, display, resolution=DISPSIZE,
+		data_file=LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC,
+		eventdetection=EVENTDETECTION, saccade_velocity_threshold=35,
+		saccade_acceleration_threshold=9500, force_drift_correct=True,
+		pupil_size_mode=EYELINKPUPILSIZEMODE, **args):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
@@ -116,6 +117,7 @@ class libeyelink(BaseEyeTracker):
 		self.left_eye = 0
 		self.right_eye = 1
 		self.binocular = 2
+		self.pupil_size_mode = pupil_size_mode
 		self.prevsample = (-1,-1)
 		self.prevps = -1
 
@@ -140,8 +142,7 @@ class libeyelink(BaseEyeTracker):
 		# distance between participant and screen in cm
 		self.screensize = SCREENSIZE
 		self.pixpercm = (self.resolution[0]/float(self.screensize[0]) + \
-			self.resolution[1]/float(self.screensize[1])) / 2.0
-
+			self.resolution[1]/float(self.screensize[1])) / 2.0			
 		# only initialize eyelink once
 		if _eyelink == None:
 			try:
@@ -150,19 +151,6 @@ class libeyelink(BaseEyeTracker):
 				raise Exception(
 					"Error in libeyelink.libeyelink.__init__(): Failed to "
 					"connect to the tracker!")
-			self.eyelink_graphics = EyelinkGraphics(self.display,
-				self.fontsize, _eyelink)
-			pylink.openGraphicsEx(self.eyelink_graphics)
-		# Optionally force drift correction. For some reason this must be done
-		# as (one of) the first things, otherwise a segmentation fault occurs.
-		if force_drift_correct:
-			self.send_command('driftcorrect_cr_disable = OFF')
-		pylink.getEYELINK().openDataFile(self.eyelink_data_file)
-		pylink.flushGetkeyQueue()
-		pylink.getEYELINK().setOfflineMode()
-		# notify eyelink of display resolution
-		self.send_command("screen_pixel_coords = 0 0 %d %d" % \
-			(self.resolution[0], self.resolution[1]))
 		# determine software version of tracker
 		self.tracker_software_ver = 0
 		self.eyelink_ver = pylink.getEYELINK().getTrackerVersion()
@@ -170,19 +158,42 @@ class libeyelink(BaseEyeTracker):
 			tvstr = pylink.getEYELINK().getTrackerVersionString()
 			vindex = tvstr.find("EYELINK CL")
 			self.tracker_software_ver = int(float(tvstr[(vindex + \
-				len("EYELINK CL")):].strip()))
-
+				len("EYELINK CL")):].strip()))				
+		if self.eyelink_ver == 1:
+			self.eyelink_model = 'EyeLink I'
+		elif self.eyelink_ver == 2:
+			self.eyelink_model = 'EyeLink II'
+		elif self.eyelink_ver == 3:
+			self.eyelink_model = 'EyeLink 1000'
+		else:
+			self.eyelink_model = 'EyeLink (model unknown)'					
+		# Open graphics					
+		self.eyelink_graphics = EyelinkGraphics(self, _eyelink)
+		pylink.openGraphicsEx(self.eyelink_graphics)
+		# Optionally force drift correction. For some reason this must be done
+		# as (one of) the first things, otherwise a segmentation fault occurs.
+		if force_drift_correct:
+			self.send_command('driftcorrect_cr_disable = OFF')
+		# Set pupil-size mode
+		if self.pupil_size_mode == 'area':
+			pylink.getEYELINK().setPupilSizeDiameter(False)
+		elif self.pupil_size_mode == 'diameter':
+			pylink.getEYELINK().setPupilSizeDiameter(True)
+		else:
+			raise Exception(
+				"pupil_size_mode should be 'area' or 'diameter', not %s" \
+				% self.pupil_size_mode)
+		pylink.getEYELINK().openDataFile(self.eyelink_data_file)
+		pylink.flushGetkeyQueue()
+		pylink.getEYELINK().setOfflineMode()
+		# notify eyelink of display resolution
+		self.send_command("screen_pixel_coords = 0 0 %d %d" % \
+			(self.resolution[0], self.resolution[1]))
 		# get some configuration stuff
 		if self.eyelink_ver >= 2:
 			self.send_command("select_parser_configuration 0")
 			if self.eyelink_ver == 2: # turn off scenelink camera stuff
 				self.send_command("scene_camera_gazemap = NO")
-		else:
-			self.send_command("saccade_velocity_threshold = %d" % \
-				self.saccade_velocity_threshold)
-			self.send_command("saccade_acceleration_threshold = %s" % \
-				self.saccade_acceleration_threshold)
-
 		# set EDF file contents (this specifies which data is written to the EDF
 		# file)
 		self.send_command(

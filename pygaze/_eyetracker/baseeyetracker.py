@@ -92,6 +92,8 @@ class BaseEyeTracker:
 					relevant for EyeLink 1000 devices, on which drift correction
 					is by default only a check, and not an actual single-point
 					recalibration.
+		pupil_size_mode	--	EyeLink only! Indicates whether pupil-size is
+					recorded in area or diameter values. (default='area')
 		resolution	--	EyeLink only! Specify the display resolution using
 					a (w,h) tuple (default = DISPSIZE)
 		fg_color	--	EyeLink only! Specify the foreground colour using

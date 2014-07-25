@@ -55,6 +55,7 @@ class pygaze_init(item):
 		# EyeLink-specific settings
 		self.eyelink_calbeep = u'yes'
 		self.eyelink_force_drift_correct = u'yes'
+		self.eyelink_pupil_size_mode = u'area'
 		# SMI-specific settings
 		self.smi_ip = u'127.0.0.1'
 		self.smi_send_port = 4444
@@ -160,16 +161,17 @@ class pygaze_init(item):
 			event_detection = u'pygaze'
 		# Initialize pygaze and the eye-tracker object
 		self.experiment.pygaze_display = Display(u'opensesame')
-		self.experiment.pygaze_eyetracker = EyeTracker( \
-			self.experiment.pygaze_display, trackertype=tracker_type, \
-			data_file=logfile, eventdetection=event_detection, \
-			saccade_velocity_threshold=self.get(u'sacc_vel_thr'), \
-			saccade_acceleration_threshold=self.get(u'sacc_acc_thr'), \
-			ip=self.get(u'smi_ip'), sendport=self.get(u'smi_send_port'), \
+		self.experiment.pygaze_eyetracker = EyeTracker(
+			self.experiment.pygaze_display, trackertype=tracker_type,
+			data_file=logfile, eventdetection=event_detection,
+			saccade_velocity_threshold=self.get(u'sacc_vel_thr'),
+			saccade_acceleration_threshold=self.get(u'sacc_acc_thr'),
+			ip=self.get(u'smi_ip'), sendport=self.get(u'smi_send_port'),
 			receiveport=self.get(u'smi_recv_port'), logfile=logfile,
-			eyelink_force_drift_correct= \
-			self.get(u'eyelink_force_drift_correct'))
-		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func( \
+			eyelink_force_drift_correct=self.get(
+			u'eyelink_force_drift_correct'),pupil_size_mode=self.get(
+			u'eyelink_pupil_size_mode'))
+		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func(
 			self.draw_calibration_canvas)
 		self.experiment.cleanup_functions.append(self.close)
 		if self.calibrate == u'yes':
@@ -194,7 +196,6 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 
 		pygaze_init.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
-		self.custom_interactions()
 
 	def apply_edit_changes(self):
 
@@ -204,6 +205,23 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			return False
 		self.custom_interactions()
 		return True
+		
+	def edit_widget(self):
+	
+		"""
+		Refreshes the controls.
+		
+		Returns:
+		The QWidget containing the controls
+		"""
+	
+		if self.lock:
+			return
+		self.lock = True
+		w = qtautoplugin.edit_widget(self)
+		self.custom_interactions()
+		self.lock = False
+		return w
 			
 	def custom_interactions(self):
 		
@@ -216,3 +234,7 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		eyelink = self.get(u'tracker_type') == u'EyeLink'
 		self.checkbox_eyelink_calbeep.setEnabled(eyelink)
 		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)
+		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
+		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
+		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
+		
