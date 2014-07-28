@@ -34,7 +34,8 @@
 			"min_val"	: 0,
 			"max_val"	: 100000,
 			"suffix"	: " °/s",
-			"tooltip"	: "Velocity threshold for saccade detection algorithm"
+			"tooltip"	: "Velocity threshold for saccade detection algorithm",
+			"name"		: "spinbox_sacc_vel_thr"
 		},
 		{
 			"type"		: "spinbox",
@@ -43,7 +44,8 @@
 			"min_val"	: 0,
 			"max_val"	: 100000,
 			"suffix"	: " °/s/s",
-			"tooltip"	: "Acceleration threshold for saccade detection algorithm"
+			"tooltip"	: "Acceleration threshold for saccade detection algorithm",
+			"name"		: "spinbox_sacc_acc_thr"
 		},
 		{
 			"type"		: "checkbox",
@@ -59,6 +61,17 @@
 			"tooltip"	: "Turn on active drift correction",
 			"name"		: "checkbox_eyelink_force_drift_correct"
 		},
+		{
+			"type"		: "combobox",
+			"var"		: "eyelink_pupil_size_mode",
+			"label"		: "Pupil-size mode",
+			"tooltip"	: "Determines whether pupil size is recorded as area or diameter",
+			"name"		: "combobox_eyelink_pupil_size_mode",
+			"options"	: [
+				"area",
+				"diameter"
+			]		
+		},		
 		{
 			"type"		: "line_edit",
 			"label"		: "SMI IP address",
