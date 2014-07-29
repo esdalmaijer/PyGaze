@@ -48,7 +48,7 @@ class EyeTracker(BaseEyeTracker):
 		
 		trackertype		--	the type of eye tracker; choose from:
 						'dumbdummy', 'dummy', 'eyelink', 'smi',
-						'tobii' (default = TRACKERTYPE)
+						'tobii', 'eyetribe' (default = TRACKERTYPE)
 		**args		--	A keyword-argument dictionary that contains
 						eye-tracker-specific options
 		"""
@@ -58,9 +58,9 @@ class EyeTracker(BaseEyeTracker):
 			trackertype = u'dummy'
 	
 		# correct wrong input
-		if trackertype not in [u'dumbdummy', u'dummy', u'eyelink', u'smi', u'tobii']:
+		if trackertype not in [u'dumbdummy', u'dummy', u'eyelink', u'smi', u'tobii', u'eyetribe']:
 			raise Exception( \
-				u"Error in eyetracker.EyeTracker: trackertype '%s' not recognized; it should be one of 'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii'" % trackertype)
+				u"Error in eyetracker.EyeTracker: trackertype '%s' not recognized; it should be one of 'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii', 'eyetribe'" % trackertype)
 
 		# EyeLink
 		if trackertype == u'eyelink':
@@ -86,6 +86,15 @@ class EyeTracker(BaseEyeTracker):
 			from pygaze._eyetracker.libtobii import TobiiTracker
 			# morph class
 			self.__class__ = TobiiTracker
+			# initialize
+			self.__class__.__init__(self, display, **args)
+
+		# EyeTribe
+		elif trackertype == u'eyetribe':
+			# import libraries
+			from pygaze._eyetracker.libeyetribe import EyeTribeTracker
+			# morph class
+			self.__class__ = EyeTribeTracker
 			# initialize
 			self.__class__.__init__(self, display, **args)
 
