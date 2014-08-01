@@ -29,21 +29,23 @@ from pygaze.display import Display
 
 class pygaze_init(item):
 	
-	"""Plug-in runtime definition."""
+	"""
+	desc:
+		Plug-in runtime definition.
+	"""
 
 	description = u'Initialize and calibrate eye tracker'
-
-	def __init__(self, name, experiment, script=None):
+	
+	def __init__(self, name, experiment, string=None):
+	
+		item.__init__(self, name, experiment, string)
+		self.reload_pygaze()
+	
+	def reset(self):
 
 		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
+		desc:
+			Resets plug-in settings.
 		"""
 
 		# Generic settings
@@ -59,15 +61,14 @@ class pygaze_init(item):
 		# SMI-specific settings
 		self.smi_ip = u'127.0.0.1'
 		self.smi_send_port = 4444
-		self.smi_recv_port = 5555
-		item.__init__(self, name, experiment, script)
-		self.reload_pygaze()
+		self.smi_recv_port = 5555		
 		
 	def close(self):
 		
 		"""
-		Closes the connection with the eye tracker when the experiment is
-		finished.
+		desc:
+			Closes the connection with the eye tracker when the experiment is
+			finished.
 		"""
 
 		debug.msg(u'Starting PyGaze deinitialisation')
@@ -79,7 +80,18 @@ class pygaze_init(item):
 
 	def draw_calibration_canvas(self, x, y):
 		
-		"""A hook to prepare the canvas with the clibration target."""
+		"""
+		desc:
+			A hook to prepare the canvas with the clibration target.
+			
+		arguments:
+			x:
+				desc:	The X coordinate.
+				type:	int
+			y:
+				desc:	The Y coordinate.
+				type:	int			
+		"""
 
 		if self.get(u'eyelink_calbeep'):
 			self.beep.play()
@@ -89,20 +101,15 @@ class pygaze_init(item):
 		else:
 			dc_canvas.fixdot(x, y)
 		dc_canvas.show()
-		
-	def prepare(self):
-
-		"""The preparation phase of the plug-in goes here."""
-
-		item.prepare(self)
-		
+				
 	def reload_pygaze(self):
 		
 		"""
-		Reloads pygaze modules to get a clean start. This is necessary, because
-		otherwise PyGaze will try to use the old experiment instance when the
-		experiment is executed twice. Explicitly reloading all
-		OpenSesame-related modules will fix this.
+		desc:
+			Reloads pygaze modules to get a clean start. This is necessary,
+			because otherwise PyGaze will try to use the old experiment instance
+			when the experiment is executed twice. Explicitly reloading all
+			OpenSesame-related modules will fix this.
 		"""
 		
 		from pygaze import defaults
@@ -124,7 +131,10 @@ class pygaze_init(item):
 
 	def run(self):
 
-		"""The run phase of the plug-in goes here."""
+		"""
+		desc:
+			The run phase of the plug-in goes here.
+		"""
 
 		if hasattr(self.experiment, u'pygaze_eyetracker'):
 			raise osexception( \
@@ -151,6 +161,16 @@ class pygaze_init(item):
 		if self.get(u'_logfile') == u'automatic':
 			logfile = os.path.splitext(self.get(u'logfile'))[0]
 			if tracker_type == u'eyelink':
+				# Automatically shorten filenames like 'subject-0', because
+				# these are too long. This avoids having to rename logfiles
+				# all the time.
+				basename = os.path.basename(logfile)
+				dirname = os.path.dirname(logfile)
+				if len(basename) > 8 and basename.startswith(u'subject-'):
+					basename = u'sub_' + basename[8:]
+					logfile = os.path.join(dirname, basename)
+					print(u'Attention: EyeLink logfile renamed to %s.edf' \
+						% logfile)
 				logfile = logfile + u'.edf'
 		else:
 			logfile = self.get(u'_logfile')
@@ -179,7 +199,10 @@ class pygaze_init(item):
 
 class qtpygaze_init(pygaze_init, qtautoplugin):
 	
-	"""Plug-in GUI definition."""
+	"""
+	desc:
+		Plug-in GUI definition.
+	"""
 	
 	def __init__(self, name, experiment, script=None):
 		
@@ -199,7 +222,10 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 
 	def apply_edit_changes(self):
 
-		"""Apply the controls"""
+		"""
+		desc:
+			Applies the controls.
+		"""
 
 		if not qtautoplugin.apply_edit_changes(self) or self.lock:
 			return False
@@ -225,7 +251,10 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			
 	def custom_interactions(self):
 		
-		"""Activates the relevant controls for each tracker."""
+		"""
+		desc:
+			Activates the relevant controls for each tracker.
+		"""
 		
 		smi = self.get(u'tracker_type') == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
