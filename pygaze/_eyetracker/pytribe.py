@@ -3,9 +3,9 @@
 # author: Edwin Dalmaijer
 # email: edwin.dalmaijer@psy.ox.ac.uk
 # 
-# version 2 (02-Jul-2014)
+# version 3 (11-Aug-2014)
 
-
+import os
 import copy
 import json
 import time
@@ -64,6 +64,7 @@ class EyeTribe:
 		self._logdata = False
 		self._currentsample = self._tracker.get_frame()
 		self._dpthread = Thread(target=self._process_samples, args=[self._queue])
+		self._dpthread.daemon = True
 		self._dpthread.name = 'dataprocessor'
 		
 		# start all threads
@@ -112,7 +113,9 @@ class EyeTribe:
 		# assemble line
 		line = self._separator.join(map(str,['MSG',ts,t,message]))
 		# write message
-		self._logfile.write(line + '\n')
+		self._logfile.write(line + '\n') # to internal buffer
+		self._logfile.flush() # internal buffer to RAM
+		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 	
 	def sample(self):
 		
@@ -202,15 +205,15 @@ class EyeTribe:
 		# keep beating until it is signalled that we should stop		
 		while self._beating:
 			# do not bother the tracker when it is calibrating
-			self._wait_while_calibrating()
+			#self._wait_while_calibrating()
 			# wait for the Threading Lock to be released, then lock it
 			self._lock.acquire(True)
 			# send heartbeat
 			self._heartbeat.beat()
-			# wait for a bit
-			time.sleep(heartbeatinterval)
 			# release the Threading Lock
 			self._lock.release()
+			# wait for a bit
+			time.sleep(heartbeatinterval)
 	
 	def _stream_samples(self, queue):
 		
@@ -226,17 +229,17 @@ class EyeTribe:
 		# keep streaming until it is signalled that we should stop
 		while self._streaming:
 			# do not bother the tracker when it is calibrating
-			self._wait_while_calibrating()
+			#self._wait_while_calibrating()
 			# wait for the Threading Lock to be released, then lock it
 			self._lock.acquire(True)
 			# get a new sample
 			sample = self._tracker.get_frame()
 			# put the sample in the Queue
 			queue.put(sample)
-			# pause during the intersample time, to avoid an overflow
-			time.sleep(self._intsampletime)
 			# release the Threading Lock
 			self._lock.release()
+			# pause during the intersample time, to avoid an overflow
+			time.sleep(self._intsampletime)
 	
 	def _process_samples(self, queue):
 		
@@ -254,17 +257,18 @@ class EyeTribe:
 			# wait for the Threading Lock to be released, then lock it
 			self._lock.acquire(True)
 			# read new item from the queue
-			sample = queue.get()
-			# update newest sample
-			self._currentsample = copy.deepcopy(sample)
-			# write to file if data logging is on
-			if self._logdata:
-				self._log_sample(sample)
+			if not queue.empty():
+				sample = queue.get()
+			else:
+				sample = None
 			# release the Threading Lock
 			self._lock.release()
-		
-		print("processing thread terminated")
-		return
+			# update newest sample
+			if sample != None:
+				self._currentsample = copy.deepcopy(sample)
+				# write to file if data logging is on
+				if self._logdata:
+					self._log_sample(sample)
 	
 	def _log_sample(self, sample):
 		
@@ -302,7 +306,9 @@ class EyeTribe:
 										sample['Rpupily']
 								]))
 		# write line to log file
-		self._logfile.write(line + '\n')
+		self._logfile.write(line + '\n') # to internal buffer
+		self._logfile.flush() # internal buffer to RAM
+		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 	
 	def _log_header(self):
 		
@@ -315,7 +321,9 @@ class EyeTribe:
 								'Lrawx','Lrawy','Lavgx','Lavgy','Lpsize','Lpupilx','Lpupily',
 								'Rrawx','Rrawy','Ravgx','Ravgy','Rpsize','Rpupilx','Rpupily'
 								])
-		self._logfile.write(header + '\n')
+		self._logfile.write(header + '\n') # to internal buffer
+		self._logfile.flush() # internal buffer to RAM
+		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 		self._firstlog = False
 
 
@@ -341,6 +349,8 @@ class connection:
 		# properties
 		self.host = host
 		self.port = port
+		self.resplist = []
+		self.DEBUG = False
 		
 		# initialize a connection
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -360,19 +370,60 @@ class connection:
 		# create a JSON formatted string
 		msg = self.create_json(category, request, values)
 		# send the message over the connection
-		response = self.sock.send(msg)
+		self.sock.send(msg)
+		# print request in DEBUG mode
+		if self.DEBUG:
+			print("REQUEST: '%s'" % msg)
 		
-		# get response
-		if type(response) != str:
-			try:
-				response = self.sock.recv(32768)
-			except socket.error:
-				print("reviving connection")
-				self.revive()
-				response = '{"statuscode":901,"values":{"statusmessage":"connection error"}}'
-
-		# return the parsed response
-		return self.parse_json(response)
+		# give the tracker a wee bit of time to reply
+		time.sleep(0.005)
+		
+		# get new responses
+		success = self.get_response()
+		
+		# return the appropriate response
+		if success:
+			for i in range(len(self.resplist)):
+				# check if the category matches
+				if self.resplist[i]['category'] == category:
+					# if this is a heartbeat, return
+					if self.resplist[i]['category'] == 'heartbeat':
+						return self.resplist.pop(i)
+					# if this is another category, check if the request
+					# matches
+					elif self.resplist[i]['request'] == request:
+						return self.resplist.pop(i)
+		# on a connection error, get_response returns False and a connection
+		# error should be returned
+		else:
+			return self.parse_json('{"statuscode":901,"values":{"statusmessage":"connection error"}}')
+	
+	def get_response(self):
+		
+		"""Asks for a response, and adds these to the list of all received
+		responses (basically a very simple queue)
+		"""
+		
+		# try to get a new response
+		try:
+			response = self.sock.recv(32768)
+			# print reply in DEBUG mode
+			if self.DEBUG:
+				print("REPLY: '%s'" % response)
+		# if it fails, revive the connection and return a connection error
+		except socket.error:
+			print("reviving connection")
+			self.revive()
+			response = '{"statuscode":901,"values":{"statusmessage":"connection error"}}'
+			return False
+		# split the responses (in case multiple came in)
+		response = response.split('\n')
+		# add parsed responses to the internal list
+		for r in response:
+			if r:
+				self.resplist.append(self.parse_json(r))
+		
+		return True
 	
 	def create_json(self, category, request, values):
 		
@@ -1170,7 +1221,7 @@ class calibration:
 			raise Exception("Error in calibration.pointend: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 		
 		# return True if this was not the final calibration point
-		if not 'calibpoints' in response['values']:
+		if not 'calibresult' in response['values']:
 			return True
 		
 		# if this was the final calibration point, return the results

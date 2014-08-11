@@ -204,7 +204,6 @@ class EyeTribeTracker(BaseEyeTracker):
 				clock.pause(1000)
 				# stop calibration of this point
 				result = self.eyetribe.calibration.pointend()
-				print result, cpos
 				# the final calibration point returns a dict (does it?)
 				if type(result) == dict:
 					calibresult = copy.deepcopy(result)
@@ -228,6 +227,8 @@ class EyeTribeTracker(BaseEyeTracker):
 				if key == 'space':
 					# unset quited Boolean
 					quited = False
+				# skip further processing
+				continue
 
 			# get the calibration result if it was not obtained yet
 			if type(calibresult) != dict:
@@ -240,90 +241,66 @@ class EyeTribeTracker(BaseEyeTracker):
 				calibresult = self.eyetribe._tracker.get_calibresult()
 
 			# results
-			else:
-				# clear the screen
-				self.screen.clear()
-				# draw results for each point
-				if type(calibresult) == dict:
-					for p in calibresult['calibpoints']:
-						# only draw the point if data was obtained
-						if p['state'] > 0:
-							# draw the mean error
-							self.screen.draw_circle(colour=(252,233,79), pos=(p['cpx'],p['cpy']), r=p['mepix'], pw=0, fill=True)
-							# draw the point
-							self.screen.draw_fixation(fixtype='dot', colour=(115,210,22), pos=(p['cpx'],p['cpy']))
-							# draw the estimated point
-							self.screen.draw_fixation(fixtype='dot', colour=(32,74,135), pos=(p['mecpx'],p['mecpy']))
-							# annotate accuracy
-							self.screen.draw_text(text=str(p['acd']), pos=(p['cpx']+10,p['cpy']+10), fontsize=12)
-						# if no data was obtained, draw the point in red
-						else:
-							self.screen.draw_fixation(fixtype='dot', colour=(204,0,0), pos=(p['cpx'],p['cpy']))
-					# draw box for averages
-					self.screen.draw_rect(colour=(46,52,54), x=int(self.dispsize[0]*0.2), y=int(self.dispsize[1]*0.2), w=200, h=100, pw=0, fill=True)
-					# draw result
-					if calibresult['result']:
-						self.screen.draw_text(text="calibration is successful", colour=(115,210,22), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
+			# clear the screen
+			self.screen.clear()
+			# draw results for each point
+			if type(calibresult) == dict:
+				for p in calibresult['calibpoints']:
+					# only draw the point if data was obtained
+					if p['state'] > 0:
+						# draw the mean error
+						self.screen.draw_circle(colour=(252,233,79), pos=(p['cpx'],p['cpy']), r=p['mepix'], pw=0, fill=True)
+						# draw the point
+						self.screen.draw_fixation(fixtype='dot', colour=(115,210,22), pos=(p['cpx'],p['cpy']))
+						# draw the estimated point
+						self.screen.draw_fixation(fixtype='dot', colour=(32,74,135), pos=(p['mecpx'],p['mecpy']))
+						# annotate accuracy
+						self.screen.draw_text(text=str(p['acd']), pos=(p['cpx']+10,p['cpy']+10), fontsize=12)
+					# if no data was obtained, draw the point in red
 					else:
-						self.screen.draw_text(text="calibration failed", colour=(204,0,0), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
-					# draw average accuracy
-					self.screen.draw_text(text="average error = %.2f degrees" % (calibresult['deg']), colour=(211,215,207), pos=(int(self.dispsize[0]*0.25+20),int(self.dispsize[1]*0.25+20)), fontsize=12)
-					# draw input options
-					self.screen.draw_text(text="Press Space to continue, or 'R' to restart.", colour=(211,215,207), pos=(int(self.dispsize[0]*0.25+40),int(self.dispsize[1]*0.25+40)), fontsize=12)
+						self.screen.draw_fixation(fixtype='dot', colour=(204,0,0), pos=(p['cpx'],p['cpy']))
+				# draw box for averages
+				self.screen.draw_rect(colour=(238,238,236), x=int(self.dispsize[0]*0.15), y=int(self.dispsize[1]*0.2), w=400, h=200, pw=0, fill=True)
+				# draw result
+				if calibresult['result']:
+					self.screen.draw_text(text="calibration is successful", colour=(115,210,22), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
 				else:
-					self.screen.draw_text(text="Calibration failed, press 'R' to try again.")
-				# show the results
-				self.disp.fill(self.screen)
-				self.disp.show()
-				# wait for input
-				key, keytime = self.kb.get_key(keylist=['space','r'], timeout=None, flush=True)
-				# process input
-				if key == 'space':
-					calibrated = True
+					self.screen.draw_text(text="calibration failed", colour=(204,0,0), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
+				# draw average accuracy
+				self.screen.draw_text(text="average error = %.2f degrees" % (calibresult['deg']), colour=(211,215,207), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25+20)), fontsize=12)
+				# draw input options
+				self.screen.draw_text(text="Press Space to continue, or 'R' to restart.", colour=(211,215,207), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25+40)), fontsize=12)
+			else:
+				self.screen.draw_text(text="Calibration failed, press 'R' to try again.")
+			# show the results
+			self.disp.fill(self.screen)
+			self.disp.show()
+			# wait for input
+			key, keytime = self.kb.get_key(keylist=['space','r'], timeout=None, flush=True)
+			# process input
+			if key == 'space':
+				calibrated = True
 
 		# calibration failed if the user quited
 		if quited:
 			return False
 
 		# NOISE CALIBRATION
-		# present instructions
-		self.screen.clear()
-		self.screen.draw_text(text="Noise calibration: please look at the dot\n\n(press space to start)", pos=(self.dispsize[0]/2, int(self.dispsize[1]*0.2)), center=True)
-		self.screen.draw_fixation(fixtype='dot')
-		self.disp.fill(self.screen)
-		self.disp.show()
-		# wait for spacepress
-		self.kb.get_key(keylist=['space'], timeout=None)
-		# show fixation
-		self.screen.clear()
-		self.screen.draw_fixation(fixtype='dot')
-		self.disp.fill(self.screen)
-		self.disp.show()
-		# wait for a bit, to allow participant to fixate
-		clock.pause(500)
-		# get samples
-		sl = [self.sample()] # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
-		t0 = clock.get_time() # starting time
-		while clock.get_time() - t0 < 1000:
-			s = self.sample() # sample
-			if s != sl[-1] and s != (-1,-1) and s != (0,0):
-				sl.append(s)
-		# calculate RMS noise
-		Xvar = []
-		Yvar = []
-		for i in range(2,len(sl)):
-			Xvar.append((sl[i][0]-sl[i-1][0])**2)
-			Yvar.append((sl[i][1]-sl[i-1][1])**2)
-		XRMS = (sum(Xvar) / len(Xvar))**0.5
-		YRMS = (sum(Yvar) / len(Yvar))**0.5
-		self.pxdsttresh = (XRMS, YRMS)
+		# get all error estimates (pixels)
+		var = []
+		for p in calibresult['calibpoints']:
+			# only draw the point if data was obtained
+			if p['state'] > 0:
+				var.append(p['mepix'])
+		noise = sum(var) / float(len(var))
+		self.pxdsttresh = (noise, noise)
 				
 		# AFTERMATH
 		# store some variables
 		pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2
-		self.accuracy = ((calibresult['Ldeg'],calibresult['Ldeg']), (calibresult['Rdeg'],calibresult['Rdeg'])) 
 		screendist = SCREENDIST
 		# calculate thresholds based on tracker settings
+		self.accuracy = ((calibresult['Ldeg'],calibresult['Ldeg']), (calibresult['Rdeg'],calibresult['Rdeg'])) 
 		self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
 		self.pxfixtresh = deg2pix(screendist, self.fixtresh, pixpercm)
 		self.pxaccuracy = ((deg2pix(screendist, self.accuracy[0][0], pixpercm),deg2pix(screendist, self.accuracy[0][1], pixpercm)), (deg2pix(screendist, self.accuracy[1][0], pixpercm),deg2pix(screendist, self.accuracy[1][1], pixpercm)))
