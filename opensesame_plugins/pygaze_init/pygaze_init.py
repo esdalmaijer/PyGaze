@@ -155,6 +155,8 @@ class pygaze_init(item):
 			tracker_type = u'tobii'
 		elif self.tracker_type == u'SMI':
 			tracker_type = u'smi'
+		elif self.tracker_type == u'EyeTribe':
+			tracker_type = u'eyetribe'
 		else:
 			raise osexception(u'Unknown tracker type: %s' % self.tracker_type)
 		# Determine logfile
