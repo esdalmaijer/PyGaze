@@ -45,6 +45,7 @@ except:
 # native imports
 import copy
 import math
+import random
 
 # external imports
 from pytribe import EyeTribe
@@ -167,6 +168,7 @@ class EyeTribeTracker(BaseEyeTracker):
 		for x in [0.1,0.5,0.9]:
 			for y in [0.1,0.5,0.9]:
 				calibpoints.append((int(x*self.dispsize[0]),int(y*self.dispsize[1])))
+		random.shuffle(calibpoints)
 		
 		# show a message
 		self.screen.clear()
