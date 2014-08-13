@@ -350,11 +350,13 @@ class connection:
 		self.host = host
 		self.port = port
 		self.resplist = []
-		self.DEBUG = False
+		self.DEBUG = False		
 		
 		# initialize a connection
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.connect((self.host,self.port))
+		# Create lock
+		self._request_lock = Lock()
 	
 	def request(self, category, request, values):
 		
@@ -370,6 +372,7 @@ class connection:
 		# create a JSON formatted string
 		msg = self.create_json(category, request, values)
 		# send the message over the connection
+		self._request_lock.acquire()
 		self.sock.send(msg)
 		# print request in DEBUG mode
 		if self.DEBUG:
@@ -380,6 +383,7 @@ class connection:
 		
 		# get new responses
 		success = self.get_response()
+		self._request_lock.release()
 		
 		# return the appropriate response
 		if success:
