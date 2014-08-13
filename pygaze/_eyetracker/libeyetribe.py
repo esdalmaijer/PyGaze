@@ -384,7 +384,7 @@ class EyeTribeTracker(BaseEyeTracker):
 
 		if fix_triggered:
 			return self.fix_triggered_drift_correction(pos)
-
+		self.draw_drift_correction_target(pos[0], pos[1])
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
 
@@ -430,6 +430,7 @@ class EyeTribeTracker(BaseEyeTracker):
 					   or 'escape' is pressed
 		"""
 
+		self.draw_drift_correction_target(pos[0], pos[1])
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
 
@@ -469,6 +470,12 @@ class EyeTribeTracker(BaseEyeTracker):
 				else:
 					lx = []
 					ly = []
+					
+	def set_draw_drift_correction_target_func(self, func):
+		
+		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
+		
+		self.draw_drift_correction_target = func					
 
 	def get_eyetracker_clock_async(self):
 
