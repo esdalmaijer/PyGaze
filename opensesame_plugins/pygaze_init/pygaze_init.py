@@ -38,6 +38,7 @@ class pygaze_init(item):
 	
 	def __init__(self, name, experiment, string=None):
 	
+		self.reset()
 		item.__init__(self, name, experiment, string)
 		self.reload_pygaze()
 	
