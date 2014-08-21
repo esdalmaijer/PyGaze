@@ -57,29 +57,28 @@ class OSKeyboard(BaseKeyboard):
 		self.experiment = osexperiment
 		self.keyboard = keyboard(self.experiment, keylist=keylist, timeout= \
 			timeout)
-	
+
 	def set_keylist(self, keylist=None):
 
 		# See _keyboard.basekeyboard.BaseKeyboard
-		
+
 		self.keyboard.set_keylist(keylist)
 
 	def set_timeout(self, timeout=None):
 
 		# See _keyboard.basekeyboard.BaseKeyboard
-		
+
 		self.keyboard.set_timeout(timeout)
 
 	def get_key(self, keylist='default', timeout='default', flush=False):
-		
+
 		# See _keyboard.basekeyboard.BaseKeyboard
 
-		# set keylist and timeout
-		if keylist == 'default':
-			keylist = None
-		if timeout == 'default':
-			timeout = None
+		if keylist != 'default':
+			self.set_keylist(keylist)
+		if timeout != 'default':
+			self.set_timeout(timeout)
 		# flush if necessary
 		if flush:
 			self.keyboard.flush()
-		return self.keyboard.get_key(keylist=keylist, timeout=timeout)
+		return self.keyboard.get_key()
