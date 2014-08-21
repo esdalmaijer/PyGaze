@@ -1416,7 +1416,7 @@ class TobiiController:
 			# create tobii.eye_tracking_io.types 2D point
 			px, py = self.points[self.point_index]
 			p = Point2D()
-			p.x, p.y = float(px)/self.disp.dispsize[0], float(py)/self.disp.dispsize[0]
+			p.x, p.y = float(px)/self.disp.dispsize[0], float(py)/self.disp.dispsize[1]
 			# recalculate to psycho coordinates
 			self.calin['pos'] = (int(px),int(py))
 			self.calout['pos'] = (int(px),int(py))
