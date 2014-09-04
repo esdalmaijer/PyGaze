@@ -20,6 +20,7 @@
 #	along with this program. If not, see <http://www.gnu.org/licenses/>
 
 import os
+import copy
 import time
 from ctypes import windll, c_int, c_double, byref
 from threading import Thread, Lock
@@ -62,7 +63,7 @@ class MP150:
 		Class to communicate with BioPax MP150 Squeezies.
 	"""
 	
-	def __init__(self, logfile='default', samplerate=5.0):
+	def __init__(self, logfile='default', samplerate=200):
 		
 		"""
 		desc:
@@ -75,19 +76,22 @@ class MP150:
 					'default_MP150_data.tsv' (default = 'default')
 				type:str
 			samplerate:
-				desc:The amount of time (milliseconds) between samples
-					(default = 5.0).
-				type:float
+				desc:The sampling rate in Hertz (default = 200).
+				type:int
 		"""
 		
 		# settings
-		self._sampletime = float(samplerate)
+		self._samplerate = samplerate
+		self._sampletime = 1000.0 / self._samplerate
 		self._sampletimesec = self._sampletime / 1000.0
-		self._samplerate = 1000.0 / self._sampletime
 		self._logfilename = "%s_MP150_data.tsv" % (logfile)
+		self._newestsample = (0.0, 0.0, 0.0)
 
 		# connect to the MP150
 		# (101 is the code for the MP150, 103 for the MP36R)
+		# (11 is a code for the communication method)
+		# ('auto' is for automatically connecting to the first responding
+		# device)
 		try:
 			result = mpdev.connectMPDev(c_int(101), c_int(11), b'auto')
 		except:
@@ -167,8 +171,15 @@ class MP150:
 			Stops writing MP150 samples to the log file
 		"""
 		
+		# signal to the logging thread that recording stopped
 		self._recording = False
-	
+
+		# consolidate logged data
+		self._loglock.acquire(True)
+		self._logfile.flush() # internal buffer to RAM
+		os.fsync(self._logfile.fileno()) # RAM file cache to disk
+		self._loglock.release()
+
 	
 	def sample(self):
 		
@@ -182,19 +193,7 @@ class MP150:
 			type:list
 		"""
 		
-		# get data
-		try:
-			#data = [0.0,0.0,0.0]
-			#result, data = mpdev.getMPBuffer(1, data) # 1 for one sample
-			data = [0.0, 0.0, 0.0]
-			data = (c_double * len(data))(*data)
-			result = mpdev.getMostRecentSample(byref(data))
-		except:
-			result = "failed to call getMPBuffer"
-		if check_returncode(result) != "MPSUCCESS":
-			raise Exception("Error in libmp150: failed to obtain a sample from the MP150: %s" % result)
-		
-		return (data[0], data[1], data[2])
+		return self._newestsample
 
 	
 	def log(self, msg):
@@ -267,16 +266,29 @@ class MP150:
 		# run until the connection is closed
 		while self._connected:
 			# get new sample
-			ch1, ch2, ch3 = self.sample()
+			try:
+				#data = [0.0,0.0,0.0]
+				#result, data = mpdev.getMPBuffer(1, data) # 1 for one sample
+				data = [0.0, 0.0, 0.0]
+				data = (c_double * len(data))(*data)
+				result = mpdev.getMostRecentSample(byref(data))
+				data = tuple(data)
+			except:
+				result = "failed to call getMPBuffer"
+			if check_returncode(result) != "MPSUCCESS":
+				raise Exception("Error in libmp150: failed to obtain a sample from the MP150: %s" % result)
+			# update newest sample
+			if data != self._newestsample:
+				self._newestsample = copy.deepcopy(data)
 			# write sample to file
 			if self._recording:
 				# wait for the logging lock to be released, then lock it
 				self._loglock.acquire(True)
 				# log data
-				self._logfile.write("%d\t%.3f\t%.3f\t%.3f\n" % (self.get_timestamp(), ch1, ch2, ch3))
-				self._logfile.flush() # internal buffer to RAM
-				os.fsync(self._logfile.fileno()) # RAM file cache to disk
+				self._logfile.write("%d\t%.3f\t%.3f\t%.3f\n" % (self.get_timestamp(), self._newestsample[0], self._newestsample[1], self._newestsample[2]))
 				# release the logging lock
 				self._loglock.release()
 			# pause until the next sample is available
-			time.sleep(self._sampletimesec)
+			# (NOT necessary, as getMostRecentSample blocks until a
+			# new sample is available!)
+			#time.sleep(self._sampletimesec)
