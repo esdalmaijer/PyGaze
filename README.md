@@ -1,7 +1,7 @@
 [PyGaze - the open-source toolbox for eye tracking](http://www.pygaze.org/)
 ===========================================================================
 
-version 0.5 (22-12-2013)
+version 0.5 (01-10-2014)
 
 
 IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
@@ -12,7 +12,7 @@ Behaviour Research Methods. doi:[10.3758/s13428-013-0422-2](http://link.springer
 
 
 This toolbox is developed by Edwin Dalmaijer and Sebastiaan Mathot. For more
-information on contributors, see: http://pygaze.org/contributors
+information on contributors, see: http://www.pygaze.org/contributors
 
 PyGaze is open source software and therefore free to use and modify at will.
 Warranty, however, is NOT given. If this software fails, causes your computer
