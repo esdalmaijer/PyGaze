@@ -393,10 +393,12 @@ class connection:
 					# if this is a heartbeat, return
 					if self.resplist[i]['category'] == 'heartbeat':
 						return self.resplist.pop(i)
-					# if this is another category, check if the request
-					# matches
-					elif self.resplist[i]['request'] == request:
-						return self.resplist.pop(i)
+					# if this is another category, check if the
+					# message contains a request key
+					if 'request' in self.resplist[i].keys():
+						# check if the request key matches
+						if self.resplist[i]['request'] == request:
+							return self.resplist.pop(i)
 		# on a connection error, get_response returns False and a connection
 		# error should be returned
 		else:
