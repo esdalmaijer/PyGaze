@@ -507,9 +507,18 @@ class EyelinkGraphics(custom_display):
 			self.scale = totlines/320.
 			self._size = int(self.scale*self.size[0]), int(
 				self.scale*self.size[1])
-			# Convert the image buffer to a pygame image, save it ...			
-			self.cam_img = pygame.image.fromstring(self.imagebuffer.tostring(),
-				self._size, 'RGBX')
+			# Convert the image buffer to a pygame image, save it ...
+			try:
+				# This is based on PyLink >= 1.1
+				self.cam_img = pygame.image.fromstring(
+					self.imagebuffer.tostring(), self._size, 'RGBX')
+			except:
+				# This is for PyLink <= 1.0. This try ... except construction
+				# is a hack. It would be better to understand the difference
+				# between these two versions.
+				self.cam_img = pygame.image.fromstring(
+					self.imagebuffer.tostring(), self.size, 'RGBX')
+				self.scale = 1.
 			if self.extra_info:
 				self.draw_cross_hair()				
 				self.draw_title()
