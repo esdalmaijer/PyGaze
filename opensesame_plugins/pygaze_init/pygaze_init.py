@@ -269,4 +269,14 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
 		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
 		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
-		
+		if eyelink:
+			try:
+				import eyelink
+			except:
+				pylink = None
+			if pylink == None:
+				self.text_eyelink_pylink_check.show()
+			else:
+				self.text_eyelink_pylink_check.hide()
+		else:
+			self.text_eyelink_pylink_check.hide()

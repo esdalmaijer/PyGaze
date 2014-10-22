@@ -49,6 +49,11 @@
 			"name"		: "spinbox_sacc_acc_thr"
 		},
 		{
+			"type"		: "text",
+			"label"		: "<b>Warning:</b> PyLink is required for EyeLink functionality and is not installed. Visit http://osdoc.cogsci.nl/devices/eyelink for more information.",
+			"name"		: "text_eyelink_pylink_check"
+		},
+		{
 			"type"		: "checkbox",
 			"var"		: "eyelink_calbeep",
 			"label"		: "Calibration beep",
