@@ -375,12 +375,47 @@ class BaseEyeTracker:
 		"""
 
 		pass
+		
+	def draw_drift_correction_target(self, x, y):
+		
+		"""
+		desc:
+			Draws a drift-correction target.
+		
+		arguments:		
+			x:
+				desc:	The X coordinate
+				type:	int
+			y:
+				desc:	The Y coordinate
+				type:	int
+		"""
+		
+		pass
+		
+	def draw_calibration_target(self, x, y):
+		
+		"""
+		desc:
+			Draws a calibration target.
+
+		arguments:		
+			x:
+				desc:	The X coordinate
+				type:	int
+			y:
+				desc:	The Y coordinate
+				type:	int
+		"""		
+		
+		pass
 
 	def set_draw_calibration_target_func(self, func):
 		
 		"""
 		desc:
-			Specifies a custom function to draw the calibration target.
+			Specifies a custom function to draw the calibration target. This
+			will function will override the default [draw_calibration_target].
 		
 		arguments:
 			func:
@@ -390,13 +425,15 @@ class BaseEyeTracker:
 				type:	function
 		"""
 		
-		pass
+		self.draw_calibration_target = func
 	
 	def set_draw_drift_correction_target_func(self, func):
 		
 		"""
 		desc:
 			Specifies a custom function to draw the drift-correction target.
+			This function will override the default
+			[draw_drift_correction_target].
 		
 		arguments:
 			func:
@@ -406,7 +443,7 @@ class BaseEyeTracker:
 				type:	function
 		"""
 		
-		pass
+		self.draw_drift_correction_target = func
 
 	def start_recording(self):
 

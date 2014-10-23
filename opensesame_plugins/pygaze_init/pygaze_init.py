@@ -53,11 +53,11 @@ class pygaze_init(item):
 		# Generic settings
 		self.tracker_type = u'Simple dummy'
 		self.calibrate = u'yes'
+		self.calbeep = u'yes'
 		self.sacc_vel_thr = 35
 		self.sacc_acc_thr = 9500
 		self._logfile = u'automatic'
-		# EyeLink-specific settings
-		self.eyelink_calbeep = u'yes'
+		# EyeLink-specific settings		
 		self.eyelink_force_drift_correct = u'yes'
 		self.eyelink_pupil_size_mode = u'area'
 		# SMI-specific settings
@@ -95,7 +95,7 @@ class pygaze_init(item):
 				type:	int
 		"""
 
-		if self.get(u'eyelink_calbeep'):
+		if self.get(u'calbeep') == 'yes':
 			self.beep.play()
 		dc_canvas = canvas(self.experiment)
 		if u'style' in inspect.getargspec(dc_canvas.fixdot).args:
@@ -150,9 +150,6 @@ class pygaze_init(item):
 			tracker_type = u'dummy'
 		elif self.tracker_type == u'EyeLink':
 			tracker_type = u'eyelink'
-			if self.get(u'eyelink_calbeep'):
-				from openexp.synth import synth
-				self.beep = synth(self.experiment)
 		elif self.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 		elif self.tracker_type == u'SMI':
@@ -199,7 +196,12 @@ class pygaze_init(item):
 			eyelink_force_drift_correct=self.get(
 			u'eyelink_force_drift_correct'),pupil_size_mode=self.get(
 			u'eyelink_pupil_size_mode'))
+		if self.get(u'calbeep') == 'yes':
+			from openexp.synth import synth
+			self.beep = synth(self.experiment)
 		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func(
+			self.draw_calibration_canvas)
+		self.experiment.pygaze_eyetracker.set_draw_drift_correction_target_func(
 			self.draw_calibration_canvas)
 		self.experiment.cleanup_functions.append(self.close)
 		if self.calibrate == u'yes':
@@ -271,7 +273,6 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.spinbox_smi_send_port.setEnabled(smi)
 		self.spinbox_smi_recv_port.setEnabled(smi)
 		eyelink = self.get(u'tracker_type') == u'EyeLink'
-		self.checkbox_eyelink_calbeep.setEnabled(eyelink)
 		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
 		self.spinbox_sacc_acc_thr.setDisabled(eyelink)

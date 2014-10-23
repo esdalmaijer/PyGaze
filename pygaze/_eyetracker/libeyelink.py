@@ -953,12 +953,6 @@ class libeyelink(BaseEyeTracker):
 		
 		self.eyelink_graphics.draw_cal_target = func
 	
-	def set_draw_drift_correction_target_func(self, func):
-		
-		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
-		
-		self.draw_drift_correction_target = func
-	
 	# ***
 	#
 	# Internal functions below

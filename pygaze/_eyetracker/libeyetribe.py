@@ -113,6 +113,7 @@ class EyeTribeTracker(BaseEyeTracker):
 		self.connected = False
 		self.recording = False
 		self.errdist = 2 # degrees; maximal error for drift correction
+		self.pxerrdist = 30 # initial error in pixels
 		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
 		self.prevsample = (-1,-1)
 		self.prevps = -1
@@ -172,7 +173,7 @@ class EyeTribeTracker(BaseEyeTracker):
 		
 		# show a message
 		self.screen.clear()
-		self.screen.draw_text(text="Press Space to start the calibration.")
+		self.screen.draw_text(text="Press Space to start the calibration or Q to quit.")
 		self.disp.fill(self.screen)
 		self.disp.show()
 		
@@ -192,11 +193,7 @@ class EyeTribeTracker(BaseEyeTracker):
 			
 			# loop through calibration points
 			for cpos in calibpoints:
-				# show a new calibration point
-				self.screen.clear()
-				self.screen.draw_fixation(fixtype='dot', pos=cpos)
-				self.disp.fill(self.screen)
-				self.disp.show()
+				self.draw_calibration_target(cpos[0], cpos[1])
 				# wait for a bit to allow participant to start looking at
 				# the calibration point (#TODO: space press?)
 				clock.pause(1000)
@@ -381,13 +378,12 @@ class EyeTribeTracker(BaseEyeTracker):
 					   or not (False); or calls self.calibrate if 'q'
 					   or 'escape' is pressed
 		"""
-
-		if fix_triggered:
-			return self.fix_triggered_drift_correction(pos)
-		self.draw_drift_correction_target(pos[0], pos[1])
+		
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
-
+		if fix_triggered:
+			return self.fix_triggered_drift_correction(pos)		
+		self.draw_drift_correction_target(pos[0], pos[1])
 		pressed = False
 		while not pressed:
 			pressed, presstime = self.kb.get_key()
@@ -402,6 +398,26 @@ class EyeTribeTracker(BaseEyeTracker):
 					self.errorbeep.play()
 		return False
 		
+	def draw_drift_correction_target(self, x, y):
+		
+		"""
+		Draws the drift-correction target.
+		
+		arguments
+		
+		x		--	The X coordinate
+		y		--	The Y coordinate
+		"""
+		
+		self.screen.clear()
+		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0,
+			diameter=12)
+		self.disp.fill(self.screen)
+		self.disp.show()			
+		
+	def draw_calibration_target(self, x, y):
+		
+		self.draw_drift_correction_target(x, y)
 
 	def fix_triggered_drift_correction(self, pos=None, min_samples=10, max_dev=60, reset_threshold=30):
 
@@ -469,13 +485,7 @@ class EyeTribeTracker(BaseEyeTracker):
 					return True
 				else:
 					lx = []
-					ly = []
-					
-	def set_draw_drift_correction_target_func(self, func):
-		
-		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
-		
-		self.draw_drift_correction_target = func					
+					ly = []			
 
 	def get_eyetracker_clock_async(self):
 
