@@ -238,8 +238,9 @@ class EyeTribe:
 			queue.put(sample)
 			# release the Threading Lock
 			self._lock.release()
-			# pause during the intersample time, to avoid an overflow
-			time.sleep(self._intsampletime)
+			# pause for half the intersample time, to avoid an overflow
+			# (but to make sure to not miss any samples)
+			time.sleep(self._intsampletime/2)
 	
 	def _process_samples(self, queue):
 		
@@ -265,10 +266,13 @@ class EyeTribe:
 			self._lock.release()
 			# update newest sample
 			if sample != None:
-				self._currentsample = copy.deepcopy(sample)
-				# write to file if data logging is on
-				if self._logdata:
-					self._log_sample(sample)
+				# check if the new sample is the same as the current sample
+				if not self._currentsample['timestamp'] == sample['timestamp']:
+					# update current sample
+					self._currentsample = copy.deepcopy(sample)
+					# write to file if data logging is on
+					if self._logdata:
+						self._log_sample(sample)
 	
 	def _log_sample(self, sample):
 		
@@ -393,12 +397,10 @@ class connection:
 					# if this is a heartbeat, return
 					if self.resplist[i]['category'] == 'heartbeat':
 						return self.resplist.pop(i)
-					# if this is another category, check if the
-					# message contains a request key
-					if 'request' in self.resplist[i].keys():
-						# check if the request key matches
-						if self.resplist[i]['request'] == request:
-							return self.resplist.pop(i)
+					# if this is another category, check if the request
+					# matches
+					elif self.resplist[i]['request'] == request:
+						return self.resplist.pop(i)
 		# on a connection error, get_response returns False and a connection
 		# error should be returned
 		else:
