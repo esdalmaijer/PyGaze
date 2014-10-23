@@ -25,7 +25,7 @@ try:
 	from constants import *
 except:
 	pass
-	
+
 import pygaze
 from pygaze.screen import Screen
 from pygaze.mouse import Mouse
@@ -89,16 +89,52 @@ class EyelinkGraphics(custom_display):
 		self.fontsize = libeyelink.fontsize
 		self.title = ""
 		self.display_open = True
-		# menu
-		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)		
+		self.draw_menu_screen()
+		# beeps
+		self.__target_beep__ = Sound(osc='sine', freq=440, length=50,
+			attack=0, decay=0, soundfile=None)
+		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200,
+			attack=0, decay=0, soundfile=None)
+		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200,
+			attack=0, decay=0, soundfile=None)
+		# Colors
+		self.color = {
+			pylink.CR_HAIR_COLOR:			pygame.Color('white'),
+			pylink.PUPIL_HAIR_COLOR:		pygame.Color('white'),
+			pylink.PUPIL_BOX_COLOR:			pygame.Color('green'),
+			pylink.SEARCH_LIMIT_BOX_COLOR:	pygame.Color('red'),
+			pylink.MOUSE_CURSOR_COLOR:		pygame.Color('red'),
+			'font':							pygame.Color('white'),
+			}
+		# Font
+		pygame.font.init()
+		self.font = pygame.font.SysFont('Courier New', 11)
+		# further properties
+		self.state = None
+		self.pal = None
+
+		self.size = (0,0)
+		self.set_tracker(tracker)
+		self.last_mouse_state = -1
+		self.bit64 = '64bit' in platform.architecture()
+		self.imagebuffer = self.new_array()
+
+	def draw_menu_screen(self):
+
+		"""
+		desc:
+			Draws the menu screen.
+		"""
+
+		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
 		self.menuscreen.draw_text(text="Eyelink calibration menu",
 			pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
 			fontsize=int(2*self.fontsize), antialias=True)
 		self.menuscreen.draw_text(text="%s (pygaze %s, pylink %s)" \
-			% (libeyelink.eyelink_model, pygaze.version, pylink.__version__),
-			pos=(self.xc,self.yc-5*self.ld), center=True,
+			% (self.libeyelink.eyelink_model, pygaze.version,
+			pylink.__version__), pos=(self.xc,self.yc-5*self.ld), center=True,
 			font='mono', fontsize=int(.8*self.fontsize), antialias=True)
-		self.menuscreen.draw_text(text="Press C to calibrate", 
+		self.menuscreen.draw_text(text="Press C to calibrate",
 			pos=(self.xc, self.yc-3*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press V to validate",
@@ -119,56 +155,28 @@ class EyelinkGraphics(custom_display):
 			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press Escape to abort experiment",
 			pos=(self.xc, self.yc+4*self.ld), center=True, font='mono',
-			fontsize=self.fontsize, antialias=True)			
+			fontsize=self.fontsize, antialias=True)
 		self.menuscreen.draw_text(text="Press Q to exit menu",
 			pos=(self.xc, self.yc+5*self.ld), center=True, font='mono',
 			fontsize=self.fontsize, antialias=True)
-		# beeps
-		self.__target_beep__ = Sound(osc='sine', freq=440, length=50, 
-			attack=0, decay=0, soundfile=None)
-		self.__target_beep__done__ = Sound(osc='sine', freq=880, length=200,
-			attack=0, decay=0, soundfile=None)
-		self.__target_beep__error__ = Sound(osc='sine', freq=220, length=200,
-			attack=0, decay=0, soundfile=None)
-		# Colors
-		self.color = {
-			pylink.CR_HAIR_COLOR:			pygame.Color('white'),
-			pylink.PUPIL_HAIR_COLOR:		pygame.Color('white'),
-			pylink.PUPIL_BOX_COLOR:			pygame.Color('green'),
-			pylink.SEARCH_LIMIT_BOX_COLOR:	pygame.Color('red'),
-			pylink.MOUSE_CURSOR_COLOR:		pygame.Color('red'),	
-			'font':							pygame.Color('white'),		
-			}
-		# Font
-		pygame.font.init()
-		self.font = pygame.font.SysFont('Courier New', 11)
-		# further properties
-		self.state = None
-		self.pal = None
-		
-		self.size = (0,0)
-		self.set_tracker(tracker)
-		self.last_mouse_state = -1
-		self.bit64 = '64bit' in platform.architecture()
-		self.imagebuffer = self.new_array()		
-		
+
 	def close(self):
-	
+
 		"""
-		Is called when the connection and display are shutting down.		
+		Is called when the connection and display are shutting down.
 		"""
-		
+
 		self.display_open = False
-		
+
 	def new_array(self):
-	
+
 		"""
 		Creates a new array with a system-specific format.
-		
+
 		Returns:
 		An array.
 		"""
-		
+
 		# On 64 bit Linux, we need to use an unsigned int data format.
 		# <https://www.sr-support.com/showthread.php?3215-Visual-glitch-when-/
 		# sending-eye-image-to-display-PC&highlight=ubuntu+pylink>
@@ -200,7 +208,7 @@ class EyelinkGraphics(custom_display):
 		Sets up the initial calibration display, which contains a menu with
 		instructions.
 		"""
-		
+
 		# show instructions
 		self.display.fill(self.menuscreen)
 		self.display.show()
@@ -241,7 +249,7 @@ class EyelinkGraphics(custom_display):
 		"""
 
 		self.play_beep(pylink.CAL_TARG_BEEP)
-		self.screen.clear()		
+		self.screen.clear()
 		self.screen.draw_fixation(fixtype='dot', pos=(x,y))
 		self.display.fill(screen=self.screen)
 		self.display.show()
@@ -259,7 +267,7 @@ class EyelinkGraphics(custom_display):
 			# For some reason, playing the beep here doesn't work, so we have
 			# to play it when the calibration target is drawn.
 			if EYELINKCALBEEP:
-				self.__target_beep__.play()			
+				self.__target_beep__.play()
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
 			self.screen.clear()
@@ -282,7 +290,7 @@ class EyelinkGraphics(custom_display):
 				self.screen.draw_text(
 					text="Validation succesfull, press 'Enter' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
-					fontsize=self.fontsize, antialias=True)				
+					fontsize=self.fontsize, antialias=True)
 			else:
 				self.screen.draw_text(text="Press 'Enter' to return to menu",
 					pos=(self.xc,self.yc), center=True, font='mono',
@@ -301,7 +309,7 @@ class EyelinkGraphics(custom_display):
 		Unlike the function name suggests, this draws a single pixel. I.e.
 		the end coordinates are always exactly one pixel away from the start
 		coordinates.
-		
+
 		Arguments:
 		x1			--	The starting x.
 		y1			--	The starting y.
@@ -313,16 +321,16 @@ class EyelinkGraphics(custom_display):
 		x1 = int(self.scale*x1)
 		y1 = int(self.scale*y1)
 		x2 = int(self.scale*x2)
-		y2 = int(self.scale*y2)			
+		y2 = int(self.scale*y2)
 		pygame.draw.line(self.cam_img, self.color[colorindex], (x1, y1),
 			(x2, y2))
-		
+
 	def draw_lozenge(self, x, y, w, h, colorindex):
 
 		"""
 		desc:
 			Draws a rectangle.
-			
+
 		arguments:
 			x:
 				desc:	X coordinate.
@@ -344,16 +352,16 @@ class EyelinkGraphics(custom_display):
 		x = int(self.scale*x)
 		y = int(self.scale*y)
 		w = int(self.scale*w)
-		h = int(self.scale*h)		
+		h = int(self.scale*h)
 		pygame.draw.rect(self.cam_img, self.color[colorindex], (x, y, w, h), 2)
-		
+
 	def draw_title(self):
-	
+
 		"""
 		desc:
 			Draws title info.
 		"""
-	
+
 		y = 0
 		for line in self.title:
 			surf = self.font.render(line, 0, self.color['font'])
@@ -365,12 +373,12 @@ class EyelinkGraphics(custom_display):
 		"""
 		desc:
 			Gets the mouse position and state.
-			
+
 		returns:
 			desc:	A (pos, state) tuple.
-			type:	tuple.		
+			type:	tuple.
 		"""
-		
+
 		button, pos, time = self.mouse.get_clicked()
 		if button == None:
 			button = -1
@@ -481,7 +489,7 @@ class EyelinkGraphics(custom_display):
 		while ': ' in text:
 			text = text.replace(': ', ':')
 		self.title = text.split()
-		
+
 	def draw_image_line(self, width, line, totlines, buff):
 
 		"""
@@ -520,14 +528,14 @@ class EyelinkGraphics(custom_display):
 					self.imagebuffer.tostring(), self.size, 'RGBX')
 				self.scale = 1.
 			if self.extra_info:
-				self.draw_cross_hair()				
+				self.draw_cross_hair()
 				self.draw_title()
 			pygame.image.save(self.cam_img, self.tmp_file)
 			# ... and then show the image.
 			self.screen.clear()
 			self.screen.draw_image(self.tmp_file, scale=1.5/self.scale)
 			self.display.fill(self.screen)
-			self.display.show()			
+			self.display.show()
 			# Clear the buffer for the next round!
 			self.imagebuffer = self.new_array()
 
@@ -556,4 +564,3 @@ class EyelinkGraphics(custom_display):
 			bf = int(r[i])
 			self.pal.append((rf<<16) | (gf<<8) | (bf))
 			i += 1
-
