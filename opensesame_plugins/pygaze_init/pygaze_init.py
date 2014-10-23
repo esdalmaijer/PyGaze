@@ -29,20 +29,20 @@ from pygaze.display import Display
 import pygaze
 
 class pygaze_init(item):
-	
+
 	"""
 	desc:
 		Plug-in runtime definition.
 	"""
 
 	description = u'Initialize and calibrate eye tracker'
-	
+
 	def __init__(self, name, experiment, string=None):
-	
+
 		self.reset()
 		item.__init__(self, name, experiment, string)
 		self.reload_pygaze()
-	
+
 	def reset(self):
 
 		"""
@@ -63,10 +63,10 @@ class pygaze_init(item):
 		# SMI-specific settings
 		self.smi_ip = u'127.0.0.1'
 		self.smi_send_port = 4444
-		self.smi_recv_port = 5555		
-		
+		self.smi_recv_port = 5555
+
 	def close(self):
-		
+
 		"""
 		desc:
 			Closes the connection with the eye tracker when the experiment is
@@ -78,21 +78,21 @@ class pygaze_init(item):
 		self.experiment.pygaze_eyetracker.close()
 		self.experiment.pygaze_eyetracker = None
 		debug.msg(u'Finished PyGaze deinitialisation')
-		self.sleep(1000)	
+		self.sleep(1000)
 
 	def draw_calibration_canvas(self, x, y):
-		
+
 		"""
 		desc:
 			A hook to prepare the canvas with the clibration target.
-			
+
 		arguments:
 			x:
 				desc:	The X coordinate.
 				type:	int
 			y:
 				desc:	The Y coordinate.
-				type:	int			
+				type:	int
 		"""
 
 		if self.get(u'eyelink_calbeep'):
@@ -103,9 +103,9 @@ class pygaze_init(item):
 		else:
 			dc_canvas.fixdot(x, y)
 		dc_canvas.show()
-				
+
 	def reload_pygaze(self):
-		
+
 		"""
 		desc:
 			Reloads pygaze modules to get a clean start. This is necessary,
@@ -113,7 +113,7 @@ class pygaze_init(item):
 			when the experiment is executed twice. Explicitly reloading all
 			OpenSesame-related modules will fix this.
 		"""
-		
+
 		from pygaze import defaults
 		defaults.osexperiment = self.experiment
 		defaults.DISPTYPE = u'opensesame'
@@ -175,6 +175,10 @@ class pygaze_init(item):
 					logfile = os.path.join(dirname, basename)
 					print(u'Attention: EyeLink logfile renamed to %s.edf' \
 						% logfile)
+				elif basename == u'defaultlog':
+					logfile = u'default'
+					print(u'Attention: EyeLink logfile renamed to %s.edf' \
+						% logfile)
 				logfile = logfile + u'.edf'
 		else:
 			logfile = self.get(u'_logfile')
@@ -202,21 +206,21 @@ class pygaze_init(item):
 			self.experiment.pygaze_eyetracker.calibrate()
 
 class qtpygaze_init(pygaze_init, qtautoplugin):
-	
+
 	"""
 	desc:
 		Plug-in GUI definition.
 	"""
-	
+
 	def __init__(self, name, experiment, script=None):
-		
+
 		"""
 		Constructor.
-		
+
 		Arguments:
 		name		--	The name of the plug-in.
 		experiment	--	The experiment object.
-		
+
 		Keyword arguments:
 		script		--	A definition script. (default=None)
 		"""
@@ -237,16 +241,16 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			return False
 		self.custom_interactions()
 		return True
-		
+
 	def edit_widget(self):
-	
+
 		"""
 		Refreshes the controls.
-		
+
 		Returns:
 		The QWidget containing the controls
 		"""
-	
+
 		if self.lock:
 			return
 		self.lock = True
@@ -254,14 +258,14 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.custom_interactions()
 		self.lock = False
 		return w
-			
+
 	def custom_interactions(self):
-		
+
 		"""
 		desc:
 			Activates the relevant controls for each tracker.
 		"""
-		
+
 		smi = self.get(u'tracker_type') == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
 		self.spinbox_smi_send_port.setEnabled(smi)
