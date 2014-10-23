@@ -26,6 +26,7 @@ from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze.eyetracker import EyeTracker
 from pygaze.display import Display
+import pygaze
 
 class pygaze_init(item):
 	
@@ -222,6 +223,8 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 
 		pygaze_init.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
+		self.text_pygaze_version.setText(
+			u'<small>PyGaze version %s</small>' % pygaze.version)
 
 	def apply_edit_changes(self):
 

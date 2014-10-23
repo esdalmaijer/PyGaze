@@ -54,6 +54,11 @@
 			"name"		: "text_eyelink_pylink_check"
 		},
 		{
+			"type"		: "text",
+			"label"		: "DUMMY",
+			"name"		: "text_pygaze_version"
+		},
+		{
 			"type"		: "checkbox",
 			"var"		: "eyelink_calbeep",
 			"label"		: "Calibration beep",
