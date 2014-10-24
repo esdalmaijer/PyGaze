@@ -95,13 +95,13 @@ class pygaze_init(item):
 				type:	int
 		"""
 
-		if self.get(u'calbeep') == 'yes':
-			self.beep.play()
 		dc_canvas = canvas(self.experiment)
 		if u'style' in inspect.getargspec(dc_canvas.fixdot).args:
 			dc_canvas.fixdot(x, y, style=u'large-open')
 		else:
 			dc_canvas.fixdot(x, y)
+		if self.get(u'calbeep') == 'yes':
+			self.beep.play()			
 		dc_canvas.show()
 
 	def reload_pygaze(self):
