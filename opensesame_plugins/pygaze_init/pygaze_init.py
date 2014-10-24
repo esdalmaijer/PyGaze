@@ -279,7 +279,7 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
 		if eyelink:
 			try:
-				import eyelink
+				import pylink
 			except:
 				pylink = None
 			if pylink == None:
