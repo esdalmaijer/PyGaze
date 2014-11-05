@@ -96,8 +96,12 @@ class pygaze_drift_correct(item):
 		self.set_item_onset()
 		xpos = self.get(u'width') / 2 + self.get(u'xpos')
 		ypos = self.get(u'height') / 2 + self.get(u'ypos')
-		self.experiment.pygaze_eyetracker.drift_correction(pos=(xpos, ypos), \
-			fix_triggered=self.get(u'fixation_triggered') == u'yes')
+		while True:
+			success = self.experiment.pygaze_eyetracker.drift_correction(
+				pos=(xpos, ypos),
+				fix_triggered=self.get(u'fixation_triggered') == u'yes')
+			if success:
+				break
 
 class qtpygaze_drift_correct(pygaze_drift_correct, qtautoplugin):
 	
