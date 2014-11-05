@@ -430,6 +430,17 @@ class libeyelink(BaseEyeTracker):
 		lx = []
 		ly = []
 		while len(lx) < min_samples:
+
+			# Check whether the EyeLink is put into set-up mode on the EyeLink
+			# PC and, if so, jump to the calibration menu.
+			if pylink.getEYELINK().getCurrentMode() == pylink.IN_SETUP_MODE:
+				self.recording = False			
+				self.calibrate()
+				print(
+					"libeyelink.libeyelink.fix_triggered_drift_correction(): "
+					"'q' pressed")
+				return False	
+		
 			# pressing escape enters the calibration screen
 			resp = self.kb.get_key(keylist=["escape", "q"], timeout=1)[0]
 			if resp == 'escape':
