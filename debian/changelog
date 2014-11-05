@@ -1,0 +1,5 @@
+python-pygaze (0.5.0~opensesame3-ubuntu1) trusty; urgency=medium
+
+  * Initial release.
+
+ -- Sebastiaan Mathot <s.mathot@cogsci.nl>  Wed, 05 Nov 2014 17:03:51 +0100
