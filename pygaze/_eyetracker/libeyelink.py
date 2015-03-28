@@ -652,6 +652,10 @@ class libeyelink(BaseEyeTracker):
 		"""
 		Retrieve time differenece between tracker timestamps and 
 		current clock time upheld in the pygaze environment.
+		
+		Note that this is not guaranteed to be a static time difference, the 
+		clocks might run at different speeds. Therefore you should consider 
+		running this function every time you utilize on this time difference.
 
 		Returns:
 		The tracker time minus the clock time
