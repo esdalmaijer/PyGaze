@@ -648,6 +648,15 @@ class libeyelink(BaseEyeTracker):
 		
 		return (self.eventdetection,self.eventdetection,self.eventdetection)
 
+	def _get_eyelink_clock_async(self):
+		"""
+		Retrieve time differenece between tracker timestamps and 
+		current clock time upheld in the pygaze environment.
+
+		Returns:
+		The tracker time minus the clock time
+		"""
+		return pylink.getEYELINK().trackerTime() -  clock.time()
 
 	def wait_for_event(self, event):
 
@@ -661,10 +670,17 @@ class libeyelink(BaseEyeTracker):
 		if self.eye_used == None:
 			self.set_eye_used()
 		if self.eventdetection == 'native':
-			d = 0
-			while d != event:
+			# since the link buffer was not have been polled, old data has
+			# accumulated in the buffer -- so ignore events that are old:
+			t0 = clock.time() # time of call
+			while True:
 				d = pylink.getEYELINK().getNextData()
-			return pylink.getEYELINK().getFloatData()
+				if d == event:
+					float_data  = pylink.getEYELINK().getFloatData()
+					# corresponding clock_time
+					tc = float_data.getTime() - self._get_eyelink_clock_async()
+					if tc > t0:
+						return tc, float_data
 
 		if event == 5:
 			outcome = self.wait_for_saccade_start()
@@ -692,8 +708,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.STARTSACC)
-			return d.getTime(), d.getStartGaze()
+			t,d = self.wait_for_event(pylink.STARTSACC)
+			return t, d.getStartGaze()
 		
 		
 		# # # # #
@@ -752,8 +768,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.ENDSACC)
-			return d.getTime(), d.getStartGaze(), d.getEndGaze()
+			t,d = self.wait_for_event(pylink.ENDSACC)
+			return t, d.getStartGaze(), d.getEndGaze()
 		
 		
 		# # # # #
@@ -803,7 +819,6 @@ class libeyelink(BaseEyeTracker):
 	
 			return etime, spos, epos
 
-
 	def wait_for_fixation_start(self):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
@@ -812,8 +827,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.STARTFIX)
-			return d.getTime(), d.getStartGaze()
+			t,d = self.wait_for_event(pylink.STARTFIX)
+			return t, d.getTime(), d.getStartGaze()
 		
 		
 		# # # # #
@@ -862,8 +877,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.ENDFIX)
-			return d.getTime(), d.getStartGaze()
+			t, d = self.wait_for_event(pylink.ENDFIX)
+			return t, d.getTime(), d.getStartGaze()
 		
 		
 		# # # # #
@@ -900,8 +915,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.STARTBLINK)
-			return d.getTime()
+			t, d = self.wait_for_event(pylink.STARTBLINK)
+			return t, d.getTime()
 		
 		
 		# # # # #
@@ -926,7 +941,6 @@ class libeyelink(BaseEyeTracker):
 							# return timestamp of blink start
 							return t0
 
-
 	def wait_for_blink_end(self):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
@@ -935,8 +949,8 @@ class libeyelink(BaseEyeTracker):
 		# EyeLink method
 		
 		if self.eventdetection == 'native':
-			d = self.wait_for_event(pylink.ENDBLINK)
-			return d.getTime()
+			t,d = self.wait_for_event(pylink.ENDBLINK)
+			return t
 		
 		
 		# # # # #
