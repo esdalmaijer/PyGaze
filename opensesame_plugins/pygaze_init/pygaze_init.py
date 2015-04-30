@@ -26,22 +26,23 @@ from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze.eyetracker import EyeTracker
 from pygaze.display import Display
+import pygaze
 
 class pygaze_init(item):
-	
+
 	"""
 	desc:
 		Plug-in runtime definition.
 	"""
 
 	description = u'Initialize and calibrate eye tracker'
-	
+
 	def __init__(self, name, experiment, string=None):
-	
+
 		self.reset()
 		item.__init__(self, name, experiment, string)
 		self.reload_pygaze()
-	
+
 	def reset(self):
 
 		"""
@@ -52,20 +53,20 @@ class pygaze_init(item):
 		# Generic settings
 		self.tracker_type = u'Simple dummy'
 		self.calibrate = u'yes'
+		self.calbeep = u'yes'
 		self.sacc_vel_thr = 35
 		self.sacc_acc_thr = 9500
 		self._logfile = u'automatic'
-		# EyeLink-specific settings
-		self.eyelink_calbeep = u'yes'
+		# EyeLink-specific settings		
 		self.eyelink_force_drift_correct = u'yes'
 		self.eyelink_pupil_size_mode = u'area'
 		# SMI-specific settings
 		self.smi_ip = u'127.0.0.1'
 		self.smi_send_port = 4444
-		self.smi_recv_port = 5555		
-		
+		self.smi_recv_port = 5555
+
 	def close(self):
-		
+
 		"""
 		desc:
 			Closes the connection with the eye tracker when the experiment is
@@ -77,34 +78,34 @@ class pygaze_init(item):
 		self.experiment.pygaze_eyetracker.close()
 		self.experiment.pygaze_eyetracker = None
 		debug.msg(u'Finished PyGaze deinitialisation')
-		self.sleep(1000)	
+		self.sleep(1000)
 
 	def draw_calibration_canvas(self, x, y):
-		
+
 		"""
 		desc:
 			A hook to prepare the canvas with the clibration target.
-			
+
 		arguments:
 			x:
 				desc:	The X coordinate.
 				type:	int
 			y:
 				desc:	The Y coordinate.
-				type:	int			
+				type:	int
 		"""
 
-		if self.get(u'eyelink_calbeep'):
-			self.beep.play()
 		dc_canvas = canvas(self.experiment)
 		if u'style' in inspect.getargspec(dc_canvas.fixdot).args:
 			dc_canvas.fixdot(x, y, style=u'large-open')
 		else:
 			dc_canvas.fixdot(x, y)
+		if self.get(u'calbeep') == 'yes':
+			self.beep.play()			
 		dc_canvas.show()
-				
+
 	def reload_pygaze(self):
-		
+
 		"""
 		desc:
 			Reloads pygaze modules to get a clean start. This is necessary,
@@ -112,7 +113,7 @@ class pygaze_init(item):
 			when the experiment is executed twice. Explicitly reloading all
 			OpenSesame-related modules will fix this.
 		"""
-		
+
 		from pygaze import defaults
 		defaults.osexperiment = self.experiment
 		defaults.DISPTYPE = u'opensesame'
@@ -149,9 +150,6 @@ class pygaze_init(item):
 			tracker_type = u'dummy'
 		elif self.tracker_type == u'EyeLink':
 			tracker_type = u'eyelink'
-			if self.get(u'eyelink_calbeep'):
-				from openexp.synth import synth
-				self.beep = synth(self.experiment)
 		elif self.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 		elif self.tracker_type == u'SMI':
@@ -174,6 +172,10 @@ class pygaze_init(item):
 					logfile = os.path.join(dirname, basename)
 					print(u'Attention: EyeLink logfile renamed to %s.edf' \
 						% logfile)
+				elif basename == u'defaultlog':
+					logfile = u'default'
+					print(u'Attention: EyeLink logfile renamed to %s.edf' \
+						% logfile)
 				logfile = logfile + u'.edf'
 		else:
 			logfile = self.get(u'_logfile')
@@ -194,34 +196,41 @@ class pygaze_init(item):
 			eyelink_force_drift_correct=self.get(
 			u'eyelink_force_drift_correct'),pupil_size_mode=self.get(
 			u'eyelink_pupil_size_mode'))
+		if self.get(u'calbeep') == 'yes':
+			from openexp.synth import synth
+			self.beep = synth(self.experiment)
 		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func(
+			self.draw_calibration_canvas)
+		self.experiment.pygaze_eyetracker.set_draw_drift_correction_target_func(
 			self.draw_calibration_canvas)
 		self.experiment.cleanup_functions.append(self.close)
 		if self.calibrate == u'yes':
 			self.experiment.pygaze_eyetracker.calibrate()
 
 class qtpygaze_init(pygaze_init, qtautoplugin):
-	
+
 	"""
 	desc:
 		Plug-in GUI definition.
 	"""
-	
+
 	def __init__(self, name, experiment, script=None):
-		
+
 		"""
 		Constructor.
-		
+
 		Arguments:
 		name		--	The name of the plug-in.
 		experiment	--	The experiment object.
-		
+
 		Keyword arguments:
 		script		--	A definition script. (default=None)
 		"""
 
 		pygaze_init.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
+		self.text_pygaze_version.setText(
+			u'<small>PyGaze version %s</small>' % pygaze.version)
 
 	def apply_edit_changes(self):
 
@@ -234,16 +243,16 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			return False
 		self.custom_interactions()
 		return True
-		
+
 	def edit_widget(self):
-	
+
 		"""
 		Refreshes the controls.
-		
+
 		Returns:
 		The QWidget containing the controls
 		"""
-	
+
 		if self.lock:
 			return
 		self.lock = True
@@ -251,22 +260,31 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.custom_interactions()
 		self.lock = False
 		return w
-			
+
 	def custom_interactions(self):
-		
+
 		"""
 		desc:
 			Activates the relevant controls for each tracker.
 		"""
-		
+
 		smi = self.get(u'tracker_type') == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
 		self.spinbox_smi_send_port.setEnabled(smi)
 		self.spinbox_smi_recv_port.setEnabled(smi)
 		eyelink = self.get(u'tracker_type') == u'EyeLink'
-		self.checkbox_eyelink_calbeep.setEnabled(eyelink)
 		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
 		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
 		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
-		
+		if eyelink:
+			try:
+				import pylink
+			except:
+				pylink = None
+			if pylink == None:
+				self.text_eyelink_pylink_check.show()
+			else:
+				self.text_eyelink_pylink_check.hide()
+		else:
+			self.text_eyelink_pylink_check.hide()

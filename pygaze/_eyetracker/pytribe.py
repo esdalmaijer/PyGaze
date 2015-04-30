@@ -390,16 +390,17 @@ class connection:
 		self._request_lock.release()
 		
 		# return the appropriate response
-		if success:
+		if success:			
 			for i in range(len(self.resplist)):
-				# check if the category matches
+				# check if the category matches				
 				if self.resplist[i]['category'] == category:
 					# if this is a heartbeat, return
 					if self.resplist[i]['category'] == 'heartbeat':
 						return self.resplist.pop(i)
 					# if this is another category, check if the request
 					# matches
-					elif self.resplist[i]['request'] == request:
+					elif 'request' in self.resplist[i] and \
+						self.resplist[i]['request'] == request:
 						return self.resplist.pop(i)
 		# on a connection error, get_response returns False and a connection
 		# error should be returned

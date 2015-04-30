@@ -1,0 +1,18 @@
+Source: python-pygaze
+Section: science
+Priority: extra
+Maintainer: Edwin Dalmaijer <edwin.dalmaijer@psy.ox.ac.uk>
+Build-Depends: debhelper (>= 7.0.50~), python-support, python-all,
+  python-setuptools
+XS-Python-Version: >= 2.6
+Standards-Version: 3.9.5
+Vcs-Git: git://github.com:esdalmaijer/PyGaze.git
+Homepage: https://www.pygaze.org
+
+Package: python-pygaze
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends}, ${python:Depends}
+Recommends: python-pygame, psychopy
+Suggests: opensesame
+Description: A Python library for eye tracking
