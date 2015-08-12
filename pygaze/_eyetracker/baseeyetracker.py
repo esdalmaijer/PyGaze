@@ -298,6 +298,11 @@ class BaseEyeTracker:
 		"""
 		desc:
 			Writes a message to the log file.
+			
+		arguments:
+			msg:
+				desc:	A message.
+				type:	[str, unicode]
 		"""
 
 		pass
