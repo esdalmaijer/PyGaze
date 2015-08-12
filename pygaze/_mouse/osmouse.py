@@ -41,7 +41,7 @@ class OSMouse(BaseMouse):
 
 	# See _mouse.basemouse.BaseMouse
 
-	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT, \
+	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT,
 		visible=False):
 
 		# See _mouse.basemouse.BaseMouse
@@ -57,26 +57,26 @@ class OSMouse(BaseMouse):
 			pass
 		
 		self.experiment = osexperiment
-		self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist, \
+		self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
 			timeout=timeout)
 
 	def set_mousebuttonlist(self, mousebuttonlist=None):
 
 		# See _mouse.basemouse.BaseMouse
 		
-		self.mouse.set_buttonlist(mousebuttonlist)
+		self.mouse.buttonlist = mousebuttonlist
 
 	def set_timeout(self, timeout=None):
 
 		# See _mouse.basemouse.BaseMouse
 		
-		self.mouse.set_timeout(timeout)
+		self.mouse.timeout = timeout
 
 	def set_visible(self, visible=True):
 
 		# See _mouse.basemouse.BaseMouse
 		
-		self.mouse.set_visible(visible)
+		self.mouse.show_cursor(visible)
 
 	def set_pos(self, pos=(0,0)):
 
@@ -90,16 +90,17 @@ class OSMouse(BaseMouse):
 		
 		return self.mouse.get_pos()[0]
 
-	def get_clicked(self, mousebuttonlist='default', timeout='default'):
+	def get_clicked(self, mousebuttonlist=u'default', timeout=u'default'):
 
 		# See _mouse.basemouse.BaseMouse
 
 		# set buttonlist and timeout
-		if mousebuttonlist == 'default':
-			mousebuttonlist = None
-		if timeout == 'default':
-			timeout = None
-		return self.mouse.get_click(buttonlist=mousebuttonlist, timeout=timeout)
+		kwdict = {}
+		if mousebuttonlist != u'default':
+			kwdict[u'buttonlist'] = mousebuttonlist
+		if timeout != u'default':
+			kwdict[u'buttonlist'] = timeout
+		return self.mouse.get_click(**kwdict)
 
 	def get_pressed(self):
 

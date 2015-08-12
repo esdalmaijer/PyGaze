@@ -47,6 +47,8 @@
 #		print("Display.show call at %d" % int(clock.get_time()))
 #
 
+from pygaze.py3compat import *
+
 class BaseEyeTracker:
 
 	"""
@@ -322,7 +324,7 @@ class BaseEyeTracker:
 				desc:	A variable value
 		"""
 
-		pass
+		self.log(u"var %s %s" % (safe_decode(var), safe_decode(val)))
 
 	def pupil_size(self):
 

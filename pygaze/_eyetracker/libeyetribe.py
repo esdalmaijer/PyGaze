@@ -21,6 +21,7 @@
 
 
 # PyGaze imports
+from pygaze.py3compat import *
 from pygaze.defaults import *
 from pygaze.libtime import clock
 try:
@@ -507,25 +508,6 @@ class EyeTribeTracker(BaseEyeTracker):
 		"""
 
 		self.eyetribe.log_message(msg)
-
-
-	def log_var(self, var, val):
-
-		"""Writes a variable to the log file
-		
-		arguments
-		var		-- variable name
-		val		-- variable value
-		
-		returns
-		Nothing	-- uses native log function of iViewX to include a line
-				   in the log file in a "var NAME VALUE" layout
-		"""
-
-		msg = "var %s %s" % (var, val)
-
-		self.log(msg)
-
 
 	def prepare_drift_correction(self, pos):
 

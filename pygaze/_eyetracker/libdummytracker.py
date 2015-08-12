@@ -32,7 +32,7 @@ from pygaze.mouse import Mouse
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
-from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+from pygaze._eyetracker.libdumbdummy import DumbDummy
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
 # be imported correctly
@@ -43,7 +43,7 @@ except:
 
 
 
-class Dummy(BaseEyeTracker):
+class Dummy(DumbDummy):
 
 	"""A dummy class to run experiments in dummy mode, where eye movements are simulated by the mouse"""
 	
@@ -73,61 +73,20 @@ class Dummy(BaseEyeTracker):
 		self.blinking = False
 		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 		self.resolution = DISPSIZE[:]
-
-		self.simulator = Mouse(disptype=DISPTYPE, mousebuttonlist=None, \
+		self.simulator = Mouse(disptype=DISPTYPE, mousebuttonlist=None,
 			timeout=2, visible=False)
-
 		self.kb = Keyboard(disptype=DISPTYPE, keylist=None, timeout=None)
-		self.angrybeep = Sound(osc='saw',freq=100, length=100, attack=0, decay=0, soundfile=None)
+		self.angrybeep = Sound(osc='saw',freq=100, length=100, attack=0,
+			decay=0, soundfile=None)
 		self.display = display
 		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
-
-
-	def send_command(self, cmd):
-
-		"""Dummy command, prints command instead of sending it to the eyetracker"""
-
-		print("The following command would have been given to the eyetracker: " + str(cmd))
-
-
-	def log(self, msg):
-
-		"""Dummy log message, prints message instead of sending it to the eyetracker"""
-
-		print("The following message would have been logged to the EDF: " + str(msg))
-
-
-	def log_var(self, var, val):
-
-		"""Dummy varlog, prints variable and value instead of sending it to the eyetracker"""
-
-		print("The following variable would have been logged to the EDF: " + str(var) + ", value: " + str(val))
-
-
-	def status_msg(self, msg):
-		
-		"""Dummy status message, prints message instead of sending it to the eyetracker"""
-
-		print("The following status message would have been visible on the experimentor PC: " + str(msg))
-
-
-	def connected(self):
-
-		"""Dummy connection status"""
-
-		print("Dummy mode, eyetracker not connected.")
-
-		return True
-
 
 	def calibrate(self):
 
 		"""Dummy calibration"""
 
 		print("Calibration would now take place")
-
 		clock.pause(1000)
-
 
 	def drift_correction(self, pos=None, fix_triggered=False):
 
@@ -173,13 +132,6 @@ class Dummy(BaseEyeTracker):
 				else:
 					# show discontent
 					self.angrybeep.play()
-
-
-	def prepare_drift_correction(self, pos):
-
-		"""Dummy drift correction preparation"""
-
-		pass
 
 
 	def fix_triggered_drift_correction(self, pos=None, min_samples=30, max_dev=60, reset_threshold=10):
@@ -275,14 +227,6 @@ class Dummy(BaseEyeTracker):
 
 		print("eyetracker connection would have closed at: " + str(closetime))
 
-
-	def set_eye_used(self):
-
-		"""Dummy for setting which eye to track (does nothing)"""
-		
-		pass
-
-
 	def pupil_size(self):
 		
 		"""Returns dummy pupil size"""
@@ -308,27 +252,6 @@ class Dummy(BaseEyeTracker):
 				self.simulator.set_pos(pos=(self.bbpos[0],self.resolution[1])) # set position to blinking position
 
 		return self.simulator.get_pos()
-
-
-	def wait_for_event(self, event):
-
-		"""Waits for simulated event (3=STARTBLINK, 4=ENDBLINK, 5=STARTSACC, 6=ENDSACC, 7=STARTFIX, 8=ENDFIX)"""
-
-		if event == 5:
-			outcome = self.wait_for_saccade_start()
-		elif event == 6:
-			outcome = self.wait_for_saccade_end()
-		elif event == 7:
-			outcome = self.wait_for_fixation_start()
-		elif event == 8:
-			outcome = self.wait_for_fixation_end()
-		elif event == 3:
-			outcome = self.wait_for_blink_start()
-		elif event == 4:
-			outcome = self.wait_for_blink_end()
-
-		return outcome
-
 
 	def wait_for_saccade_start(self):
 
