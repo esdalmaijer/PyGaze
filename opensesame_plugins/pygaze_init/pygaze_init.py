@@ -56,7 +56,7 @@ class pygaze_init(item):
 		self.var.sacc_vel_thr = 35
 		self.var.sacc_acc_thr = 9500
 		self.var._logfile = u'automatic'
-		# EyeLink-specific settings		
+		# EyeLink-specific settings
 		self.var.eyelink_force_drift_correct = u'yes'
 		self.var.eyelink_pupil_size_mode = u'area'
 		# SMI-specific settings
@@ -95,12 +95,9 @@ class pygaze_init(item):
 		"""
 
 		dc_canvas = canvas(self.experiment)
-		if u'style' in inspect.getargspec(dc_canvas.fixdot).args:
-			dc_canvas.fixdot(x, y, style=u'large-open')
-		else:
-			dc_canvas.fixdot(x, y)
+		dc_canvas.fixdot(x, y, style=u'large-open')
 		if self.var.calbeep == 'yes':
-			self.beep.play()			
+			self.beep.play()
 		dc_canvas.show()
 
 	def reload_pygaze(self):

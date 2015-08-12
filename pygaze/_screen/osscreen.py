@@ -36,13 +36,13 @@ try:
 except:
 	pass
 
-	
+
 class OSScreen(BaseScreen):
 
 	"""See _display.pygamescreen.PyGameScreen"""
-	
+
 	def __init__(self, screen=None, **args):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		# try to copy docstring (but ignore it if it fails, as we do
@@ -59,7 +59,7 @@ class OSScreen(BaseScreen):
 		self.create(screen=screen)
 
 	def create(self, screen=None):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		if screen != None:
@@ -82,16 +82,19 @@ class OSScreen(BaseScreen):
 	def draw_circle(self, colour=None, pos=None, r=50, pw=1, fill=False):
 
 		"""See _display.pygamescreen.PyGameScreen"""
-		
+
 		if pos == None:
 			x = self.canvas.xcenter()
 			y = self.canvas.ycenter()
 		else:
 			x, y = pos
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
 		self.canvas.set_penwidth(pw)
-		self.canvas.circle(x, y, r, fill=fill, color=colour)
+		self.canvas.circle(x, y, r, fill=fill, **kwdict)
 
-	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1, \
+	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1,
 		fill=False):
 
 		"""See _display.pygamescreen.PyGameScreen"""
@@ -100,20 +103,28 @@ class OSScreen(BaseScreen):
 			x = self.canvas.xcenter()
 		if y == None:
 			y = self.canvas.ycenter()
-		self.canvas.set_penwidth(pw)
-		self.canvas.ellipse(x, y, w, h, fill=fill, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pwd
+		self.canvas.ellipse(x, y, w, h, fill=fill, **kwdict)
 
-	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1, \
+	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1,
 		fill=False):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		if x == None:
 			x = self.canvas.xcenter()
 		if y == None:
 			y = self.canvas.ycenter()
-		self.canvas.set_penwidth(pw)
-		self.canvas.rect(x, y, w, h, fill=fill, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pwd
+		self.canvas.rect(x, y, w, h, fill=fill, **kwdict)
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
 
@@ -129,18 +140,26 @@ class OSScreen(BaseScreen):
 			ey = self.canvas.ycenter()
 		else:
 			ex, ey = epos
-		self.canvas.set_penwidth(pw)
-		self.canvas.rect(sx, sy, ex, ey, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pwd
+		self.canvas.rect(sx, sy, ex, ey, **kwdict)
 
 	def draw_polygon(self, pointlist, colour=None, pw=1, fill=True):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		self.canvas.set_penwidth(pw)
-		self.canvas.polygon(pointlist, fill=fill, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pwd
+		self.canvas.polygon(pointlist, fill=fill, **kwdict)
 
 
-	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1, \
+	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1,
 		diameter=12):
 
 		"""See _display.pygamescreen.PyGameScreen"""
@@ -151,7 +170,10 @@ class OSScreen(BaseScreen):
 			y = self.canvas.ycenter()
 		else:
 			x, y = pos
-		self.canvas.fixdot(x, y, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		self.canvas.fixdot(x, y, **kwdict)
 
 	def draw_text(self, text='text', colour=None, pos=None, center=True, \
 		font='mono', fontsize=12, antialias=True):
@@ -163,14 +185,16 @@ class OSScreen(BaseScreen):
 			y = self.canvas.ycenter()
 		else:
 			x, y = pos
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
 		self.canvas.set_font(style=font, size=fontsize)
-		self.canvas.text(text, center=center, color=colour, x=x, y=y, \
-			html=False)
-	
+		self.canvas.text(text, center=center, x=x, y=y, html=False, **kwdict)
+
 	def draw_image(self, image, pos=None, scale=None):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
-		
+
 		if pos == None:
 			x = self.canvas.xcenter()
 			y = self.canvas.ycenter()
