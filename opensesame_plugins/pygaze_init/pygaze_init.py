@@ -39,7 +39,6 @@ class pygaze_init(item):
 
 	def __init__(self, name, experiment, string=None):
 
-		self.reset()
 		item.__init__(self, name, experiment, string)
 		self.reload_pygaze()
 
@@ -51,19 +50,19 @@ class pygaze_init(item):
 		"""
 
 		# Generic settings
-		self.tracker_type = u'Simple dummy'
-		self.calibrate = u'yes'
-		self.calbeep = u'yes'
-		self.sacc_vel_thr = 35
-		self.sacc_acc_thr = 9500
-		self._logfile = u'automatic'
+		self.var.tracker_type = u'Simple dummy'
+		self.var.calibrate = u'yes'
+		self.var.calbeep = u'yes'
+		self.var.sacc_vel_thr = 35
+		self.var.sacc_acc_thr = 9500
+		self.var._logfile = u'automatic'
 		# EyeLink-specific settings		
-		self.eyelink_force_drift_correct = u'yes'
-		self.eyelink_pupil_size_mode = u'area'
+		self.var.eyelink_force_drift_correct = u'yes'
+		self.var.eyelink_pupil_size_mode = u'area'
 		# SMI-specific settings
-		self.smi_ip = u'127.0.0.1'
-		self.smi_send_port = 4444
-		self.smi_recv_port = 5555
+		self.var.smi_ip = u'127.0.0.1'
+		self.var.smi_send_port = 4444
+		self.var.smi_recv_port = 5555
 
 	def close(self):
 
@@ -74,11 +73,11 @@ class pygaze_init(item):
 		"""
 
 		debug.msg(u'Starting PyGaze deinitialisation')
-		self.sleep(1000)
+		self.clock.sleep(1000)
 		self.experiment.pygaze_eyetracker.close()
 		self.experiment.pygaze_eyetracker = None
 		debug.msg(u'Finished PyGaze deinitialisation')
-		self.sleep(1000)
+		self.clock.sleep(1000)
 
 	def draw_calibration_canvas(self, x, y):
 
@@ -100,7 +99,7 @@ class pygaze_init(item):
 			dc_canvas.fixdot(x, y, style=u'large-open')
 		else:
 			dc_canvas.fixdot(x, y)
-		if self.get(u'calbeep') == 'yes':
+		if self.var.calbeep == 'yes':
 			self.beep.play()			
 		dc_canvas.show()
 
@@ -118,8 +117,8 @@ class pygaze_init(item):
 		defaults.osexperiment = self.experiment
 		defaults.DISPTYPE = u'opensesame'
 		defaults.DISPSIZE = self.resolution()
-		defaults.BGC = self.get(u'background')
-		defaults.FGC = self.get(u'foreground')
+		defaults.BGC = self.var.background
+		defaults.FGC = self.var.foreground
 		from pygaze._screen import osscreen
 		from pygaze._display import osdisplay
 		from pygaze._keyboard import oskeyboard
@@ -139,28 +138,29 @@ class pygaze_init(item):
 		"""
 
 		if hasattr(self.experiment, u'pygaze_eyetracker'):
-			raise osexception( \
+			raise osexception(
 				u'You should have only one instance of `pygaze_init` in your experiment')
 		self.set_item_onset()
 		# Determine the tracker type and perform certain tracker-specific
 		# operations.
-		if self.tracker_type == u'Simple dummy':
+		if self.var.tracker_type == u'Simple dummy':
 			tracker_type = u'dumbdummy'
-		elif self.tracker_type == u'Advanced dummy (mouse simulation)':
+		elif self.var.tracker_type == u'Advanced dummy (mouse simulation)':
 			tracker_type = u'dummy'
-		elif self.tracker_type == u'EyeLink':
+		elif self.var.tracker_type == u'EyeLink':
 			tracker_type = u'eyelink'
-		elif self.tracker_type == u'Tobii':
+		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
-		elif self.tracker_type == u'SMI':
+		elif self.var.tracker_type == u'SMI':
 			tracker_type = u'smi'
-		elif self.tracker_type == u'EyeTribe':
+		elif self.var.tracker_type == u'EyeTribe':
 			tracker_type = u'eyetribe'
 		else:
-			raise osexception(u'Unknown tracker type: %s' % self.tracker_type)
+			raise osexception(
+				u'Unknown tracker type: %s' % self.var.tracker_type)
 		# Determine logfile
-		if self.get(u'_logfile') == u'automatic':
-			logfile = os.path.splitext(self.get(u'logfile'))[0]
+		if self.var._logfile == u'automatic':
+			logfile = os.path.splitext(self.var.logfile)[0]
 			if tracker_type == u'eyelink':
 				# Automatically shorten filenames like 'subject-0', because
 				# these are too long. This avoids having to rename logfiles
@@ -178,9 +178,9 @@ class pygaze_init(item):
 						% logfile)
 				logfile = logfile + u'.edf'
 		else:
-			logfile = self.get(u'_logfile')
+			logfile = self.var._logfile
 		# Determine event detection
-		if tracker_type == u'eyelink':
+		if self.var.tracker_type == u'eyelink':
 			event_detection = u'native'
 		else:
 			event_detection = u'pygaze'
@@ -189,14 +189,13 @@ class pygaze_init(item):
 		self.experiment.pygaze_eyetracker = EyeTracker(
 			self.experiment.pygaze_display, trackertype=tracker_type,
 			data_file=logfile, eventdetection=event_detection,
-			saccade_velocity_threshold=self.get(u'sacc_vel_thr'),
-			saccade_acceleration_threshold=self.get(u'sacc_acc_thr'),
-			ip=self.get(u'smi_ip'), sendport=self.get(u'smi_send_port'),
-			receiveport=self.get(u'smi_recv_port'), logfile=logfile,
-			eyelink_force_drift_correct=self.get(
-			u'eyelink_force_drift_correct'),pupil_size_mode=self.get(
-			u'eyelink_pupil_size_mode'))
-		if self.get(u'calbeep') == 'yes':
+			saccade_velocity_threshold=self.var.sacc_vel_thr,
+			saccade_acceleration_threshold=self.var.sacc_acc_thr,
+			ip=self.var.smi_ip, sendport=self.var.smi_send_port,
+			receiveport=self.var.smi_recv_port, logfile=logfile,
+			eyelink_force_drift_correct=self.var.eyelink_force_drift_correct
+			,pupil_size_mode=self.var.eyelink_pupil_size_mode)
+		if self.var.calbeep == u'yes':
 			from openexp.synth import synth
 			self.beep = synth(self.experiment)
 		self.experiment.pygaze_eyetracker.set_draw_calibration_target_func(
@@ -206,6 +205,7 @@ class pygaze_init(item):
 		self.experiment.cleanup_functions.append(self.close)
 		if self.calibrate == u'yes':
 			self.experiment.pygaze_eyetracker.calibrate()
+		self.python_workspace[u'eyetracker'] = self.experiment.pygaze_eyetracker
 
 class qtpygaze_init(pygaze_init, qtautoplugin):
 
@@ -242,7 +242,6 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		if not qtautoplugin.apply_edit_changes(self) or self.lock:
 			return False
 		self.custom_interactions()
-		return True
 
 	def edit_widget(self):
 
