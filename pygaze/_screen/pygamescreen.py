@@ -426,8 +426,11 @@ class PyGameScreen(BaseScreen):
 		fontname = os.path.join(pygaze.FONTDIR, font) + '.ttf'
 		if not os.path.isfile(fontname):
 			print("WARNING: screen.Screen: could not find font '%s'; using default instead" % fontname)
-			fontname = pygame.font.get_default_font()
-		font = pygame.font.Font(fontname, fontsize)
+			font = pygame.font.get_default_font()
+		if os.path.isfile(fontname):			
+			font = pygame.font.Font(fontname, fontsize)
+		else:
+			font = pygame.font.SysFont(font, fontsize)
 		
 		lines = text.split("\n")
 		lineh = font.get_linesize()
