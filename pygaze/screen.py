@@ -20,16 +20,10 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze import defaults
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze.py3compat import *
+from pygaze import settings
 from pygaze._misc.misc import copy_docstr
 from pygaze._screen.basescreen import BaseScreen
-
 
 class Screen(BaseScreen):
 
@@ -38,7 +32,7 @@ class Screen(BaseScreen):
 	Display object)
 	"""
 
-	def __init__(self, disptype=DISPTYPE, **args):
+	def __init__(self, disptype=settings.DISPTYPE, **args):
 
 		"""
 		Initializes the Screen object.

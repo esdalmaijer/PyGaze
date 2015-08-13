@@ -21,12 +21,8 @@
 
 from libopensesame.exceptions import osexception
 from openexp.keyboard import keyboard
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze.py3compat import *
+from pygaze import settings
 from pygaze._keyboard.basekeyboard import BaseKeyboard
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -40,7 +36,7 @@ class OSKeyboard(BaseKeyboard):
 
 	# See _keyboard.basekeyboard.BaseKeyboard
 
-	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
+	def __init__(self, keylist=settings.KEYLIST, timeout=settings.KEYTIMEOUT):
 
 		# See _keyboard.basekeyboard.BaseKeyboard
 
@@ -54,7 +50,7 @@ class OSKeyboard(BaseKeyboard):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 
-		self.experiment = osexperiment
+		self.experiment = settings.osexperiment
 		self.keyboard = keyboard(self.experiment, keylist=keylist,
 			timeout=timeout)
 

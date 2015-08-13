@@ -19,14 +19,10 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.py3compat import *
+from pygaze import settings
 from libopensesame.exceptions import osexception
 from openexp.mouse import mouse
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
 from pygaze._mouse.basemouse import BaseMouse
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -41,8 +37,8 @@ class OSMouse(BaseMouse):
 
 	# See _mouse.basemouse.BaseMouse
 
-	def __init__(self, mousebuttonlist=MOUSEBUTTONLIST, timeout=MOUSETIMEOUT,
-		visible=False):
+	def __init__(self, mousebuttonlist=settings.MOUSEBUTTONLIST,
+		timeout=settings.MOUSETIMEOUT, visible=False):
 
 		# See _mouse.basemouse.BaseMouse
 
@@ -56,7 +52,7 @@ class OSMouse(BaseMouse):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 		
-		self.experiment = osexperiment
+		self.experiment = settings.osexperiment
 		self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
 			timeout=timeout)
 

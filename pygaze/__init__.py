@@ -21,6 +21,8 @@
 
 version = u'0.5.0'
 
+from pygaze.settings import settings
+
 import os
 
 # directory stuff

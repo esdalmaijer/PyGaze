@@ -19,14 +19,10 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.py3compat import *
+from pygaze import settings
 from libopensesame.exceptions import osexception
 from openexp.canvas import canvas
-from pygaze.defaults import osexperiment
-try:
-	from constants import osexperiment
-except:
-	pass
-
 from pygaze._screen.basescreen import BaseScreen
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -55,7 +51,7 @@ class OSScreen(BaseScreen):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 
-		self.experiment = osexperiment
+		self.experiment = settings.osexperiment
 		self.create(screen=screen)
 
 	def create(self, screen=None):
@@ -107,7 +103,7 @@ class OSScreen(BaseScreen):
 		if colour is not None:
 			kwdict[u'color'] = colour
 		if pw is not None:
-			kwdict[u'penwidth'] = pwd
+			kwdict[u'penwidth'] = pw
 		self.canvas.ellipse(x, y, w, h, fill=fill, **kwdict)
 
 	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1,
@@ -123,7 +119,7 @@ class OSScreen(BaseScreen):
 		if colour is not None:
 			kwdict[u'color'] = colour
 		if pw is not None:
-			kwdict[u'penwidth'] = pwd
+			kwdict[u'penwidth'] = pw
 		self.canvas.rect(x, y, w, h, fill=fill, **kwdict)
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
@@ -144,8 +140,8 @@ class OSScreen(BaseScreen):
 		if colour is not None:
 			kwdict[u'color'] = colour
 		if pw is not None:
-			kwdict[u'penwidth'] = pwd
-		self.canvas.rect(sx, sy, ex, ey, **kwdict)
+			kwdict[u'penwidth'] = pw
+		self.canvas.line(sx, sy, ex, ey, **kwdict)
 
 	def draw_polygon(self, pointlist, colour=None, pw=1, fill=True):
 
@@ -155,7 +151,7 @@ class OSScreen(BaseScreen):
 		if colour is not None:
 			kwdict[u'color'] = colour
 		if pw is not None:
-			kwdict[u'penwidth'] = pwd
+			kwdict[u'penwidth'] = pw
 		self.canvas.polygon(pointlist, fill=fill, **kwdict)
 
 
@@ -175,7 +171,7 @@ class OSScreen(BaseScreen):
 			kwdict[u'color'] = colour
 		self.canvas.fixdot(x, y, **kwdict)
 
-	def draw_text(self, text='text', colour=None, pos=None, center=True, \
+	def draw_text(self, text='text', colour=None, pos=None, center=True,
 		font='mono', fontsize=12, antialias=True):
 
 		"""See _display.pygamescreen.PyGameScreen"""

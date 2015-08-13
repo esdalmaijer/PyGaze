@@ -19,12 +19,8 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze.py3compat import *
+from pygaze import settings
 from pygaze._misc.misc import copy_docstr
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
 
@@ -35,7 +31,7 @@ class EyeTracker(BaseEyeTracker):
 	Generic EyeTracker class, which morphs into an eye-tracker specific class.
 	"""
 
-	def __init__(self, display, trackertype=TRACKERTYPE, **args):
+	def __init__(self, display, trackertype=settings.TRACKERTYPE, **args):
 
 		"""
 		Initializes an EyeTracker object.
@@ -54,7 +50,7 @@ class EyeTracker(BaseEyeTracker):
 		"""
 
 		# set trackertype to dummy in dummymode
-		if DUMMYMODE:
+		if settings.DUMMYMODE:
 			trackertype = u'dummy'
 	
 		# correct wrong input

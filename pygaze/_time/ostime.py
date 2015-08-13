@@ -19,12 +19,8 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import osexperiment
-try:
-	from constants import osexperiment
-except:
-	pass
-
+from pygaze.py3compat import *
+from pygaze import settings
 from pygaze._time.basetime import BaseTime
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -69,18 +65,18 @@ class OSTime(BaseTime):
 
 		# see pygaze._time.basetime.BaseTime
 
-		return osexperiment.time()
+		return settings.osexperiment.time()
 
 
 	def pause(self, pausetime):
 
 		# see pygaze._time.basetime.BaseTime
 
-		return osexperiment.sleep(pausetime)
+		return settings.osexperiment.sleep(pausetime)
 
 
 	def expend(self):
 
 		# see pygaze._time.basetime.BaseTime
 
-		return osexperiment.time()
+		return settings.osexperiment.time()
