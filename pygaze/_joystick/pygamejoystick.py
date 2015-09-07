@@ -68,7 +68,9 @@ class PyGameJoystick(BaseJoystick):
 
 		# initialize joystick
 		pygame.init()
+		pygame.joystick.init()
 		self.js = Joystick(0)
+		self.js.init()
 
 		# set joystick characteristics
 		self.set_joybuttonlist(joybuttonlist)
