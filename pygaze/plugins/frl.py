@@ -19,13 +19,8 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
-if DISPTYPE == 'psychopy':
+from pygaze import settings
+if settings.DISPTYPE == 'psychopy':
 	try:
 		from psychopy.visual import Aperture
 	except:
@@ -45,7 +40,7 @@ class FRL:
 	
 	"""Gaze contingent FRL"""
 	
-	def __init__(self, disptype=DISPTYPE, pos='centre', dist=125, size=200):
+	def __init__(self, disptype=settings.DISPTYPE, pos='centre', dist=125, size=200):
 
 		"""Initializes FRL object
 		

@@ -19,14 +19,9 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze import settings
 from pygaze.py3compat import *
-from pygaze.defaults import *
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-
 import pygaze
 from pygaze.screen import Screen
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
@@ -73,10 +68,10 @@ class DumbDummy(BaseEyeTracker):
 
 		self.recording = False
 		self.blinking = False
-		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
+		self.bbpos = (settings.DISPSIZE[0]/2, settings.DISPSIZE[1]/2)
 
 		self.display = display
-		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):

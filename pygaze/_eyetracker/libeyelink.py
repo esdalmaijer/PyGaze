@@ -19,14 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
-
-from pygaze.defaults import *
+from pygaze import settings
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-	
 import pygaze
 from pygaze.screen import Screen
 from pygaze.mouse import Mouse
@@ -72,11 +66,12 @@ class libeyelink(BaseEyeTracker):
 
 	MAX_TRY = 100
 
-	def __init__(self, display, resolution=DISPSIZE,
-		data_file=LOGFILENAME+".edf", fg_color=FGC, bg_color=BGC,
-		eventdetection=EVENTDETECTION, saccade_velocity_threshold=35,
-		saccade_acceleration_threshold=9500, force_drift_correct=True,
-		pupil_size_mode=EYELINKPUPILSIZEMODE, **args):
+	def __init__(self, display, resolution=settings.DISPSIZE,
+		data_file=settings.LOGFILENAME+".edf", fg_color=settings.FGC,
+		bg_color=settings.BGC, eventdetection=settings.EVENTDETECTION,
+		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500,
+		force_drift_correct=True, pupil_size_mode=settings.EYELINKPUPILSIZEMODE,
+		**args):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
@@ -107,7 +102,7 @@ class libeyelink(BaseEyeTracker):
 		# properties
 		self.display = display
 		self.fontsize = 18
-		self.scr = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.scr = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=["escape", "q"], timeout=1)
 		self.resolution = resolution
 		self.recording = False
@@ -138,9 +133,9 @@ class libeyelink(BaseEyeTracker):
 		# result in only larger saccades to be detected)
 		self.weightdist = 10
 		# distance between participant and screen in cm
-		self.screendist = SCREENDIST
+		self.screendist = settings.SCREENDIST
 		# distance between participant and screen in cm
-		self.screensize = SCREENSIZE
+		self.screensize = settings.SCREENSIZE
 		self.pixpercm = (self.resolution[0]/float(self.screensize[0]) + \
 			self.resolution[1]/float(self.screensize[1])) / 2.0			
 		# only initialize eyelink once
@@ -1007,10 +1002,10 @@ class libeyelink(BaseEyeTracker):
 		"""
 
 		# Display the confirmation screen
-		scr = Screen(disptype=DISPTYPE)
+		scr = Screen(disptype=settings.DISPTYPE)
 		kb = Keyboard(timeout=5000)
-		yc = DISPSIZE[1]/2
-		xc = DISPSIZE[0]/2
+		yc = settings.DISPSIZE[1]/2
+		xc = settings.DISPSIZE[0]/2
 		ld = 40 # Line height
 		scr.draw_text(u'Really abort experiment?', pos=(xc, yc-3*ld),
 			fontsize=self.fontsize)

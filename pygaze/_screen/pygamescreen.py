@@ -19,12 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 import pygaze
 
 from pygaze._screen.basescreen import BaseScreen
@@ -61,8 +56,9 @@ class PyGameScreen(BaseScreen):
 
 	"""A class for PyGame Screen objects, for visual stimuli (to be displayed via a Display object)"""
 	
-	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, mousevisible= \
-		MOUSEVISIBLE, screen=None, **args):
+	def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
+		bgc=settings.BGC, mousevisible=settings.MOUSEVISIBLE, screen=None,
+		**args):
 		
 		"""
 		Constructor.

@@ -20,12 +20,7 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from inspect import ismethod
-
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
+from pygaze import settings
 
 # # # # #
 # helper functions
@@ -66,7 +61,7 @@ def pos2psychopos(pos, dispsize=None):
 	"""
 
 	if dispsize == None:
-		dispsize = DISPSIZE[:]
+		dispsize = settings.DISPSIZE[:]
 
 	x = pos[0] - dispsize[0]/2
 	y = (pos[1] - dispsize[1]/2) * -1
@@ -93,7 +88,7 @@ def psychopos2pos(pos, dispsize=None):
 	"""
 
 	if dispsize == None:
-		dispsize = DISPSIZE[:]
+		dispsize = settings.DISPSIZE[:]
 
 	x = pos[0] + dispsize[0]/2
 	y = (pos[1] * -1) + dispsize[1]/2

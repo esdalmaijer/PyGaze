@@ -19,13 +19,8 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
+from pygaze import settings
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-	
 import pygaze
 from pygaze.screen import Screen
 from pygaze.mouse import Mouse
@@ -71,15 +66,16 @@ class Dummy(DumbDummy):
 
 		self.recording = False
 		self.blinking = False
-		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
-		self.resolution = DISPSIZE[:]
-		self.simulator = Mouse(disptype=DISPTYPE, mousebuttonlist=None,
+		self.bbpos = (settings.DISPSIZE[0]/2, settings.DISPSIZE[1]/2)
+		self.resolution = settings.DISPSIZE[:]
+		self.simulator = Mouse(disptype=settings.DISPTYPE, mousebuttonlist=None,
 			timeout=2, visible=False)
-		self.kb = Keyboard(disptype=DISPTYPE, keylist=None, timeout=None)
+		self.kb = Keyboard(disptype=settings.DISPTYPE, keylist=None,
+			timeout=None)
 		self.angrybeep = Sound(osc='saw',freq=100, length=100, attack=0,
 			decay=0, soundfile=None)
 		self.display = display
-		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 
 	def calibrate(self):
 
@@ -98,7 +94,7 @@ class Dummy(DumbDummy):
 			return self.fix_triggered_drift_correction(pos)
 		
 		if pos == None:
-			pos = DISPSIZE[0] / 2, DISPSIZE[1] / 2
+			pos = settings.DISPSIZE[0] / 2, settings.DISPSIZE[1] / 2
 
 		# show mouse
 		self.simulator.set_visible(visible=True)
@@ -141,7 +137,7 @@ class Dummy(DumbDummy):
 		print("Drift correction (fixation triggered) would now take place")
 
 		if pos == None:
-			pos = DISPSIZE[0] / 2, DISPSIZE[1] / 2
+			pos = settings.DISPSIZE[0] / 2, settings.DISPSIZE[1] / 2
 
 		# show mouse
 		self.simulator.set_visible(visible=True)
