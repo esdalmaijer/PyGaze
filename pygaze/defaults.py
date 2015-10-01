@@ -1,24 +1,4 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of PyGaze - the open-source toolbox for eye tracking
-#
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
-#
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
-#
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
-
 # MAIN
 DUMMYMODE = False # False for gaze contingent display, True for dummy mode (using mouse or joystick)
 LOGFILENAME = 'default' # logfilename, without path
@@ -27,13 +7,13 @@ LOGFILE = LOGFILENAME[:] # .txt; adding path before logfilename is optional; log
 # DISPLAY
 SCREENNR = 0 # number of the screen used for displaying experiment
 DISPTYPE = 'psychopy' # either 'psychopy' or 'pygame'
-DISPSIZE = (1280,1024) # canvas size
-SCREENSIZE = (33.8,27.1) # physical screen size in centimeters
+DISPSIZE = (1280, 1024) # canvas size
+SCREENSIZE = (33.8, 27.1) # physical screen size in centimeters
 SCREENDIST = 57.0 # centimeters; distance between screen and participant's eyes
 FULLSCREEN = True # Indicates whether the experiment is executed in fullscreen
 MOUSEVISIBLE = False # mouse visibility
-BGC = (125,125,125) # backgroundcolour
-FGC = (0,0,0) # foregroundcolour
+BGC = (125, 125, 125) # backgroundcolour
+FGC = (0, 0, 0) # foregroundcolour
 
 # SOUND
 SOUNDOSCILLATOR = 'sine' # 'sine', 'saw', 'square' or 'whitenoise'

@@ -13,10 +13,10 @@ from pygaze.libinput import Keyboard
 
 # first, we try to import libwebcam from PyGaze
 try:
-	from pygaze import libwebcam
+    from pygaze import libwebcam
 # if importing from PyGaze fails, we try to import from the current directory
-except:
-	import libwebcam
+except Exception:
+    import libwebcam
 
 
 # # # # #
@@ -42,15 +42,15 @@ stopped = False
 
 # loop until a key is pressed
 while not stopped:
-	# get new image
-	img = cam.get_image()
-	# draw it on the Screen
-	scr.draw_image(img)
-	# update Display
-	disp.fill(scr)
-	disp.show()
-	# check input
-	stopped, stoptime = kb.get_key()
+    # get new image
+    img = cam.get_image()
+    # draw it on the Screen
+    scr.draw_image(img)
+    # update Display
+    disp.fill(scr)
+    disp.show()
+    # check input
+    stopped, stoptime = kb.get_key()
 
 
 # # # # #

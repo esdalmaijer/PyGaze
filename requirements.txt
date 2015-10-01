@@ -1,0 +1,6 @@
+apipkg==1.4
+execnet==1.4.1
+pep8==1.6.2
+pytest==2.8.1
+pytest-cache==1.0
+pytest-pep8==1.0.6

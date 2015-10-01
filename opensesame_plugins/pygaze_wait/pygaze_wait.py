@@ -23,77 +23,77 @@ from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze.display import Display
 
 class pygaze_wait(item):
-	
-	"""Plug-in runtime definition."""
 
-	description = u'Waits for an eye-tracker event'
+    """Plug-in runtime definition."""
 
-	def __init__(self, name, experiment, script=None):
+    description = u'Waits for an eye-tracker event'
 
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
+    def __init__(self, name, experiment, script=None):
 
-		self.event = u'Saccade start'
-		item.__init__(self, name, experiment, script)
+        """
+        Constructor.
 
-	def prepare(self):
+        Arguments:
+        name        --    The name of the plug-in.
+        experiment    --    The experiment object.
 
-		"""The preparation phase of the plug-in goes here."""
+        Keyword arguments:
+        script        --    A definition script. (default=None)
+        """
 
-		item.prepare(self)
-		if self.get(u'event') == u'Saccade start':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_saccade_start
-		elif self.get(u'event') == u'Saccade end':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_saccade_end
-		elif self.get(u'event') == u'Fixation start':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_fixation_start
-		elif self.get(u'event') == u'Fixation end':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_fixation_end
-		elif self.get(u'event') == u'Blink start':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_blink_start
-		elif self.get(u'event') == u'Blink end':
-			self.wait_func = self.experiment.pygaze_eyetracker. \
-				wait_for_blink_start
-		else:
-			raise osexception(u'Unknown event: %s' % self.get(u'event'))
-		
-	def run(self):
+        self.event = u'Saccade start'
+        item.__init__(self, name, experiment, script)
 
-		"""The run phase of the plug-in goes here."""
+    def prepare(self):
 
-		self.wait_func()
-		self.set_item_onset()
+        """The preparation phase of the plug-in goes here."""
+
+        item.prepare(self)
+        if self.get(u'event') == u'Saccade start':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_saccade_start
+        elif self.get(u'event') == u'Saccade end':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_saccade_end
+        elif self.get(u'event') == u'Fixation start':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_fixation_start
+        elif self.get(u'event') == u'Fixation end':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_fixation_end
+        elif self.get(u'event') == u'Blink start':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_blink_start
+        elif self.get(u'event') == u'Blink end':
+            self.wait_func = self.experiment.pygaze_eyetracker. \
+                wait_for_blink_start
+        else:
+            raise osexception(u'Unknown event: %s' % self.get(u'event'))
+
+    def run(self):
+
+        """The run phase of the plug-in goes here."""
+
+        self.wait_func()
+        self.set_item_onset()
 
 class qtpygaze_wait(pygaze_wait, qtautoplugin):
-	
-	"""Plug-in GUI definition."""
-	
-	def __init__(self, name, experiment, script=None):
-		
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
 
-		pygaze_wait.__init__(self, name, experiment, script)
-		qtautoplugin.__init__(self, __file__)
+    """Plug-in GUI definition."""
+
+    def __init__(self, name, experiment, script=None):
+
+        """
+        Constructor.
+
+        Arguments:
+        name        --    The name of the plug-in.
+        experiment    --    The experiment object.
+
+        Keyword arguments:
+        script        --    A definition script. (default=None)
+        """
+
+        pygaze_wait.__init__(self, name, experiment, script)
+        qtautoplugin.__init__(self, __file__)
 

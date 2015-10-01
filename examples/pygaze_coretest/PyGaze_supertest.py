@@ -52,12 +52,12 @@ mouse = Mouse(mousebuttonlist=None, timeout=None)
 # initialize a sound
 snd = Sound(osc='sine', freq=4400, length=3000)
 sounds = {
-	'a sine wave (slightly oscillating)':Sound(osc='sine', freq=440, length=5000, attack=1000, decay=1000),
-	'a saw wave':Sound(osc='saw', freq=880, length=5000, attack=0, decay=0),
-	'a square wave':Sound(osc='square', freq=1760, length=5000, attack=0, decay=0),
-	'white noise':Sound(osc='whitenoise'),
-	'soundfile':Sound(soundfile=soundfile)
-	}
+    'a sine wave (slightly oscillating)':Sound(osc='sine', freq=440, length=5000, attack=1000, decay=1000),
+    'a saw wave':Sound(osc='saw', freq=880, length=5000, attack=0, decay=0),
+    'a square wave':Sound(osc='square', freq=1760, length=5000, attack=0, decay=0),
+    'white noise':Sound(osc='whitenoise'),
+    'soundfile':Sound(soundfile=soundfile)
+    }
 
 # initialize a Timer
 timer = Time()
@@ -103,13 +103,13 @@ kb.set_timeout(timeout=0.1)
 key, presstime = kb.get_key()
 kb.set_timeout(timeout=None)
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key()
-	# draw the key name
-	scr.clear()
-	scr.draw_text("keylist = ['1','5','e','s','left','space']\n\nYou pressed:\n\n%s" % key)
-	disp.fill(scr)
-	disp.show()
+    # get new key
+    key, presstime = kb.get_key()
+    # draw the key name
+    scr.clear()
+    scr.draw_text("keylist = ['1','5','e','s','left','space']\n\nYou pressed:\n\n%s" % key)
+    disp.fill(scr)
+    disp.show()
 kb.set_keylist(keylist=['space'])
 
 
@@ -233,16 +233,16 @@ mouse.set_timeout(timeout=1)
 button, clickpos, clicktime = mouse.get_clicked()
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# get new button
-	button, clickpos, clicktime = mouse.get_clicked()
-	if button != None:
-		# draw the key name
-		scr.clear()
-		scr.draw_text("mousebuttonlist = [1,2]\n\nYou pressed:\n\n%s" % str(button))
-		disp.fill(scr)
-		disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # get new button
+    button, clickpos, clicktime = mouse.get_clicked()
+    if button != None:
+        # draw the key name
+        scr.clear()
+        scr.draw_text("mousebuttonlist = [1,2]\n\nYou pressed:\n\n%s" % str(button))
+        disp.fill(scr)
+        disp.show()
 mouse.set_timeout(timeout=None)
 mouse.set_mousebuttonlist(mousebuttonlist=None)
 
@@ -261,13 +261,13 @@ disp.fill(scr)
 disp.show()
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# new position
-	x = random.randint(1,DISPSIZE[0]-1)
-	y = random.randint(1,DISPSIZE[1]-1)
-	# set mouse position
-	mouse.set_pos(pos=(x,y))
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # new position
+    x = random.randint(1,DISPSIZE[0]-1)
+    y = random.randint(1,DISPSIZE[1]-1)
+    # set mouse position
+    mouse.set_pos(pos=(x,y))
 
 #mouse.get_pos()
 scr.clear()
@@ -277,32 +277,32 @@ disp.show()
 mouse.set_visible(visible=True)
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# new states
-	mpos = mouse.get_pos()
-	# draw to screen
-	scr.clear()
-	scr.draw_text("The dot should follow your mouse movements")
-	scr.draw_fixation(fixtype='dot', pos=mpos, pw=3, diameter=15)
-	disp.fill(scr)
-	disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # new states
+    mpos = mouse.get_pos()
+    # draw to screen
+    scr.clear()
+    scr.draw_text("The dot should follow your mouse movements")
+    scr.draw_fixation(fixtype='dot', pos=mpos, pw=3, diameter=15)
+    disp.fill(scr)
+    disp.show()
 mouse.set_visible(visible=False)
 scr.clear()
 
 #mouse.get_pressed()
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# new position
-	state = mouse.get_pressed()
-	# draw to screen
-	scr.clear()
-	scr.draw_text("The current mouse state is %s; press any buttons to test" % str(state))
-	scr.draw_fixation(fixtype='dot', pos=mpos, pw=3, diameter=15)
-	disp.fill(scr)
-	disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # new position
+    state = mouse.get_pressed()
+    # draw to screen
+    scr.clear()
+    scr.draw_text("The current mouse state is %s; press any buttons to test" % str(state))
+    scr.draw_fixation(fixtype='dot', pos=mpos, pw=3, diameter=15)
+    disp.fill(scr)
+    disp.show()
 
 
 # # # # #
@@ -317,34 +317,34 @@ kb.get_key()
 
 # loop through sound waves
 for sound in sounds.keys():
-	scr.clear()
-	scr.draw_text("You should now hear %s. Press Space to continue." % sound)
-	disp.fill(scr)
-	disp.show()
-	sounds[sound].play(repeats=-1)
-	kb.get_key()
-	sounds[sound].stop()
+    scr.clear()
+    scr.draw_text("You should now hear %s. Press Space to continue." % sound)
+    disp.fill(scr)
+    disp.show()
+    sounds[sound].play(repeats=-1)
+    kb.get_key()
+    sounds[sound].stop()
 
 #snd.pan()
 panning = 'right'
 key = None
 while not key == 'space':
-	# new panning
-	if panning == 'left':
-		panning = 'right'
-	elif panning == 'right':
-		panning = 'left'
-	# apply panning
-	snd.stop()
-	snd.pan(panning)
-	snd.play(repeats=-1)
-	# show text
-	scr.clear()
-	scr.draw_text("The sound should come from your %s." % panning)
-	disp.fill(scr)
-	disp.show()
-	# get new key
-	key, presstime = kb.get_key(timeout=2000)
+    # new panning
+    if panning == 'left':
+        panning = 'right'
+    elif panning == 'right':
+        panning = 'left'
+    # apply panning
+    snd.stop()
+    snd.pan(panning)
+    snd.play(repeats=-1)
+    # show text
+    scr.clear()
+    scr.draw_text("The sound should come from your %s." % panning)
+    disp.fill(scr)
+    disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=2000)
 snd.stop()
 snd.pan(0)
 
@@ -358,19 +358,19 @@ volume = 0
 volfactor = 0.05
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=20)
-	# new volume
-	volume += volfactor
-	# correct volume
-	if volume < 0:
-		volume = 0
-		volfactor *= -1
-	elif volume > 1:
-		volume = 1
-		volfactor *= -1
-	# apply volume
-	snd.set_volume(volume)
+    # get new key
+    key, presstime = kb.get_key(timeout=20)
+    # new volume
+    volume += volfactor
+    # correct volume
+    if volume < 0:
+        volume = 0
+        volfactor *= -1
+    elif volume > 1:
+        volume = 1
+        volfactor *= -1
+    # apply volume
+    snd.set_volume(volume)
 snd.stop()
 
 
@@ -391,22 +391,22 @@ disp.fill(scr)
 disp.show()
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# get time (in milliseconds)
-	ms = timer.get_time()
-	# hours, minutes, seconds, milliseconds
-	h = int(ms / 3600000); ms -= h*3600000
-	m = int(ms / 60000); ms -= m*60000
-	s = int(ms / 1000); ms -= s*1000
-	ms = int(ms)
-	# timestring
-	timestring = "%s:%s:%s:%s" % (h, m, s, ms)
-	# display
-	scr.clear()
-	scr.draw_text("The time passed from the experiment beginning is: %s" % timestring)
-	disp.fill(scr)
-	disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # get time (in milliseconds)
+    ms = timer.get_time()
+    # hours, minutes, seconds, milliseconds
+    h = int(ms / 3600000); ms -= h*3600000
+    m = int(ms / 60000); ms -= m*60000
+    s = int(ms / 1000); ms -= s*1000
+    ms = int(ms)
+    # timestring
+    timestring = "%s:%s:%s:%s" % (h, m, s, ms)
+    # display
+    scr.clear()
+    scr.draw_text("The time passed from the experiment beginning is: %s" % timestring)
+    disp.fill(scr)
+    disp.show()
 
 #time.pause()
 scr.clear()

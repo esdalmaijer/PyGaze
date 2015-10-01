@@ -1,30 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of PyGaze - the open-source toolbox for eye tracking
-#
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
-#
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
-#
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
-
 from pygaze.defaults import *
 from pygaze.libtime import clock
 try:
-	from constants import *
-except:
-	pass
+    from constants import *
+except Exception:
+    pass
 
 import pygaze
 from pygaze.screen import Screen
@@ -33,235 +13,235 @@ from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
 # for a proper functioning of the code, we simply ignore it when it fails to
 # be imported correctly
 try:
-	from pygaze._misc.misc import copy_docstr
-except:
-	pass
+    from pygaze._misc.misc import copy_docstr
+except Exception:
+    pass
 
 
 def message(msg):
-	
-	"""Prints a timestamp and message to the console"""
-	
-	print("%d\t%s" % (int(clock.get_time()), msg))
+
+    """Prints a timestamp and message to the console"""
+
+    print("%d\t%s" % (int(clock.get_time()), msg))
 
 
 class DumbDummy(BaseEyeTracker):
 
-	"""A dummy class to run experiments in 'dumb dummy' mode, where nothing happens (NO simulation!)"""
-	
+    """A dummy class to run experiments in 'dumb dummy' mode, where nothing happens (NO simulation!)"""
 
-	def __init__(self, display):
 
-		"""Initiates a 'dumb dummy' object, that doesn't do a thing
-		
-		arguments
-		display		--	a pygaze display.Display instance
-		
-		keyword arguments
-		None
-		"""
+    def __init__(self, display):
 
-		# try to copy docstrings (but ignore it if it fails, as we do
-		# not need it for actual functioning of the code)
-		try:
-			copy_docstr(BaseEyeTracker, DumbDummy)
-		except:
-			# we're not even going to show a warning, since the copied
-			# docstring is useful for code editors; these load the docs
-			# in a non-verbose manner, so warning messages would be lost
-			pass
+        """Initiates a 'dumb dummy' object, that doesn't do a thing
 
-		self.recording = False
-		self.blinking = False
-		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
+        arguments
+        display        --    a pygaze display.Display instance
 
-		self.display = display
-		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
+        keyword arguments
+        None
+        """
 
+        # try to copy docstrings (but ignore it if it fails, as we do
+        # not need it for actual functioning of the code)
+        try:
+            copy_docstr(BaseEyeTracker, DumbDummy)
+        except Exception:
+            # we're not even going to show a warning, since the copied
+            # docstring is useful for code editors; these load the docs
+            # in a non-verbose manner, so warning messages would be lost
+            pass
 
-	def send_command(self, cmd):
+        self.recording = False
+        self.blinking = False
+        self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
 
-		"""Dummy command, messages command instead of sending it to the eyetracker"""
+        self.display = display
+        self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
 
-		message("The following command would have been given to the eyetracker: " + str(cmd))
 
+    def send_command(self, cmd):
 
-	def log(self, msg):
+        """Dummy command, messages command instead of sending it to the eyetracker"""
 
-		"""Dummy log message, messages message instead of sending it to the eyetracker"""
+        message("The following command would have been given to the eyetracker: " + str(cmd))
 
-		message("The following message would have been logged to the EDF: " + str(msg))
 
+    def log(self, msg):
 
-	def log_var(self, var, val):
+        """Dummy log message, messages message instead of sending it to the eyetracker"""
 
-		"""Dummy varlog, messages variable and value instead of sending it to the eyetracker"""
+        message("The following message would have been logged to the EDF: " + str(msg))
 
-		message("The following variable would have been logged to the EDF: " + str(var) + ", value: " + str(val))
 
+    def log_var(self, var, val):
 
-	def status_msg(self, msg):
-		
-		"""Dummy status message, messages message instead of sending it to the eyetracker"""
+        """Dummy varlog, messages variable and value instead of sending it to the eyetracker"""
 
-		message("The following status message would have been visible on the experimentor PC: " + str(msg))
+        message("The following variable would have been logged to the EDF: " + str(var) + ", value: " + str(val))
 
 
-	def connected(self):
+    def status_msg(self, msg):
 
-		"""Dummy connection status"""
+        """Dummy status message, messages message instead of sending it to the eyetracker"""
 
-		message("Dummy mode, eyetracker not connected.")
+        message("The following status message would have been visible on the experimentor PC: " + str(msg))
 
-		return True
 
+    def connected(self):
 
-	def calibrate(self):
+        """Dummy connection status"""
 
-		"""Dummy calibration"""
+        message("Dummy mode, eyetracker not connected.")
 
-		message("Calibration would now take place")
+        return True
 
 
-	def drift_correction(self, pos=None, fix_triggered=False):
+    def calibrate(self):
 
-		"""Dummy drift correction"""
+        """Dummy calibration"""
 
-		message("Drift correction would now take place")
-		
-		return True
+        message("Calibration would now take place")
 
 
-	def prepare_drift_correction(self, pos):
+    def drift_correction(self, pos=None, fix_triggered=False):
 
-		"""Dummy drift correction preparation"""
+        """Dummy drift correction"""
 
-		message("Drift correction preparation would now take place")
+        message("Drift correction would now take place")
 
+        return True
 
-	def fix_triggered_drift_correction(self, pos=None, min_samples=30, max_dev=60, reset_threshold=10):
 
-		"""Dummy drift correction (fixation triggered)"""
+    def prepare_drift_correction(self, pos):
 
-		message("Drift correction (fixation triggered) would now take place")
-		
-		return True
+        """Dummy drift correction preparation"""
 
+        message("Drift correction preparation would now take place")
 
-	def start_recording(self):
 
-		"""Dummy for starting recording, messages what would have been the recording start"""
+    def fix_triggered_drift_correction(self, pos=None, min_samples=30, max_dev=60, reset_threshold=10):
 
-		self.recording = True
-		
-		message("Recording would have started now")
+        """Dummy drift correction (fixation triggered)"""
 
+        message("Drift correction (fixation triggered) would now take place")
 
-	def stop_recording(self):
+        return True
 
-		"""Dummy for stopping recording, messages what would have been the recording end"""
 
-		self.recording = False
+    def start_recording(self):
 
-		message("Recording would have stopped now")
+        """Dummy for starting recording, messages what would have been the recording start"""
 
+        self.recording = True
 
-	def close(self):
+        message("Recording would have started now")
 
-		"""Dummy for closing connection with eyetracker, messages what would have been connection closing time"""
 
-		if self.recording:
-			self.stop_recording()
+    def stop_recording(self):
 
-		message("eyetracker connection would have closed now")
+        """Dummy for stopping recording, messages what would have been the recording end"""
 
+        self.recording = False
 
-	def set_eye_used(self):
+        message("Recording would have stopped now")
 
-		"""Dummy for setting which eye to track (does nothing)"""
-		
-		message("Which eye to track would now be set")
 
+    def close(self):
 
-	def pupil_size(self):
-		
-		"""Returns dummy pupil size"""
-		
-		return 19
+        """Dummy for closing connection with eyetracker, messages what would have been connection closing time"""
 
+        if self.recording:
+            self.stop_recording()
 
-	def sample(self):
+        message("eyetracker connection would have closed now")
 
-		"""Returns dummy gaze position"""
 
-		return (19,19)
+    def set_eye_used(self):
 
+        """Dummy for setting which eye to track (does nothing)"""
 
-	def wait_for_event(self, event):
+        message("Which eye to track would now be set")
 
-		"""Waits for simulated event (3=STARTBLINK, 4=ENDBLINK, 5=STARTSACC, 6=ENDSACC, 7=STARTFIX, 8=ENDFIX)"""
 
-		if event == 5:
-			outcome = self.wait_for_saccade_start()
-		elif event == 6:
-			outcome = self.wait_for_saccade_end()
-		elif event == 7:
-			outcome = self.wait_for_fixation_start()
-		elif event == 8:
-			outcome = self.wait_for_fixation_end()
-		elif event == 3:
-			outcome = self.wait_for_blink_start()
-		elif event == 4:
-			outcome = self.wait_for_blink_end()
+    def pupil_size(self):
 
-		return outcome
+        """Returns dummy pupil size"""
 
+        return 19
 
-	def wait_for_saccade_start(self):
 
-		"""Returns starting time and starting position when a simulated saccade is started"""
+    def sample(self):
 
-		return clock.get_time(), (19,19)
+        """Returns dummy gaze position"""
 
+        return (19,19)
 
-	def wait_for_saccade_end(self):
 
-		"""Returns ending time, starting and end position when a simulated saccade is ended"""
+    def wait_for_event(self, event):
 
-		# function assumes that a 'saccade' has ended when 'gaze' position remains reasonably
-		# (i.e.: within maxerr) stable for five samples
-		# for saccade start algorithm, see wait_for_fixation_start
+        """Waits for simulated event (3=STARTBLINK, 4=ENDBLINK, 5=STARTSACC, 6=ENDSACC, 7=STARTFIX, 8=ENDFIX)"""
 
-		stime, spos = self.wait_for_saccade_start()
+        if event == 5:
+            outcome = self.wait_for_saccade_start()
+        elif event == 6:
+            outcome = self.wait_for_saccade_end()
+        elif event == 7:
+            outcome = self.wait_for_fixation_start()
+        elif event == 8:
+            outcome = self.wait_for_fixation_end()
+        elif event == 3:
+            outcome = self.wait_for_blink_start()
+        elif event == 4:
+            outcome = self.wait_for_blink_end()
 
-		return clock.get_time(), spos, (190,190)
+        return outcome
 
 
-	def wait_for_fixation_start(self):
+    def wait_for_saccade_start(self):
 
-		"""Returns starting time and position when a simulated fixation is started"""
+        """Returns starting time and starting position when a simulated saccade is started"""
 
-		return clock.get_time(), (19,19)
+        return clock.get_time(), (19,19)
 
 
-	def wait_for_fixation_end(self):
+    def wait_for_saccade_end(self):
 
-		"""Returns time and gaze position when a simulated fixation is ended"""
+        """Returns ending time, starting and end position when a simulated saccade is ended"""
 
-		stime, spos = self.wait_for_fixation_start()
+        # function assumes that a 'saccade' has ended when 'gaze' position remains reasonably
+        # (i.e.: within maxerr) stable for five samples
+        # for saccade start algorithm, see wait_for_fixation_start
 
-		return clock.get_time(), spos
+        stime, spos = self.wait_for_saccade_start()
 
+        return clock.get_time(), spos, (190,190)
 
-	def wait_for_blink_start(self):
 
-		"""Returns starting time and position of a simulated blink"""
+    def wait_for_fixation_start(self):
 
-		return clock.get_time(), (19,19)
+        """Returns starting time and position when a simulated fixation is started"""
 
+        return clock.get_time(), (19,19)
 
-	def wait_for_blink_end(self):
 
-		"""Returns ending time and position of a simulated blink (mousebuttonup)"""
-		
-		return clock.get_time(), (19,19)
+    def wait_for_fixation_end(self):
+
+        """Returns time and gaze position when a simulated fixation is ended"""
+
+        stime, spos = self.wait_for_fixation_start()
+
+        return clock.get_time(), spos
+
+
+    def wait_for_blink_start(self):
+
+        """Returns starting time and position of a simulated blink"""
+
+        return clock.get_time(), (19,19)
+
+
+    def wait_for_blink_end(self):
+
+        """Returns ending time and position of a simulated blink (mousebuttonup)"""
+
+        return clock.get_time(), (19,19)
