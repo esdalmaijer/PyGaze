@@ -130,6 +130,7 @@ class pygaze_init(item):
 		self.set_item_onset()
 		# Determine the tracker type and perform certain tracker-specific
 		# operations.
+		kwdict = {}
 		if self.var.tracker_type == u'Simple dummy':
 			tracker_type = u'dumbdummy'
 		elif self.var.tracker_type == u'Advanced dummy (mouse simulation)':
@@ -138,8 +139,14 @@ class pygaze_init(item):
 			tracker_type = u'eyelink'
 		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
+			kwdict[u'eyelink_force_drift_correct'] = \
+				self.var.eyelink_force_drift_correct
+			kwdict[u'pupil_size_mode'] = self.var.eyelink_pupil_size_mode
 		elif self.var.tracker_type == u'SMI':
 			tracker_type = u'smi'
+			kwdict[u'ip'] = self.var.smi_ip
+			kwdict[u'sendport'] = self.var.smi_send_port
+			kwdict[u'receiveport'] = self.var.smi_recv_port
 		elif self.var.tracker_type == u'EyeTribe':
 			tracker_type = u'eyetribe'
 		else:
@@ -164,24 +171,25 @@ class pygaze_init(item):
 					print(u'Attention: EyeLink logfile renamed to %s.edf' \
 						% logfile)
 				logfile = logfile + u'.edf'
+				kwdict[u'data_file'] = logfile
 		else:
 			logfile = self.var._logfile
-		# Determine event detection
-		if self.var.tracker_type == u'eyelink':
+		# Determine event detection. Currently, only the EyeLink has native
+		# event detection.
+		if tracker_type == u'eyelink':
 			event_detection = u'native'
 		else:
 			event_detection = u'pygaze'
 		# Initialize pygaze and the eye-tracker object
 		self.experiment.pygaze_display = Display(u'opensesame')
 		self.experiment.pygaze_eyetracker = EyeTracker(
-			self.experiment.pygaze_display, trackertype=tracker_type,
-			data_file=logfile, eventdetection=event_detection,
+			self.experiment.pygaze_display,
+			trackertype=tracker_type,
+			eventdetection=event_detection,
 			saccade_velocity_threshold=self.var.sacc_vel_thr,
 			saccade_acceleration_threshold=self.var.sacc_acc_thr,
-			ip=self.var.smi_ip, sendport=self.var.smi_send_port,
-			receiveport=self.var.smi_recv_port, logfile=logfile,
-			eyelink_force_drift_correct=self.var.eyelink_force_drift_correct
-			,pupil_size_mode=self.var.eyelink_pupil_size_mode)
+			logfile=logfile,
+			**kwdict)
 		if self.var.calbeep == u'yes':
 			from openexp.synth import synth
 			self.beep = synth(self.experiment)
