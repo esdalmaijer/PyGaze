@@ -55,52 +55,52 @@ keyboard.get_key()
 
 # run 20 trials
 for trialnr in range(1,21):
-	# prepare trial
-	trialtype = random.choice(['left','right'])
+    # prepare trial
+    trialtype = random.choice(['left','right'])
 
-	# drift correction
-	checked = False
-	while not checked:
-		disp.fill(fixscreen)
-		disp.show()
-		checked = tracker.drift_correction()
+    # drift correction
+    checked = False
+    while not checked:
+        disp.fill(fixscreen)
+        disp.show()
+        checked = tracker.drift_correction()
 
-	# start eye tracking
-	tracker.start_recording()
-	tracker.status_msg("trial %d" % trialnr)
-	tracker.log("start_trial %d trialtype %s" % (trialnr, trialtype))
-	
-	# present fixation
-	disp.fill(screen=fixscreen)
-	disp.show()
-	tracker.log("fixation")
-	libtime.pause(random.randint(750, 1250))
-	
-	# present target
-	disp.fill(targetscreens[trialtype])
-	t0 = disp.show()
-	tracker.log("target %s" % trialtype)
-	
-	# wait for eye movement
-	t1, startpos = tracker.wait_for_saccade_start()
-	endtime, startpos, endpos = tracker.wait_for_saccade_end()
-	
-	# stop eye tracking
-	tracker.stop_recording()
-	
-	# process input:
-	if (trialtype == 'left' and endpos[0] < constants.DISPSIZE[0]/2) or (trialtype == 'right' and endpos[0] > constants.DISPSIZE[0]/2):
-		correct = 1
-	else:
-		correct = 0
-	
-	# present feedback
-	disp.fill(feedbackscreens[correct])
-	disp.show()
-	libtime.pause(500)
-	
-	# log stuff
-	log.write([trialnr, trialtype, endpos, t1-t0, correct])
+    # start eye tracking
+    tracker.start_recording()
+    tracker.status_msg("trial %d" % trialnr)
+    tracker.log("start_trial %d trialtype %s" % (trialnr, trialtype))
+
+    # present fixation
+    disp.fill(screen=fixscreen)
+    disp.show()
+    tracker.log("fixation")
+    libtime.pause(random.randint(750, 1250))
+
+    # present target
+    disp.fill(targetscreens[trialtype])
+    t0 = disp.show()
+    tracker.log("target %s" % trialtype)
+
+    # wait for eye movement
+    t1, startpos = tracker.wait_for_saccade_start()
+    endtime, startpos, endpos = tracker.wait_for_saccade_end()
+
+    # stop eye tracking
+    tracker.stop_recording()
+
+    # process input:
+    if (trialtype == 'left' and endpos[0] < constants.DISPSIZE[0]/2) or (trialtype == 'right' and endpos[0] > constants.DISPSIZE[0]/2):
+        correct = 1
+    else:
+        correct = 0
+
+    # present feedback
+    disp.fill(feedbackscreens[correct])
+    disp.show()
+    libtime.pause(500)
+
+    # log stuff
+    log.write([trialnr, trialtype, endpos, t1-t0, correct])
 
 # end the experiment
 log.close()

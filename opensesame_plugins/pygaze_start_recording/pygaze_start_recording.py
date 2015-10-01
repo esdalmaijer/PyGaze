@@ -22,59 +22,59 @@ from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze.display import Display
 
 class pygaze_start_recording(item):
-	
-	"""Plug-in runtime definition."""
 
-	description = u'Puts the eye tracker into recording mode'
+    """Plug-in runtime definition."""
 
-	def __init__(self, name, experiment, script=None):
+    description = u'Puts the eye tracker into recording mode'
 
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
+    def __init__(self, name, experiment, script=None):
 
-		self.status_msg = u'start_trial'
-		item.__init__(self, name, experiment, script)
+        """
+        Constructor.
 
-	def prepare(self):
+        Arguments:
+        name        --    The name of the plug-in.
+        experiment    --    The experiment object.
 
-		"""The preparation phase of the plug-in goes here."""
+        Keyword arguments:
+        script        --    A definition script. (default=None)
+        """
 
-		item.prepare(self)
-		
-	def run(self):
+        self.status_msg = u'start_trial'
+        item.__init__(self, name, experiment, script)
 
-		"""The run phase of the plug-in goes here."""
+    def prepare(self):
 
-		self.set_item_onset()
-		self.experiment.pygaze_eyetracker.start_recording()
-		self.experiment.pygaze_eyetracker.status_msg(self.get(u'status_msg'))
-		self.experiment.pygaze_eyetracker.log(self.get(u'status_msg'))
+        """The preparation phase of the plug-in goes here."""
+
+        item.prepare(self)
+
+    def run(self):
+
+        """The run phase of the plug-in goes here."""
+
+        self.set_item_onset()
+        self.experiment.pygaze_eyetracker.start_recording()
+        self.experiment.pygaze_eyetracker.status_msg(self.get(u'status_msg'))
+        self.experiment.pygaze_eyetracker.log(self.get(u'status_msg'))
 
 class qtpygaze_start_recording(pygaze_start_recording, qtautoplugin):
-	
-	"""Plug-in GUI definition."""
-	
-	def __init__(self, name, experiment, script=None):
-		
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
 
-		pygaze_start_recording.__init__(self, name, experiment, script)
-		qtautoplugin.__init__(self, __file__)
+    """Plug-in GUI definition."""
+
+    def __init__(self, name, experiment, script=None):
+
+        """
+        Constructor.
+
+        Arguments:
+        name        --    The name of the plug-in.
+        experiment    --    The experiment object.
+
+        Keyword arguments:
+        script        --    A definition script. (default=None)
+        """
+
+        pygaze_start_recording.__init__(self, name, experiment, script)
+        qtautoplugin.__init__(self, __file__)
 

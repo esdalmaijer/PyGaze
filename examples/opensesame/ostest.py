@@ -23,7 +23,7 @@ tracker.calibrate()
 
 # create keyboard object
 kb = Keyboard(disptype='opensesame', keylist=['left','right', \
-	'escape'], timeout=2000)
+    'escape'], timeout=2000)
 
 # create screens
 fixscreen = Screen(disptype='opensesame')
@@ -44,44 +44,44 @@ feedbackscreens[0].draw_text(text='incorrect', colour=(255,0,0))
 
 # run 20 trials
 for trialnr in range(1,21):
-	# prepare trial
-	trialtype = random.choice(['left','right'])
-	
-	# Drift correction
-	tracker.drift_correction()
-	
-	tracker.start_recording()
-	
-	# present fixation
-	disp.fill(screen=fixscreen)
-	disp.show()
-	libtime.pause(random.randint(750, 1250))
-	
-	# present target
-	disp.fill(targetscreens[trialtype])
-	t0 = disp.show()
-	
-	# wait for input
-	response, t1 = kb.get_key()
+    # prepare trial
+    trialtype = random.choice(['left','right'])
 
-	# end the experiment when 'escape' is pressed
-	if response == 'escape':
-		break
-	
-	# process input
-	if response == trialtype:
-		correct = 1
-	else:
-		correct = 0
-	
-	# present feedback
-	disp.fill(feedbackscreens[correct])
-	disp.show()
-	libtime.pause(500)
-	
-	tracker.stop_recording()
-	
+    # Drift correction
+    tracker.drift_correction()
+
+    tracker.start_recording()
+
+    # present fixation
+    disp.fill(screen=fixscreen)
+    disp.show()
+    libtime.pause(random.randint(750, 1250))
+
+    # present target
+    disp.fill(targetscreens[trialtype])
+    t0 = disp.show()
+
+    # wait for input
+    response, t1 = kb.get_key()
+
+    # end the experiment when 'escape' is pressed
+    if response == 'escape':
+        break
+
+    # process input
+    if response == trialtype:
+        correct = 1
+    else:
+        correct = 0
+
+    # present feedback
+    disp.fill(feedbackscreens[correct])
+    disp.show()
+    libtime.pause(500)
+
+    tracker.stop_recording()
+
 
 # end the experiment
 disp.close()
-libtime.expend() 
+libtime.expend()

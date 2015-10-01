@@ -109,16 +109,16 @@ tracker.status_msg("now testing sample function")
 tracker.start_recording()
 key = None
 while not key == 'space':
-	# get new key
-	key, presstime = kb.get_key(timeout=1)
-	# new states
-	gazepos = tracker.sample()
-	# draw to screen
-	scr.clear()
-	scr.draw_text("The dot should follow your eye movements")
-	scr.draw_fixation(fixtype='dot', pos=gazepos, pw=3, diameter=15)
-	disp.fill(scr)
-	disp.show()
+    # get new key
+    key, presstime = kb.get_key(timeout=1)
+    # new states
+    gazepos = tracker.sample()
+    # draw to screen
+    scr.clear()
+    scr.draw_text("The dot should follow your eye movements")
+    scr.draw_fixation(fixtype='dot', pos=gazepos, pw=3, diameter=15)
+    disp.fill(scr)
+    disp.show()
 tracker.stop_recording()
 scr.clear()
 
@@ -140,28 +140,28 @@ tracker.fix_triggered_drift_correction()
 
 # events
 eventfuncs = [
-	tracker.wait_for_fixation_start,
-	tracker.wait_for_fixation_end,
-	tracker.wait_for_saccade_start,
-	tracker.wait_for_saccade_end,
-	tracker.wait_for_blink_start,
-	tracker.wait_for_blink_end,
-	]
+    tracker.wait_for_fixation_start,
+    tracker.wait_for_fixation_end,
+    tracker.wait_for_saccade_start,
+    tracker.wait_for_saccade_end,
+    tracker.wait_for_blink_start,
+    tracker.wait_for_blink_end,
+    ]
 tracker.log("now testing wait_for_event functions")
 tracker.status_msg("now testing wait_for_event functions")
 for i in range(len(eventfuncs)):
-	scr.clear()
-	scr.draw_text("Test function: %s(); press Space to start" % str(eventfuncs[i]))
-	scr.draw_fixation(fixtype='dot', pos=(DISPSIZE[0]*0.75,DISPSIZE[1]*0.75))
-	disp.fill(scr)
-	disp.show()
-	kb.get_key()
-	eventfuncs[i]()
-	scr.clear()
-	scr.draw_text("Function %s works! Press space to test the next" % str(eventfuncs[i]))
-	disp.fill(scr)
-	disp.show()
-	kb.get_key()
+    scr.clear()
+    scr.draw_text("Test function: %s(); press Space to start" % str(eventfuncs[i]))
+    scr.draw_fixation(fixtype='dot', pos=(DISPSIZE[0]*0.75,DISPSIZE[1]*0.75))
+    disp.fill(scr)
+    disp.show()
+    kb.get_key()
+    eventfuncs[i]()
+    scr.clear()
+    scr.draw_text("Function %s works! Press space to test the next" % str(eventfuncs[i]))
+    disp.fill(scr)
+    disp.show()
+    kb.get_key()
 
 
 # # # # #
@@ -180,17 +180,17 @@ log.write(["AOI", t1])
 key = None
 tracker.start_recording()
 while key != 'space':
-	# check for key input
-	key, presstime = kb.get_key(keylist=['space'],timeout=1)
-	# get gaze position
-	gazepos = tracker.sample()
-	# check if the gaze position is within the aoi
-	if aoi.contains(gazepos):
-		# play barking sound if gaze position is on kitten's head
-		snd.play(repeats=-1)
-	else:
-		# do not play sound if gaze is somewhere else
-		snd.stop()
+    # check for key input
+    key, presstime = kb.get_key(keylist=['space'],timeout=1)
+    # get gaze position
+    gazepos = tracker.sample()
+    # check if the gaze position is within the aoi
+    if aoi.contains(gazepos):
+        # play barking sound if gaze position is on kitten's head
+        snd.play(repeats=-1)
+    else:
+        # do not play sound if gaze is somewhere else
+        snd.stop()
 snd.stop()
 tracker.stop_recording()
 
@@ -205,12 +205,12 @@ log.write(["FRL", t1])
 key = None
 tracker.start_recording()
 while key != 'space':
-	# check for key input
-	key, presstime = kb.get_key(keylist=['space'],timeout=1)
-	# get gaze position
-	gazepos = tracker.sample()
-	# update FRL
-	frl.update(disp, scr, gazepos)
+    # check for key input
+    key, presstime = kb.get_key(keylist=['space'],timeout=1)
+    # get gaze position
+    gazepos = tracker.sample()
+    # update FRL
+    frl.update(disp, scr, gazepos)
 tracker.stop_recording()
 
 # GazeCursor
@@ -223,17 +223,17 @@ log.write(["GazeCursor", t1])
 key = None
 tracker.start_recording()
 while key != 'space':
-	# check for key input
-	key, presstime = kb.get_key(keylist=['space'],timeout=1)
-	# get gaze position
-	gazepos = tracker.sample()
-	# add new cursor to cleared screen
-	scr.clear() # remove previous cursor
-	scr.draw_text("The cursor should follow your gaze")
-	scr = cursor.update(scr, gazepos) # adds new cursor
-	# update display
-	disp.fill(scr)
-	disp.show()
+    # check for key input
+    key, presstime = kb.get_key(keylist=['space'],timeout=1)
+    # get gaze position
+    gazepos = tracker.sample()
+    # add new cursor to cleared screen
+    scr.clear() # remove previous cursor
+    scr.draw_text("The cursor should follow your gaze")
+    scr = cursor.update(scr, gazepos) # adds new cursor
+    # update display
+    disp.fill(scr)
+    disp.show()
 tracker.stop_recording()
 
 
