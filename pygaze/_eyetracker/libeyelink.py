@@ -224,20 +224,11 @@ class libeyelink(BaseEyeTracker):
 
 		pylink.getEYELINK().sendCommand(cmd)
 
-
 	def log(self, msg):
 
 		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
 		pylink.getEYELINK().sendMessage(msg)
-
-
-	def log_var(self, var, val):
-
-		"""See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
-
-		pylink.getEYELINK().sendMessage("var %s %s" % (var, val))
-
 
 	def status_msg(self, msg):
 

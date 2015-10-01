@@ -116,25 +116,6 @@ class pygaze_init(item):
 		settings.DISPSIZE = self.resolution()
 		settings.BGC = self.var.background
 		settings.FGC = self.var.foreground
-		
-		# from pygaze import defaults
-		# defaults.osexperiment = self.experiment
-		# defaults.DISPTYPE = u'opensesame'
-		# defaults.DISPSIZE = self.resolution()
-		# defaults.BGC = self.var.background
-		# defaults.FGC = self.var.foreground
-		# print('importing')
-		# from pygaze._screen import osscreen
-		# from pygaze._display import osdisplay
-		# from pygaze._keyboard import oskeyboard
-		# from pygaze._mouse import osmouse
-		# from pygaze._time import ostime
-		# print('reloading')
-		# reload(osscreen)
-		# reload(osdisplay)
-		# reload(oskeyboard)
-		# reload(osmouse)
-		# reload(ostime)
 
 	def run(self):
 
