@@ -72,45 +72,45 @@ kb.get_key(keylist=None, timeout=None, flush=True)
 # loop through all trials
 ntrials = len(images)
 for trialnr in range(ntrials):
-	
-	# PREPARE TRIAL
-	# draw the image
-	scr.clear()
-	scr.draw_image(os.path.join(IMGDIR,images[trialnr]))
 
-	# perform a drift check
-	tracker.drift_correction()
-	
-	# RUN TRIAL
-	# start tracking
-	tracker.start_recording()
-	tracker.log("TRIALSTART %d" % trialnr)
-	tracker.log("IMAGENAME %s" % images[trialnr])
-	tracker.status_msg("trial %d/%d" % (trialnr+1, ntrials))
-	
-	# present image
-	disp.fill(scr)
-	t0 = disp.show()
-	tracker.log("image online at %d" % t0)
-	
-	# wait for a bit
-	timer.pause(TRIALTIME)
-	
-	# reset screen
-	disp.fill()
-	t1 = disp.show()
-	tracker.log("image offline at %d" % t1)
-	
-	# stop recording
-	tracker.log("TRIALEND %d" % trialnr)
-	tracker.stop_recording()
-	
-	# TRIAL AFTERMATH
-	# bookkeeping
-	log.write([trialnr, images[trialnr], t1-t0])
-	
-	# inter trial interval
-	timer.pause(ITI)
+    # PREPARE TRIAL
+    # draw the image
+    scr.clear()
+    scr.draw_image(os.path.join(IMGDIR,images[trialnr]))
+
+    # perform a drift check
+    tracker.drift_correction()
+
+    # RUN TRIAL
+    # start tracking
+    tracker.start_recording()
+    tracker.log("TRIALSTART %d" % trialnr)
+    tracker.log("IMAGENAME %s" % images[trialnr])
+    tracker.status_msg("trial %d/%d" % (trialnr+1, ntrials))
+
+    # present image
+    disp.fill(scr)
+    t0 = disp.show()
+    tracker.log("image online at %d" % t0)
+
+    # wait for a bit
+    timer.pause(TRIALTIME)
+
+    # reset screen
+    disp.fill()
+    t1 = disp.show()
+    tracker.log("image offline at %d" % t1)
+
+    # stop recording
+    tracker.log("TRIALEND %d" % trialnr)
+    tracker.stop_recording()
+
+    # TRIAL AFTERMATH
+    # bookkeeping
+    log.write([trialnr, images[trialnr], t1-t0])
+
+    # inter trial interval
+    timer.pause(ITI)
 
 
 # # # # #
