@@ -198,7 +198,7 @@ class pygaze_init(item):
 		self.experiment.pygaze_eyetracker.set_draw_drift_correction_target_func(
 			self.draw_calibration_canvas)
 		self.experiment.cleanup_functions.append(self.close)
-		if self.calibrate == u'yes':
+		if self.var.calibrate == u'yes':
 			self.experiment.pygaze_eyetracker.calibrate()
 		self.python_workspace[u'eyetracker'] = self.experiment.pygaze_eyetracker
 
@@ -262,11 +262,11 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			Activates the relevant controls for each tracker.
 		"""
 
-		smi = self.get(u'tracker_type') == u'SMI'
+		smi = self.var.tracker_type == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
 		self.spinbox_smi_send_port.setEnabled(smi)
 		self.spinbox_smi_recv_port.setEnabled(smi)
-		eyelink = self.get(u'tracker_type') == u'EyeLink'
+		eyelink = self.var.tracker_type == u'EyeLink'
 		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
 		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
