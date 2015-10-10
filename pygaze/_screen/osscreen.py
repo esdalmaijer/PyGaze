@@ -52,7 +52,21 @@ class OSScreen(BaseScreen):
 			pass
 
 		self.experiment = settings.osexperiment
+		self.uniform_coordinates = \
+			self.experiment.var.uniform_coordinates == u'yes'
 		self.create(screen=screen)
+
+	def _pos(self, pos):
+
+		"""Convert PyGaze coordinates to OpenSesame coordinates."""
+		
+		if pos in (None, (None, None)):
+			return None, None
+		x, y = pos
+		if self.uniform_coordinates:
+			x -= self.canvas._xcenter
+			y -= self.canvas._ycenter
+		return x, y
 
 	def create(self, screen=None):
 
@@ -79,11 +93,7 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+		x, y = self._pos(pos)
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -95,10 +105,7 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if x == None:
-			x = self.canvas.xcenter()
-		if y == None:
-			y = self.canvas.ycenter()
+		x, y = self._pos((x, y))
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -111,10 +118,7 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if x == None:
-			x = self.canvas.xcenter()
-		if y == None:
-			y = self.canvas.ycenter()
+		x, y = self._pos((x, y))
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -126,16 +130,8 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if spos == None:
-			sx = self.canvas.xcenter() * .5
-			sy = self.canvas.ycenter()
-		else:
-			sx, sy = spos
-		if epos == None:
-			ex = self.canvas.xcenter() * 1.5
-			ey = self.canvas.ycenter()
-		else:
-			ex, ey = epos
+		sx, sy = self._pos(spos)
+		ex, ey = self._pos(epos)
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -152,6 +148,7 @@ class OSScreen(BaseScreen):
 			kwdict[u'color'] = colour
 		if pw is not None:
 			kwdict[u'penwidth'] = pw
+		pointlist = [self._pos(pt) for pt in pointlist]
 		self.canvas.polygon(pointlist, fill=fill, **kwdict)
 
 
@@ -161,11 +158,7 @@ class OSScreen(BaseScreen):
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		# TODO: Respect the fixtype argument
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+		x, y = self._pos(pos)
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -176,11 +169,7 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+		x, y = self._pos(pos)
 		kwdict = {}
 		if colour is not None:
 			kwdict[u'color'] = colour
@@ -191,11 +180,7 @@ class OSScreen(BaseScreen):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+		x, y = self._pos(pos)
 		self.canvas.image(image, x=x, y=y, scale=scale)
 
 	def set_background_colour(self, colour=None):

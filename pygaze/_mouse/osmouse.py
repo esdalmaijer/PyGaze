@@ -51,40 +51,58 @@ class OSMouse(BaseMouse):
 			# docstring is useful for code editors; these load the docs
 			# in a non-verbose manner, so warning messages would be lost
 			pass
-		
+
 		self.experiment = settings.osexperiment
+		self.uniform_coordinates = \
+			self.experiment.var.uniform_coordinates == u'yes'
 		self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
 			timeout=timeout)
+
+	def _from_pos(self, pos):
+
+		"""Convert OpenSesame coordinates to PyGaze coordinates."""
+
+		if not self.uniform_coordinates:
+			return pos
+		return pos[0]+self.mouse._xcenter, pos[1]+self.mouse._ycenter
+
+	def _to_pos(self, pos):
+
+		"""Convert PyGaze coordinates to OpenSesame coordinates."""
+
+		if not self.uniform_coordinates:
+			return pos
+		return pos[0]-self.mouse._xcenter, pos[1]-self.mouse._ycenter
 
 	def set_mousebuttonlist(self, mousebuttonlist=None):
 
 		# See _mouse.basemouse.BaseMouse
-		
+
 		self.mouse.buttonlist = mousebuttonlist
 
 	def set_timeout(self, timeout=None):
 
 		# See _mouse.basemouse.BaseMouse
-		
+
 		self.mouse.timeout = timeout
 
 	def set_visible(self, visible=True):
 
 		# See _mouse.basemouse.BaseMouse
-		
+
 		self.mouse.show_cursor(visible)
 
 	def set_pos(self, pos=(0,0)):
 
 		# See _mouse.basemouse.BaseMouse
-		
-		self.mouse.set_pos(pos)
+
+		self.mouse.set_pos(self._to_pos(pos))
 
 	def get_pos(self):
-		
+
 		# See _mouse.basemouse.BaseMouse
-		
-		return self.mouse.get_pos()[0]
+
+		return self._from_pos(self.mouse.get_pos()[0])
 
 	def get_clicked(self, mousebuttonlist=u'default', timeout=u'default'):
 
@@ -96,7 +114,8 @@ class OSMouse(BaseMouse):
 			kwdict[u'buttonlist'] = mousebuttonlist
 		if timeout != u'default':
 			kwdict[u'buttonlist'] = timeout
-		return self.mouse.get_click(**kwdict)
+		button, pos, t = self.mouse.get_click(**kwdict)
+		return button, self._from_pos(pos), t
 
 	def get_pressed(self):
 

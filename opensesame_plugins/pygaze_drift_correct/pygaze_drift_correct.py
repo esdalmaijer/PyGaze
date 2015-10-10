@@ -24,7 +24,7 @@ from libqtopensesame.items.qtautoplugin import qtautoplugin
 from pygaze.display import Display
 
 class pygaze_drift_correct(item):
-	
+
 	"""Plug-in runtime definition."""
 
 	description = u'Perform eye-tracker drift correction'
@@ -42,30 +42,28 @@ class pygaze_drift_correct(item):
 		self.var.target_color = u'[foreground]'
 		self.var.target_style = u'default'
 		self.var.draw_target = u'yes'
-		
+
 	def prepare_drift_correction_canvas(self):
-		
+
 		"""A hook to prepare the canvas with the drift-correction target."""
-		
+
 		if self.var.draw_target == u'yes':
 			self.dc_canvas = canvas(self.experiment)
-			x = self.var.xpos + self.dc_canvas.xcenter()
-			y = self.var.ypos + self.dc_canvas.ycenter()
-			self.dc_canvas.fixdot(x, y, color=self.var.target_color,
-				style=self.var.target_style)
+			self.dc_canvas.fixdot(self.var.xpos, self.var.ypos,
+				color=self.var.target_color, style=self.var.target_style)
 		else:
 			self.dc_canvas = None
-		
+
 	def draw_drift_correction_canvas(self, x, y):
-		
+
 		"""
 		A hook to show the canvas with the drift-correction target.
-		
+
 		Arguments:
 		x	--	The X coordinate (unused).
 		y	--	The Y coordinate (unused).
 		"""
-		
+
 		if self.dc_canvas is not None:
 			self.dc_canvas.show()
 
@@ -83,8 +81,12 @@ class pygaze_drift_correct(item):
 		"""The run phase of the plug-in goes here."""
 
 		self.set_item_onset()
-		xpos = self.var.width / 2 + self.var.xpos
-		ypos = self.var.height / 2 + self.var.ypos
+		if self.var.uniform_coordinates == u'yes':
+			xpos = self.var.width / 2 + self.var.xpos
+			ypos = self.var.height / 2 + self.var.ypos
+		else:
+			xpos = self.var.xpos
+			ypos = self.var.ypos
 		while True:
 			success = self.experiment.pygaze_eyetracker.drift_correction(
 				pos=(xpos, ypos),
@@ -93,18 +95,18 @@ class pygaze_drift_correct(item):
 				break
 
 class qtpygaze_drift_correct(pygaze_drift_correct, qtautoplugin):
-	
+
 	"""Plug-in GUI definition."""
-	
+
 	def __init__(self, name, experiment, script=None):
-		
+
 		"""
 		Constructor.
-		
+
 		Arguments:
 		name		--	The name of the plug-in.
 		experiment	--	The experiment object.
-		
+
 		Keyword arguments:
 		script		--	A definition script. (default=None)
 		"""
@@ -120,13 +122,13 @@ class qtpygaze_drift_correct(pygaze_drift_correct, qtautoplugin):
 		if not qtautoplugin.apply_edit_changes(self) or self.lock:
 			return False
 		self.custom_interactions()
-			
+
 	def custom_interactions(self):
-		
+
 		"""
 		Disables the target-style combobox if no target display should be drawn.
 		"""
-		
+
 		draw_target = self.var.draw_target == u'yes'
 		self.combobox_target_style.setEnabled(draw_target)
 		self.line_edit_target_color.setEnabled(draw_target)
