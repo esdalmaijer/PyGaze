@@ -95,6 +95,11 @@ class pygaze_init(item):
 		"""
 
 		dc_canvas = canvas(self.experiment)
+		# Coordinates are always sent in 0,0=top-left mode, so we need to
+		# correct for this if we're using uniform coordinates.
+		if self.var.uniform_coordinates == u'yes':
+			x -= dc_canvas._xcenter
+			y -= dc_canvas._ycenter
 		dc_canvas.fixdot(x, y, style=u'large-open')
 		if self.var.calbeep == 'yes':
 			self.beep.play()
