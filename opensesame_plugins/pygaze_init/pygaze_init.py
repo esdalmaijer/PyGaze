@@ -140,7 +140,7 @@ class pygaze_init(item):
 		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 			kwdict[u'eyelink_force_drift_correct'] = \
-				self.var.eyelink_force_drift_correct
+				self.var.eyelink_force_drift_correct == u'yes'
 			kwdict[u'pupil_size_mode'] = self.var.eyelink_pupil_size_mode
 		elif self.var.tracker_type == u'SMI':
 			tracker_type = u'smi'
