@@ -29,7 +29,7 @@ try:
 	from pygaze._misc.misc import copy_docstr
 except:
 	pass
-	
+
 import pygaze
 from pygaze._misc.misc import pos2psychopos, psychopos2pos
 
@@ -55,8 +55,9 @@ class PsychoPyMouse(BaseMouse):
 			pass
 
 		# create mouse object
-		self.mouse = psychopy.event.Mouse(visible=False,win=psychopy.visual.openWindows[SCREENNR])
-		
+		self.mouse = psychopy.event.Mouse(visible=False,
+			win=psychopy.visual.openWindows[settings.SCREENNR])
+
 		# set mouse characteristics
 		self.set_mousebuttonlist(mousebuttonlist)
 		self.set_timeout(timeout)
@@ -66,7 +67,7 @@ class PsychoPyMouse(BaseMouse):
 	def set_mousebuttonlist(self, mousebuttonlist=None):
 
 		# See _mouse.basemouse.BaseMouse
-		
+
 		if mousebuttonlist == None or mousebuttonlist == []:
 			self.mbuttonlist = None
 		else:
