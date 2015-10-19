@@ -95,6 +95,11 @@ class pygaze_init(item):
 		"""
 
 		dc_canvas = canvas(self.experiment)
+		# Coordinates are always sent in 0,0=top-left mode, so we need to
+		# correct for this if we're using uniform coordinates.
+		if self.var.uniform_coordinates == u'yes':
+			x -= dc_canvas._xcenter
+			y -= dc_canvas._ycenter
 		dc_canvas.fixdot(x, y, style=u'large-open')
 		if self.var.calbeep == 'yes':
 			self.beep.play()
@@ -140,7 +145,7 @@ class pygaze_init(item):
 		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 			kwdict[u'eyelink_force_drift_correct'] = \
-				self.var.eyelink_force_drift_correct
+				self.var.eyelink_force_drift_correct == u'yes'
 			kwdict[u'pupil_size_mode'] = self.var.eyelink_pupil_size_mode
 		elif self.var.tracker_type == u'SMI':
 			tracker_type = u'smi'

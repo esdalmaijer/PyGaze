@@ -19,7 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-version = u'0.5.0'
+version = u'0.6.0a1'
 
 from pygaze.settings import settings
 
@@ -36,11 +36,10 @@ elif os.path.exists(u'/usr/share/pygaze/resources'):
 else:
 	RESDIR = os.getcwd()
 FONTDIR = os.path.join(RESDIR, u'fonts')
-SOUNDDIR = os.path.join(RESDIR, u'sounds') 
+SOUNDDIR = os.path.join(RESDIR, u'sounds')
 
 # fontfiles
 FONTFILES = []
 if os.path.isdir(FONTDIR):
 	for fontfile in os.listdir(FONTDIR):
 		FONTFILES.append(os.path.join(FONTDIR, fontfile))
-
