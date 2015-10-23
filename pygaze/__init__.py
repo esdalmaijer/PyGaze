@@ -19,11 +19,19 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-version = u'0.6.0a2'
-
 from pygaze.settings import settings
-
+from distutils.version import StrictVersion
 import os
+
+__version__ = version = u'0.6.0a3'
+strict_version = StrictVersion(__version__)
+# The version without the prerelease (if any): e.g. 3.0.0
+main_version = u'.'.join([str(i) for i in strict_version.version])
+# The version following the debian convention: e.g. 3.0.0~a1
+if strict_version.prerelease is None:
+	deb_version = main_version
+else:
+	deb_version = main_version + u'~%s%d' % strict_version.prerelease
 
 # directory stuff
 DIR = os.path.dirname(__file__)

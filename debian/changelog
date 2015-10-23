@@ -1,3 +1,9 @@
+python-pygaze (0.6.0~a3-ubuntu1) vivid; urgency=medium
+
+  * Prerelease updated for OpenSesame 3.0
+
+ -- Sebastiaan Mathot <sebastiaan@mantis>  Fri, 23 Oct 2015 11:07:49 +0200
+
 python-pygaze (0.5.0~opensesame3-ubuntu1) trusty; urgency=medium
 
   * Initial release.

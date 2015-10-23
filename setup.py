@@ -47,7 +47,7 @@ def data_files():
 		]
 
 setup(name="python-pygaze",
-	version = pygaze.version,
+	version = pygaze.deb_version,
 	description = "A Python library for eye tracking",
 	author = "Edwin Dalmaijer",
 	author_email = "edwin.dalmaijer@psy.ox.ac.uk",
