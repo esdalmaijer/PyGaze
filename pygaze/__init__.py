@@ -23,7 +23,7 @@ from pygaze.settings import settings
 from distutils.version import StrictVersion
 import os
 
-__version__ = version = u'0.6.0a3'
+__version__ = version = u'0.6.0a4'
 strict_version = StrictVersion(__version__)
 # The version without the prerelease (if any): e.g. 3.0.0
 main_version = u'.'.join([str(i) for i in strict_version.version])
