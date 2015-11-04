@@ -10,6 +10,7 @@ import copy
 import json
 import time
 import socket
+import codecs
 from threading import Thread, Lock
 from multiprocessing import Queue
 from pygaze.py3compat import *
@@ -32,8 +33,8 @@ class EyeTribe:
 		"""
 
 		# initialize data collectors
-		self._logfile = open('%s.tsv' % (logfilename), 'w')
-		self._separator = '\t'
+		self._logfile = codecs.open('%s.tsv' % (logfilename), 'w', u'utf-8')
+		self._separator = u'\t'
 		self._log_header()
 		self._queue = Queue()
 
@@ -112,9 +113,9 @@ class EyeTribe:
 			ts = ''
 			t = ''
 		# assemble line
-		line = self._separator.join(map(str,['MSG',ts,t, safe_decode(message)]))
+		line = self._separator.join(map(str,[u'MSG',ts,t, safe_decode(message)]))
 		# write message
-		self._logfile.write(line + '\n') # to internal buffer
+		self._logfile.write(line + u'\n') # to internal buffer
 		self._logfile.flush() # internal buffer to RAM
 		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 
