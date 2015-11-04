@@ -261,7 +261,7 @@ class EyelinkGraphics(custom_display):
 		if beepid == pylink.CAL_TARG_BEEP:
 			# For some reason, playing the beep here doesn't work, so we have
 			# to play it when the calibration target is drawn.
-			if EYELINKCALBEEP:
+			if settings.EYELINKCALBEEP:
 				self.__target_beep__.play()
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture
