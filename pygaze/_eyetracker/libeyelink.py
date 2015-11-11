@@ -649,7 +649,7 @@ class libeyelink(BaseEyeTracker):
 		Returns:
 		The tracker time minus the clock time
 		"""
-		return pylink.getEYELINK().trackerTime() -  clock.time()
+		return pylink.getEYELINK().trackerTime() -  clock.get_time()
 
 	def wait_for_event(self, event):
 
@@ -665,7 +665,7 @@ class libeyelink(BaseEyeTracker):
 		if self.eventdetection == 'native':
 			# since the link buffer was not have been polled, old data has
 			# accumulated in the buffer -- so ignore events that are old:
-			t0 = clock.time() # time of call
+			t0 = clock.get_time() # time of call
 			while True:
 				d = pylink.getEYELINK().getNextData()
 				if d == event:
