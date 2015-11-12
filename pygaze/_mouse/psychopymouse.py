@@ -56,7 +56,7 @@ class PsychoPyMouse(BaseMouse):
 
 		# create mouse object
 		self.mouse = psychopy.event.Mouse(visible=False,
-			win=psychopy.visual.openWindows[settings.SCREENNR])
+			win=pygaze.expdisplay)
 
 		# set mouse characteristics
 		self.set_mousebuttonlist(mousebuttonlist)
