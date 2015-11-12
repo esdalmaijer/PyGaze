@@ -20,12 +20,7 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze.libtime import clock
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 from pygaze._keyboard.basekeyboard import BaseKeyboard
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -43,7 +38,7 @@ class PsychoPyKeyboard(BaseKeyboard):
 
 	# See _keyboard.basekeyboard.BaseKeyboard
 
-	def __init__(self, keylist=KEYLIST, timeout=KEYTIMEOUT):
+	def __init__(self, keylist=settings.KEYLIST, timeout=settings.KEYTIMEOUT):
 
 		# See _keyboard.basekeyboard.BaseKeyboard
 

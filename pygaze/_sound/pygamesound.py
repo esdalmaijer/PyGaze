@@ -19,12 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 from pygaze._sound.basesound import BaseSound
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -44,7 +39,9 @@ class PyGameSound(BaseSound):
 
 	# see pygaze._sound.basesound.BaseSound
 
-	def __init__(self, osc=SOUNDOSCILLATOR, freq=SOUNDFREQUENCY, length=SOUNDLENGTH, attack=SOUNDATTACK, decay=SOUNDDECAY, soundfile=None):
+	def __init__(self, osc=settings.SOUNDOSCILLATOR,
+		freq=settings.SOUNDFREQUENCY, length=settings.SOUNDLENGTH,
+		attack=settings.SOUNDATTACK, decay=settings.SOUNDDECAY, soundfile=None):
 		
 		# see pygaze._sound.basesound.BaseSound
 
@@ -58,7 +55,9 @@ class PyGameSound(BaseSound):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 
-		pygame.mixer.init(frequency=SOUNDSAMPLINGFREQUENCY, size=SOUNDSAMPLESIZE, channels=SOUNDCHANNELS, buffer=SOUNDBUFFERSIZE)
+		pygame.mixer.init(frequency=settings.SOUNDSAMPLINGFREQUENCY,
+			size=settings.SOUNDSAMPLESIZE, channels=settings.SOUNDCHANNELS,
+			buffer=settings.SOUNDBUFFERSIZE)
 
 		# if a sound file was specified, use soundfile and ignore other keyword arguments
 		if soundfile != None:
@@ -84,12 +83,12 @@ class PyGameSound(BaseSound):
 
 			l = []
 
-			attack = attack * SOUNDSAMPLINGFREQUENCY / 1000
-			decay = decay * SOUNDSAMPLINGFREQUENCY / 1000
+			attack = attack * settings.SOUNDSAMPLINGFREQUENCY / 1000
+			decay = decay * settings.SOUNDSAMPLINGFREQUENCY / 1000
 			amp = 32767 / 2
-			sps = SOUNDSAMPLINGFREQUENCY
+			sps = settings.SOUNDSAMPLINGFREQUENCY
 			cps = float(sps/freq) # cycles per sample
-			slen = SOUNDSAMPLINGFREQUENCY * length / 1000 # number of samples
+			slen = settings.SOUNDSAMPLINGFREQUENCY * length / 1000 # number of samples
 
 			for i in range(slen):
 				p = float((i % cps)) / cps * 2 * math.pi

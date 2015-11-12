@@ -20,12 +20,7 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import os
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 from pygaze._logfile.baselogfile import BaseLogfile
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -40,7 +35,7 @@ class Logfile(BaseLogfile):
 
 	# See _logfile.baselogfile.BaseLogfile
 
-	def __init__(self, filename=LOGFILE):
+	def __init__(self, filename=settings.LOGFILE):
 
 		# See _logfile.baselogfile.BaseLogfile
 
@@ -82,4 +77,3 @@ class Logfile(BaseLogfile):
 		# See _logfile.baselogfile.BaseLogfile
 
 		self.logfile.close()
-

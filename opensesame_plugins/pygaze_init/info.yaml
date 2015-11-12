@@ -1,0 +1,81 @@
+category: PyGaze
+priority: 10
+controls:
+  - type: combobox
+    var: tracker_type
+    label: Select tracker type
+    options:
+      - Simple dummy
+      - Advanced dummy (mouse simulation)
+      - EyeLink
+      - SMI
+      - Tobii
+      - EyeTribe
+    tooltip: A list of supported eye trackers
+  - type: checkbox
+    var: calibrate
+    label: Calibrate tracker
+    tooltip: Indicates whether calibration should be started
+  - type: checkbox
+    var: calbeep
+    label: Calibration beep
+    tooltip: Play a beep when the calibration target jumps
+    name: checkbox_calbeep
+  - type: line_edit
+    label: Log file
+    var: _logfile
+    tooltip: The name for the log file
+  - type: spinbox
+    var: sacc_vel_thr
+    label: Saccade velocity threshold
+    min_val: 0
+    max_val: 100000
+    suffix: ' °/s'
+    tooltip: Velocity threshold for saccade detection algorithm
+    name: spinbox_sacc_vel_thr
+  - type: spinbox
+    var: sacc_acc_thr
+    label: Saccade acceleration threshold
+    min_val: 0
+    max_val: 100000
+    suffix: ' °/s/s'
+    tooltip: Acceleration threshold for saccade detection algorithm
+    name: spinbox_sacc_acc_thr
+  - type: text
+    label: '<b>Warning:</b> PyLink is required for EyeLink functionality and is not installed. Visit http://osdoc.cogsci.nl/devices/eyelink for more information.'
+    name: text_eyelink_pylink_check
+  - type: text
+    label: DUMMY
+    name: text_pygaze_version
+  - type: checkbox
+    var: eyelink_force_drift_correct
+    label: Force drift correction (for EyeLink 1000)
+    tooltip: Turn on active drift correction
+    name: checkbox_eyelink_force_drift_correct
+  - type: combobox
+    var: eyelink_pupil_size_mode
+    label: Pupil-size mode
+    tooltip: Determines whether pupil size is recorded as area or diameter
+    name: combobox_eyelink_pupil_size_mode
+    options:
+      - area
+      - diameter
+  - type: line_edit
+    label: SMI IP address
+    var: smi_ip
+    name: line_edit_smi_ip
+    tooltip: "The tracker's IP address"
+  - type: spinbox
+    var: smi_send_port
+    label: SMI send-port number
+    min_val: 0
+    max_val: 100000
+    name: spinbox_smi_send_port
+    tooltip: Port number for sending messages to the SMI tracker
+  - type: spinbox
+    var: smi_recv_port
+    label: SMI receive-port number
+    min_val: 0
+    max_val: 100000
+    name: spinbox_smi_recv_port
+    tooltip: Port number for receiving messages from the SMI tracker

@@ -25,13 +25,8 @@ import copy
 import math
 import numpy
 
-from pygaze.defaults import *
+from pygaze import settings
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-
 import pygaze
 from pygaze.screen import Screen
 from pygaze.keyboard import Keyboard
@@ -100,8 +95,8 @@ class TobiiTracker(BaseEyeTracker):
 	
 	"""A class for Tobii EyeTracker objects"""
 	
-	def __init__(self, display, logfile=LOGFILE, eventdetection= \
-		EVENTDETECTION, saccade_velocity_threshold=35, \
+	def __init__(self, display, logfile=settings.LOGFILE,
+		eventdetection=settings.EVENTDETECTION, saccade_velocity_threshold=35,
 		saccade_acceleration_threshold=9500, **args):
 		
 		"""Initializes a TobiiTracker instance
@@ -126,9 +121,9 @@ class TobiiTracker(BaseEyeTracker):
 		# object properties
 		self.disp = display
 		self.screen = Screen()
-		self.dispsize = DISPSIZE # display size in pixels
-		self.screensize = SCREENSIZE # display size in cm
-		self.screendist = SCREENDIST # distance between participant and screen in cm
+		self.dispsize = settings.DISPSIZE # display size in pixels
+		self.screensize = settings.SCREENSIZE # display size in cm
+		self.screendist = settings.SCREENDIST # distance between participant and screen in cm
 		self.pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2.0
 		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
 		self.errorbeep = Sound(osc='saw',freq=100, length=100)

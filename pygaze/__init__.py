@@ -19,9 +19,19 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-version = u'0.5.0'
-
+from pygaze.settings import settings
+from distutils.version import StrictVersion
 import os
+
+__version__ = version = u'0.6.0a5'
+strict_version = StrictVersion(__version__)
+# The version without the prerelease (if any): e.g. 3.0.0
+main_version = u'.'.join([str(i) for i in strict_version.version])
+# The version following the debian convention: e.g. 3.0.0~a1
+if strict_version.prerelease is None:
+	deb_version = main_version
+else:
+	deb_version = main_version + u'~%s%d' % strict_version.prerelease
 
 # directory stuff
 DIR = os.path.dirname(__file__)
@@ -34,11 +44,10 @@ elif os.path.exists(u'/usr/share/pygaze/resources'):
 else:
 	RESDIR = os.getcwd()
 FONTDIR = os.path.join(RESDIR, u'fonts')
-SOUNDDIR = os.path.join(RESDIR, u'sounds') 
+SOUNDDIR = os.path.join(RESDIR, u'sounds')
 
 # fontfiles
 FONTFILES = []
 if os.path.isdir(FONTDIR):
 	for fontfile in os.listdir(FONTDIR):
 		FONTFILES.append(os.path.join(FONTDIR, fontfile))
-

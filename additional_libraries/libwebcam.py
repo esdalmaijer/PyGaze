@@ -19,15 +19,7 @@
 #
 # version: 0.4 (25-03-2013)
 
-
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
-import sys
-
+from pygaze import settings
 
 # on Windows, PyGame's webcam support is a bit shaky, so we provide a vidcap
 # back-end; project homepage: http://videocapture.sourceforge.net/
@@ -123,7 +115,8 @@ class Camera:
 	and PyGame on all other platforms (even if DISPTYPE is set to
 	'psychopy'!)"""
 	
-	def __init__(self, disptype=DISPTYPE, dev=None, devtype='pygame', resolution=(640,480), verflip=False, horflip=False):
+	def __init__(self, disptype=settings.DISPTYPE, dev=None, devtype='pygame',
+		resolution=(640,480), verflip=False, horflip=False):
 		
 		"""Initializes a Camera instance
 		

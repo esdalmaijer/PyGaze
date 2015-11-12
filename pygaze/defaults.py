@@ -63,6 +63,9 @@ EVENTDETECTION = 'pygaze' # either 'pygaze' for PyGaze detection algorithms, or 
 # EyeLink only
 EYELINKCALBEEP = True # Calibration beep with each jump
 EYELINKPUPILSIZEMODE = 'area'
+# EyeTribe only
+EYETRIBECALIBDUR = 750
+EYETRIBEPRECALIBDUR = 500
 # SMI only
 SMIIP = '127.0.0.1'
 SMISENDPORT = 4444

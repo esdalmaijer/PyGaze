@@ -20,12 +20,7 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze.libtime import clock
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 from pygaze._joystick.basejoystick import BaseJoystick
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -44,7 +39,8 @@ class PyGameJoystick(BaseJoystick):
 
 	"""A joystick for collecting responses"""
 
-	def __init__(self, joybuttonlist=JOYBUTTONLIST, timeout=JOYTIMEOUT):
+	def __init__(self, joybuttonlist=settings.JOYBUTTONLIST,
+		timeout=settings.JOYTIMEOUT):
 
 		"""Initializes joystick object (joybuttonlist: list of buttons; timeout: timeout in ms)
 		

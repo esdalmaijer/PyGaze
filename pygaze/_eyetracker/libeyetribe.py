@@ -21,14 +21,10 @@
 
 
 # PyGaze imports
-from pygaze.defaults import *
-from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-
 import pygaze
+from pygaze.py3compat import *
+from pygaze import settings
+from pygaze.libtime import clock
 from pygaze.screen import Screen
 from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
@@ -74,9 +70,9 @@ class EyeTribeTracker(BaseEyeTracker):
 
 	"""A class for EyeTribeTracker objects"""
 
-	def __init__(self, display, logfile=LOGFILE, eventdetection=EVENTDETECTION, \
-		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500, \
-		**args):
+	def __init__(self, display, logfile=settings.LOGFILE,
+		eventdetection=settings.EVENTDETECTION, saccade_velocity_threshold=35,
+		saccade_acceleration_threshold=9500, **args):
 
 		"""Initializes the EyeTribeTracker object
 		
@@ -101,8 +97,8 @@ class EyeTribeTracker(BaseEyeTracker):
 		# object properties
 		self.disp = display
 		self.screen = Screen()
-		self.dispsize = DISPSIZE # display size in pixels
-		self.screensize = SCREENSIZE # display size in cm
+		self.dispsize = settings.DISPSIZE # display size in pixels
+		self.screensize = settings.SCREENSIZE # display size in cm
 		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
 		self.errorbeep = Sound(osc='saw',freq=100, length=100)
 		
@@ -173,12 +169,17 @@ class EyeTribeTracker(BaseEyeTracker):
 		
 		# show a message
 		self.screen.clear()
-		self.screen.draw_text(text="Press Space to start the calibration or Q to quit.")
+		self.screen.draw_text(
+			text="Press Space to calibrate, S to skip, and Q to quit",
+			fontsize=20)
 		self.disp.fill(self.screen)
 		self.disp.show()
 		
 		# wait for keyboard input
-		key, keytime = self.kb.get_key(keylist=['q','space'], timeout=None, flush=True)
+		key, keytime = self.kb.get_key(keylist=['q', 's', 'space'],
+			timeout=None, flush=True)
+		if key == 's':
+			return True
 		if key == 'q':
 			quited = True
 		else:
@@ -196,11 +197,11 @@ class EyeTribeTracker(BaseEyeTracker):
 				self.draw_calibration_target(cpos[0], cpos[1])
 				# wait for a bit to allow participant to start looking at
 				# the calibration point (#TODO: space press?)
-				clock.pause(1000)
+				clock.pause(settings.EYETRIBEPRECALIBDUR)
 				# start calibration of point
 				self.eyetribe.calibration.pointstart(cpos[0],cpos[1])
 				# wait for a second
-				clock.pause(1000)
+				clock.pause(settings.EYETRIBECALIBDUR)
 				# stop calibration of this point
 				result = self.eyetribe.calibration.pointend()
 				# the final calibration point returns a dict (does it?)
@@ -218,7 +219,9 @@ class EyeTribeTracker(BaseEyeTracker):
 			if quited:
 				# show retry message
 				self.screen.clear()
-				self.screen.draw_text("Calibration aborted. Press Space to restart, or 'Q' to quit.")
+				self.screen.draw_text(
+					"Calibration aborted. Press Space to restart or 'Q' to quit",
+					fontsize=20)
 				self.disp.fill(self.screen)
 				self.disp.show()
 				# get input
@@ -248,34 +251,57 @@ class EyeTribeTracker(BaseEyeTracker):
 					# only draw the point if data was obtained
 					if p['state'] > 0:
 						# draw the mean error
-						self.screen.draw_circle(colour=(252,233,79), pos=(p['cpx'],p['cpy']), r=p['mepix'], pw=0, fill=True)
+						# self.screen.draw_circle(colour=(252,233,79),
+						# 	pos=(p['cpx'],p['cpy']), r=p['mepix'], pw=0,
+						# 	fill=True)
+						self.screen.draw_line(spos=(p['cpx'],p['cpy']),
+							epos=(p['mecpx'],p['mecpy']), pw=2)
 						# draw the point
-						self.screen.draw_fixation(fixtype='dot', colour=(115,210,22), pos=(p['cpx'],p['cpy']))
+						self.screen.draw_fixation(fixtype='dot',
+							colour=(115,210,22), pos=(p['cpx'],p['cpy']))
 						# draw the estimated point
-						self.screen.draw_fixation(fixtype='dot', colour=(32,74,135), pos=(p['mecpx'],p['mecpy']))
+						self.screen.draw_fixation(fixtype='dot',
+							colour=(32,74,135), pos=(p['mecpx'],p['mecpy']))
 						# annotate accuracy
-						self.screen.draw_text(text=str(p['acd']), pos=(p['cpx']+10,p['cpy']+10), fontsize=12)
+						self.screen.draw_text(text='%.2f' % p['acd'],
+							pos=(p['cpx']+10,p['cpy']+10), fontsize=20)
 					# if no data was obtained, draw the point in red
 					else:
-						self.screen.draw_fixation(fixtype='dot', colour=(204,0,0), pos=(p['cpx'],p['cpy']))
+						self.screen.draw_fixation(fixtype='dot',
+							colour=(204,0,0), pos=(p['cpx'],p['cpy']))
 				# draw box for averages
-				self.screen.draw_rect(colour=(238,238,236), x=int(self.dispsize[0]*0.15), y=int(self.dispsize[1]*0.2), w=400, h=200, pw=0, fill=True)
+				# self.screen.draw_rect(colour=(238,238,236), x=int(self.dispsize[0]*0.15), y=int(self.dispsize[1]*0.2), w=400, h=200, pw=0, fill=True)
 				# draw result
 				if calibresult['result']:
-					self.screen.draw_text(text="calibration is successful", colour=(115,210,22), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
+					self.screen.draw_text(text="Calibration successful",
+						colour='green',
+						pos=(int(self.dispsize[0]*0.5), int(self.dispsize[1]*0.25)), 
+						fontsize=20)
 				else:
-					self.screen.draw_text(text="calibration failed", colour=(204,0,0), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25)), fontsize=12)
+					self.screen.draw_text(text="Calibration failed",
+						colour='red',
+						pos=(int(self.dispsize[0]*0.5),int(self.dispsize[1]*0.25)),
+						fontsize=20)
 				# draw average accuracy
-				self.screen.draw_text(text="average error = %.2f degrees" % (calibresult['deg']), colour=(211,215,207), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25+20)), fontsize=12)
+				self.screen.draw_text(
+					text="Average error = %.2f degrees" % (calibresult['deg']),
+					pos=(int(self.dispsize[0]*0.5),int(self.dispsize[1]*0.25+30)),
+					fontsize=20)
 				# draw input options
-				self.screen.draw_text(text="Press Space to continue, or 'R' to restart.", colour=(211,215,207), pos=(int(self.dispsize[0]*0.25),int(self.dispsize[1]*0.25+40)), fontsize=12)
+				self.screen.draw_text(
+					text="Press Space to continue or 'R' to restart",
+					pos=(int(self.dispsize[0]*0.5),int(self.dispsize[1]*0.25+60)),
+					fontsize=20)
 			else:
-				self.screen.draw_text(text="Calibration failed, press 'R' to try again.")
+				self.screen.draw_text(
+					text="Calibration failed. Press 'R' to try again.",
+					fontsize=20)
 			# show the results
 			self.disp.fill(self.screen)
 			self.disp.show()
 			# wait for input
-			key, keytime = self.kb.get_key(keylist=['space','r'], timeout=None, flush=True)
+			key, keytime = self.kb.get_key(keylist=['space','r'], timeout=None,
+				flush=True)
 			# process input
 			if key == 'space':
 				calibrated = True
@@ -297,7 +323,7 @@ class EyeTribeTracker(BaseEyeTracker):
 		# AFTERMATH
 		# store some variables
 		pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2
-		screendist = SCREENDIST
+		screendist = settings.SCREENDIST
 		# calculate thresholds based on tracker settings
 		self.accuracy = ((calibresult['Ldeg'],calibresult['Ldeg']), (calibresult['Rdeg'],calibresult['Rdeg'])) 
 		self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
@@ -410,8 +436,8 @@ class EyeTribeTracker(BaseEyeTracker):
 		"""
 		
 		self.screen.clear()
-		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0,
-			diameter=12)
+		self.screen.draw_fixation(fixtype='dot', colour=settings.FGC, pos=(x,y),
+			pw=0, diameter=12)
 		self.disp.fill(self.screen)
 		self.disp.show()			
 		
@@ -507,25 +533,6 @@ class EyeTribeTracker(BaseEyeTracker):
 		"""
 
 		self.eyetribe.log_message(msg)
-
-
-	def log_var(self, var, val):
-
-		"""Writes a variable to the log file
-		
-		arguments
-		var		-- variable name
-		val		-- variable value
-		
-		returns
-		Nothing	-- uses native log function of iViewX to include a line
-				   in the log file in a "var NAME VALUE" layout
-		"""
-
-		msg = "var %s %s" % (var, val)
-
-		self.log(msg)
-
 
 	def prepare_drift_correction(self, pos):
 

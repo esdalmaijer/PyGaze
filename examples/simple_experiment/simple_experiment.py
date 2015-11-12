@@ -3,11 +3,11 @@
 # # # # #
 # importing the relevant libraries
 import random
-import constants
 from pygaze import libscreen
 from pygaze import libtime
 from pygaze import libinput
 from pygaze import liblog
+from pygaze import settings
 
 # # # # #
 # setup the experiment
@@ -27,9 +27,9 @@ fixscreen = libscreen.Screen()
 fixscreen.draw_fixation(fixtype='cross',pw=2)
 targetscreens = {}
 targetscreens['left'] = libscreen.Screen()
-targetscreens['left'].draw_circle(pos=(constants.DISPSIZE[0]*0.25,constants.DISPSIZE[1]/2), fill=True)
+targetscreens['left'].draw_circle(pos=(settings.DISPSIZE[0]*0.25,settings.DISPSIZE[1]/2), fill=True)
 targetscreens['right'] = libscreen.Screen()
-targetscreens['right'].draw_circle(pos=(constants.DISPSIZE[0]*0.75,constants.DISPSIZE[1]/2), fill=True)
+targetscreens['right'].draw_circle(pos=(settings.DISPSIZE[0]*0.75,settings.DISPSIZE[1]/2), fill=True)
 feedbackscreens = {}
 feedbackscreens[1] = libscreen.Screen()
 feedbackscreens[1].draw_text(text='correct', colour=(0,255,0))

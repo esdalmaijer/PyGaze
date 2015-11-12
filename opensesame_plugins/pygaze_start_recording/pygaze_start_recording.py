@@ -27,54 +27,27 @@ class pygaze_start_recording(item):
 
 	description = u'Puts the eye tracker into recording mode'
 
-	def __init__(self, name, experiment, script=None):
+	def reset(self):
 
 		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
+		desc:
+			Resets plug-in settings.
 		"""
 
-		self.status_msg = u'start_trial'
-		item.__init__(self, name, experiment, script)
-
-	def prepare(self):
-
-		"""The preparation phase of the plug-in goes here."""
-
-		item.prepare(self)
-		
+		self.var.status_msg = u'start_trial'
+	
 	def run(self):
 
 		"""The run phase of the plug-in goes here."""
 
 		self.set_item_onset()
 		self.experiment.pygaze_eyetracker.start_recording()
-		self.experiment.pygaze_eyetracker.status_msg(self.get(u'status_msg'))
-		self.experiment.pygaze_eyetracker.log(self.get(u'status_msg'))
+		self.experiment.pygaze_eyetracker.status_msg(self.var.status_msg)
+		self.experiment.pygaze_eyetracker.log(self.var.status_msg)
 
 class qtpygaze_start_recording(pygaze_start_recording, qtautoplugin):
 	
-	"""Plug-in GUI definition."""
-	
 	def __init__(self, name, experiment, script=None):
 		
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
-
 		pygaze_start_recording.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
-

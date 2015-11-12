@@ -19,12 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 import pygaze
 from pygaze.libtime import clock
 
@@ -51,7 +46,8 @@ class PyGameDisplay(BaseDisplay):
 
 	# See _display.basedisplay.BaseDisplay for documentation
 
-	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screen=None, **args):
+	def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
+		bgc=settings.BGC, screen=None, **args):
 
 		# See _display.basedisplay.BaseDisplay for documentation
 		
@@ -74,7 +70,7 @@ class PyGameDisplay(BaseDisplay):
 		pygame.display.init()
 		# make mouse invisible (should be so per default, but you never know)
 		pygame.mouse.set_visible(self.mousevis)
-		if FULLSCREEN:
+		if settings.FULLSCREEN:
 			mode = pygame.FULLSCREEN|pygame.HWSURFACE|pygame.DOUBLEBUF
 		else:
 			mode = pygame.HWSURFACE|pygame.DOUBLEBUF

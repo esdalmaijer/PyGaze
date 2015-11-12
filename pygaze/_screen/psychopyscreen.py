@@ -19,12 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 import pygaze
 from pygaze._misc.misc import pos2psychopos, psychopos2pos, rgb2psychorgb
 
@@ -68,8 +63,9 @@ class PsychoPyScreen(BaseScreen):
 
 	"""A class for PsychoPy Screen objects, for visual stimuli (to be displayed via a Display object)"""
 	
-	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, \
-		mousevisible=MOUSEVISIBLE, screen=None, **args):
+	def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
+		bgc=settings.BGC, screennr=settings.SCREENNR,
+		mousevisible=settings.MOUSEVISIBLE, screen=None, **args):
 		
 		"""
 		Constructor.

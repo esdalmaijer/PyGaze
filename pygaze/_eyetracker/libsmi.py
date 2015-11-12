@@ -20,13 +20,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-from pygaze.defaults import *
+from pygaze import settings
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-
 import pygaze
 from pygaze.screen import Screen
 from pygaze.keyboard import Keyboard
@@ -129,10 +124,10 @@ class SMItracker(BaseEyeTracker):
 
 	"""A class for SMI eye tracker objects"""
 
-	def __init__(self, display, ip='127.0.0.1', sendport=4444, receiveport= \
-		5555, logfile=LOGFILE, eventdetection=EVENTDETECTION, \
-		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500, \
-		**args):
+	def __init__(self, display, ip='127.0.0.1', sendport=4444,
+		receiveport=5555, logfile=settings.LOGFILE,
+		eventdetection=settings.EVENTDETECTION, saccade_velocity_threshold=35,
+		saccade_acceleration_threshold=9500, **args):
 
 		"""Initializes the SMItracker object
 		
@@ -162,8 +157,8 @@ class SMItracker(BaseEyeTracker):
 		# object properties
 		self.disp = display
 		self.screen = Screen()
-		self.dispsize = DISPSIZE # display size in pixels
-		self.screensize = SCREENSIZE # display size in cm
+		self.dispsize = settings.DISPSIZE # display size in pixels
+		self.screensize = settings.SCREENSIZE # display size in cm
 		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
 		self.errorbeep = Sound(osc='saw',freq=100, length=100)
 		
@@ -368,7 +363,7 @@ class SMItracker(BaseEyeTracker):
 				else:
 					err = errorstring(res)
 					print("WARNING libsmi.SMItracker.calibrate: failed to obtain screen distance; %s" % err)
-					screendist = SCREENDIST
+					screendist = settings.SCREENDIST
 					print("libsmi.SMItracker.calibrate: As an estimate, the screendistance was set to it's default value of 57 cm")
 				# calculate thresholds based on tracker settings
 				self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)

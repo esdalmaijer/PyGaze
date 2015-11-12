@@ -19,16 +19,11 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.py3compat import *
+from pygaze import settings
 from libopensesame.exceptions import osexception
 from openexp.canvas import canvas
 from openexp.keyboard import keyboard
-
-from pygaze.defaults import osexperiment
-try:
-	from constants import osexperiment
-except:
-	pass
-
 from pygaze._display.basedisplay import BaseDisplay
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -57,7 +52,7 @@ class OSDisplay(BaseDisplay):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 		
-		self.experiment = osexperiment
+		self.experiment = settings.osexperiment
 		self.canvas = canvas(self.experiment)
 		self.dispsize = self.experiment.resolution()
 

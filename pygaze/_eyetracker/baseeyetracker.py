@@ -30,22 +30,24 @@
 #from pygaze._display.basedisplay import BaseDisplay
 #
 #class DummyDisplay(BaseDisplay):
-#	
+#
 #	"""An example child of BaseDisplay"""
-#	
+#
 #	def __init__(self, *args, **kwargs):
-#		
+#
 #		"""Initializes a DummyDisplay instance"""
-#		
+#
 #		pygaze.copy_docstring(BaseDisplay,DummyDisplay)
-#	
+#
 #	def show(self):
-#		
+#
 #		# note that here no docstring is provided, as it is copied from
 #		# the parent class
-#		
+#
 #		print("Display.show call at %d" % int(clock.get_time()))
 #
+
+from pygaze.py3compat import *
 
 class BaseEyeTracker:
 
@@ -70,12 +72,12 @@ class BaseEyeTracker:
 
 		desc: |
 			Initializes the EyeTracker object.
-		
+
 		arguments:
 			display:
 				desc:	A pygaze.display.Display instance.
 				type:	Display
-		
+
 		keywords:
 			logfile:
 				desc: |
@@ -190,7 +192,7 @@ class BaseEyeTracker:
 		"""
 
 		pass
-		
+
 
 	def connected(self):
 
@@ -223,7 +225,7 @@ class BaseEyeTracker:
 			screen. From there, pressing 'q' again will cause drift correction
 			to fail immediately. Pressing 'escape' will give the option to abort
 			the experiment, in which case an Exception is raised.
-		
+
 		keywords:
 			pos:
 				desc:	(x, y) position of the fixation dot or None for a
@@ -233,7 +235,7 @@ class BaseEyeTracker:
 				desc:	Boolean indicating if drift check should be performed
 						based on gaze position (True) or on spacepress (False).
 				type:	bool
-		
+
 		returns:
 			desc:	A boolean indicating if drift check is ok (True) or not
 					(False).
@@ -241,7 +243,7 @@ class BaseEyeTracker:
 		"""
 
 		pass
-		
+
 
 	def fix_triggered_drift_correction(self, pos=None, min_samples=30,
 		max_dev=60, reset_threshold=10):
@@ -251,7 +253,7 @@ class BaseEyeTracker:
 			Performs a fixation triggered drift correction by collecting
 			a number of samples and calculating the average distance from the
 			fixation position
-		
+
 		keywords:
 			pos:
 				desc:	(x, y) position of the fixation dot or None for a
@@ -269,7 +271,7 @@ class BaseEyeTracker:
 						two consecutive samples is larger than this threshold,
 						the sample collection is reset.
 				type:	int
-		
+
 		returns:
 			desc:	A boolean indicating if drift check is ok (True) or not
 					(False).
@@ -285,7 +287,7 @@ class BaseEyeTracker:
 		desc:
 			Returns the difference between tracker time and PyGaze time, which
 			can be used to synchronize timing
-		
+
 		returns:
 			desc:	The difference between eyetracker time and PyGaze time.
 			type:	[int, float]
@@ -293,11 +295,16 @@ class BaseEyeTracker:
 
 		pass
 
-	def log(self):
+	def log(self, msg):
 
 		"""
 		desc:
 			Writes a message to the log file.
+
+		arguments:
+			msg:
+				desc:	A message.
+				type:	[str, unicode]
 		"""
 
 		pass
@@ -308,7 +315,7 @@ class BaseEyeTracker:
 		"""
 		desc:
 			Writes a variable's name and value to the log file
-		
+
 		arguments:
 			var:
 				desc:	A variable name.
@@ -317,7 +324,7 @@ class BaseEyeTracker:
 				desc:	A variable value
 		"""
 
-		pass
+		self.log(u"var %s %s" % (safe_decode(var), safe_decode(val)))
 
 	def pupil_size(self):
 
@@ -326,7 +333,7 @@ class BaseEyeTracker:
 			Returns the newest pupil size sample; size may be measured as the
 			diameter or the area of the pupil, depending on your setup (note
 			that pupil size mostly is given in an arbitrary units).
-		
+
 		returns:
 			desc:	Returns pupil size for the eye that is currently
 					being tracked (as specified by self.eye_used) or -1
@@ -341,7 +348,7 @@ class BaseEyeTracker:
 		"""
 		desc:
 			Returns newest available gaze position.
-		
+
 		returns:
 			desc: 	An (x,y) tuple or a (-1,-1) on an error.
 			type:	tuple
@@ -356,7 +363,7 @@ class BaseEyeTracker:
 			Directly sends a command to the eye tracker (not supported for all
 			brands; might produce a warning message if your setup does not
 			support direct commands).
-		
+
 		arguments:
 			cmd:
 				desc:	The command to be sent to the eye tracker.
@@ -375,14 +382,14 @@ class BaseEyeTracker:
 		"""
 
 		pass
-		
+
 	def draw_drift_correction_target(self, x, y):
-		
+
 		"""
 		desc:
 			Draws a drift-correction target.
-		
-		arguments:		
+
+		arguments:
 			x:
 				desc:	The X coordinate
 				type:	int
@@ -390,33 +397,33 @@ class BaseEyeTracker:
 				desc:	The Y coordinate
 				type:	int
 		"""
-		
+
 		pass
-		
+
 	def draw_calibration_target(self, x, y):
-		
+
 		"""
 		desc:
 			Draws a calibration target.
 
-		arguments:		
+		arguments:
 			x:
 				desc:	The X coordinate
 				type:	int
 			y:
 				desc:	The Y coordinate
 				type:	int
-		"""		
-		
+		"""
+
 		pass
 
 	def set_draw_calibration_target_func(self, func):
-		
+
 		"""
 		desc:
 			Specifies a custom function to draw the calibration target. This
 			will function will override the default [draw_calibration_target].
-		
+
 		arguments:
 			func:
 				desc:	The function to draw a calibration target. This function
@@ -424,17 +431,17 @@ class BaseEyeTracker:
 						of the target.
 				type:	function
 		"""
-		
+
 		self.draw_calibration_target = func
-	
+
 	def set_draw_drift_correction_target_func(self, func):
-		
+
 		"""
 		desc:
 			Specifies a custom function to draw the drift-correction target.
 			This function will override the default
 			[draw_drift_correction_target].
-		
+
 		arguments:
 			func:
 				desc:	The function to draw a drift-correction target. This
@@ -442,7 +449,7 @@ class BaseEyeTracker:
 						coordinate of the target.
 				type:	function
 		"""
-		
+
 		self.draw_drift_correction_target = func
 
 	def start_recording(self):
@@ -461,7 +468,7 @@ class BaseEyeTracker:
 		desc:
 			Sends a status message to the eye tracker, which is displayed in
 			the tracker's GUI (only available for EyeLink setups).
-		
+
 		arguments:
 			msg:
 				desc: |
@@ -482,17 +489,17 @@ class BaseEyeTracker:
 		"""
 
 		pass
-	
-	
+
+
 	def set_detection_type(self, eventdetection):
-		
+
 		"""
 		desc: |
 			Set the event detection type to either PyGaze algorithms, or
 			native algorithms as provided by the manufacturer (only if
 			available: detection type will default to PyGaze if no native
 			functions are available)
-		
+
 		arguments:
 			eventdetection:
 				desc: |
@@ -506,13 +513,13 @@ class BaseEyeTracker:
 
 		returns:
 			desc:		Detection type for saccades, fixations and
-						blinks in a tuple, e.g. 
+						blinks in a tuple, e.g.
 						('pygaze','native','native') when 'native'
 						was passed, but native detection was not
 						available for saccade detection.
 			type:		tuple
 		"""
-		
+
 		pass
 
 	def wait_for_event(self, event):
@@ -520,7 +527,7 @@ class BaseEyeTracker:
 		"""
 		desc:
 			Waits for an event.
-		
+
 		arguments:
 			event:
 				desc: |
@@ -534,7 +541,7 @@ class BaseEyeTracker:
 					- 8 = ENDFIX
 
 				type:	int
-		
+
 		returns:
 			desc:	A `self.wait_for_*` method is called, depending on the
 					specified event; the return value of corresponding
@@ -553,14 +560,14 @@ class BaseEyeTracker:
 			to 'pygaze', or using native detection functions if EVENTDETECTION
 			is set to 'native' (NOTE: not every system has native functionality;
 			will fall back to ;pygaze' if 'native' is not available!)
-		
+
 		returns:
 			desc:	Blink ending time in milliseconds, as measured from
 					experiment begin time.
 			type:	[int, float]
 		"""
-		
-		pass	
+
+		pass
 
 	def wait_for_blink_start(self):
 
@@ -571,15 +578,15 @@ class BaseEyeTracker:
 			to 'pygaze', or using native detection functions if EVENTDETECTION
 			is set to 'native' (NOTE: not every system has native functionality;
 			will fall back to ;pygaze' if 'native' is not available!)
-		
+
 		returns:
 			desc: 	Blink starting time in milliseconds, as measured from
 					experiment begin time
 			type:	[int, float]
 		"""
-		
+
 		pass
-		
+
 
 	def wait_for_fixation_end(self):
 
@@ -594,7 +601,7 @@ class BaseEyeTracker:
 			to 'pygaze', or using native detection functions if EVENTDETECTION
 			is set to 'native' (NOTE: not every system has native functionality;
 			will fall back to ;pygaze' if 'native' is not available!)
-		
+
 		returns:
 			desc: 	A `time, gazepos` tuple. Time is the end time in
 					milliseconds (from expstart), gazepos is a (x,y) gaze
@@ -620,7 +627,7 @@ class BaseEyeTracker:
 			to 'pygaze', or using native detection functions if EVENTDETECTION
 			is set to 'native' (NOTE: not every system has native functionality;
 			will fall back to ;pygaze' if 'native' is not available!)
-		
+
 		returns:
 			desc: 	A `time, gazepos` tuple. Time is the starting time in
 					milliseconds (from expstart), gazepos is a (x,y) gaze
@@ -628,7 +635,7 @@ class BaseEyeTracker:
 					initiated.
 			type:	tuple
 		"""
-		
+
 		pass
 
 
@@ -642,7 +649,7 @@ class BaseEyeTracker:
 			detection functions if EVENTDETECTION is set to 'native' (NOTE: not
 			every system has native functionality; will fall back to ;pygaze'
 			if 'native' is not available!)
-		
+
 		returns:
 			desc:	An `endtime, startpos, endpos` tuple. Endtime in
 					milliseconds (from expbegintime); startpos and endpos
@@ -662,7 +669,7 @@ class BaseEyeTracker:
 			detection functions if EVENTDETECTION is set to 'native' (NOTE: not
 			every system has native functionality; will fall back to ;pygaze'
 			if 'native' is not available!)
-		
+
 		returns:
 			desc:	An `endtime, startpos` tuple. Endtime in milliseconds (from
 					expbegintime); startpos is an (x,y) gaze position tuple.

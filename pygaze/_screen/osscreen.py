@@ -19,14 +19,10 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.py3compat import *
+from pygaze import settings
 from libopensesame.exceptions import osexception
 from openexp.canvas import canvas
-from pygaze.defaults import osexperiment
-try:
-	from constants import osexperiment
-except:
-	pass
-
 from pygaze._screen.basescreen import BaseScreen
 # we try importing the copy_docstr function, but as we do not really need it
 # for a proper functioning of the code, we simply ignore it when it fails to
@@ -36,13 +32,13 @@ try:
 except:
 	pass
 
-	
+
 class OSScreen(BaseScreen):
 
 	"""See _display.pygamescreen.PyGameScreen"""
-	
+
 	def __init__(self, screen=None, **args):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		# try to copy docstring (but ignore it if it fails, as we do
@@ -55,11 +51,25 @@ class OSScreen(BaseScreen):
 			# in a non-verbose manner, so warning messages would be lost
 			pass
 
-		self.experiment = osexperiment
+		self.experiment = settings.osexperiment
+		self.uniform_coordinates = \
+			self.experiment.var.uniform_coordinates == u'yes'
 		self.create(screen=screen)
 
-	def create(self, screen=None):
+	def _pos(self, pos):
+
+		"""Convert PyGaze coordinates to OpenSesame coordinates."""
 		
+		if pos in (None, (None, None)):
+			return None, None
+		x, y = pos
+		if self.uniform_coordinates:
+			x -= self.canvas._xcenter
+			y -= self.canvas._ycenter
+		return x, y
+
+	def create(self, screen=None):
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		if screen != None:
@@ -82,100 +92,95 @@ class OSScreen(BaseScreen):
 	def draw_circle(self, colour=None, pos=None, r=50, pw=1, fill=False):
 
 		"""See _display.pygamescreen.PyGameScreen"""
-		
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
-		self.canvas.set_penwidth(pw)
-		self.canvas.circle(x, y, r, fill=fill, color=colour)
 
-	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1, \
+		x, y = self._pos(pos)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		self.canvas.set_penwidth(pw)
+		self.canvas.circle(x, y, r, fill=fill, **kwdict)
+
+	def draw_ellipse(self, colour=None, x=None, y=None, w=50, h=50, pw=1,
 		fill=False):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if x == None:
-			x = self.canvas.xcenter()
-		if y == None:
-			y = self.canvas.ycenter()
-		self.canvas.set_penwidth(pw)
-		self.canvas.ellipse(x, y, w, h, fill=fill, color=colour)
+		x, y = self._pos((x, y))
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pw
+		self.canvas.ellipse(x, y, w, h, fill=fill, **kwdict)
 
-	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1, \
+	def draw_rect(self, colour=None, x=None, y=None, w=50, h=50, pw=1,
 		fill=False):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if x == None:
-			x = self.canvas.xcenter()
-		if y == None:
-			y = self.canvas.ycenter()
-		self.canvas.set_penwidth(pw)
-		self.canvas.rect(x, y, w, h, fill=fill, color=colour)
+		x, y = self._pos((x, y))
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pw
+		self.canvas.rect(x, y, w, h, fill=fill, **kwdict)
 
 	def draw_line(self, colour=None, spos=None, epos=None, pw=1):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if spos == None:
-			sx = self.canvas.xcenter() * .5
-			sy = self.canvas.ycenter()
-		else:
-			sx, sy = spos
-		if epos == None:
-			ex = self.canvas.xcenter() * 1.5
-			ey = self.canvas.ycenter()
-		else:
-			ex, ey = epos
-		self.canvas.set_penwidth(pw)
-		self.canvas.rect(sx, sy, ex, ey, color=colour)
+		sx, sy = self._pos(spos)
+		ex, ey = self._pos(epos)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pw
+		self.canvas.line(sx, sy, ex, ey, **kwdict)
 
 	def draw_polygon(self, pointlist, colour=None, pw=1, fill=True):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		self.canvas.set_penwidth(pw)
-		self.canvas.polygon(pointlist, fill=fill, color=colour)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		if pw is not None:
+			kwdict[u'penwidth'] = pw
+		pointlist = [self._pos(pt) for pt in pointlist]
+		self.canvas.polygon(pointlist, fill=fill, **kwdict)
 
 
-	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1, \
+	def draw_fixation(self, fixtype='cross', colour=None, pos=None, pw=1,
 		diameter=12):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
 		# TODO: Respect the fixtype argument
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
-		self.canvas.fixdot(x, y, color=colour)
+		x, y = self._pos(pos)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
+		self.canvas.fixdot(x, y, **kwdict)
 
-	def draw_text(self, text='text', colour=None, pos=None, center=True, \
+	def draw_text(self, text='text', colour=None, pos=None, center=True,
 		font='mono', fontsize=12, antialias=True):
 
 		"""See _display.pygamescreen.PyGameScreen"""
 
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+		x, y = self._pos(pos)
+		kwdict = {}
+		if colour is not None:
+			kwdict[u'color'] = colour
 		self.canvas.set_font(style=font, size=fontsize)
-		self.canvas.text(text, center=center, color=colour, x=x, y=y, \
-			html=False)
-	
+		self.canvas.text(text, center=center, x=x, y=y, html=False, **kwdict)
+
 	def draw_image(self, image, pos=None, scale=None):
-		
+
 		"""See _display.pygamescreen.PyGameScreen"""
-		
-		if pos == None:
-			x = self.canvas.xcenter()
-			y = self.canvas.ycenter()
-		else:
-			x, y = pos
+
+		x, y = self._pos(pos)
 		self.canvas.image(image, x=x, y=y, scale=scale)
 
 	def set_background_colour(self, colour=None):

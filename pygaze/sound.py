@@ -19,24 +19,20 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze.py3compat import *
+from pygaze import settings
 from pygaze._misc.misc import copy_docstr
 from pygaze._sound.basesound import BaseSound
 
 
 class Sound(BaseSound):
 
-	"""A mouse for collecting responses"""
+	"""Sound playback"""
 
-	def __init__(self, disptype=DISPTYPE, **args):
+	def __init__(self, disptype=settings.DISPTYPE, **args):
 
 		"""
-		Initializes the Mouse object.
+		Initializes the Sound object.
 		
 		TODO: docstring.
 		"""

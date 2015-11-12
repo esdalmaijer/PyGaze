@@ -20,12 +20,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 import pygaze
 from pygaze.screen import Screen
 from pygaze.mouse import Mouse
@@ -40,9 +35,9 @@ from PIL import Image
 import pylink
 custom_display = pylink.EyeLinkCustomDisplay
 
-if DISPTYPE == 'pygame':
+if settings.DISPTYPE == 'pygame':
 	import pygame
-elif DISPTYPE == 'psychopy':
+elif settings.DISPTYPE == 'psychopy':
 	import psychopy
 import pygame
 
@@ -70,10 +65,10 @@ class EyelinkGraphics(custom_display):
 		# objects
 		self.libeyelink = libeyelink
 		self.display = libeyelink.display
-		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 		self.kb = Keyboard(keylist=None, timeout=0)
 		self.mouse = Mouse(timeout=0)
-		if DISPTYPE == 'pygame':
+		if settings.DISPTYPE == 'pygame':
 			self.kb.set_timeout(timeout=0.001)
 		# If we are using a DISPTYPE that cannot be used directly, we have to
 		# save the camera image to a temporary file on each frame.
@@ -126,7 +121,7 @@ class EyelinkGraphics(custom_display):
 			Draws the menu screen.
 		"""
 
-		self.menuscreen = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.menuscreen = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 		self.menuscreen.draw_text(text="Eyelink calibration menu",
 			pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
 			fontsize=int(2*self.fontsize), antialias=True)
@@ -266,7 +261,7 @@ class EyelinkGraphics(custom_display):
 		if beepid == pylink.CAL_TARG_BEEP:
 			# For some reason, playing the beep here doesn't work, so we have
 			# to play it when the calibration target is drawn.
-			if EYELINKCALBEEP:
+			if settings.EYELINKCALBEEP:
 				self.__target_beep__.play()
 		elif beepid == pylink.CAL_ERR_BEEP or beepid == pylink.DC_ERR_BEEP:
 			# show a picture

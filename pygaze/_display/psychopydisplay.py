@@ -19,12 +19,7 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
+from pygaze import settings
 import pygaze
 from pygaze._misc.misc import rgb2psychorgb
 from pygaze.libtime import clock
@@ -46,7 +41,8 @@ class PsychoPyDisplay:
 
 	# See _display.basedisplay.BaseDisplay for documentation
 
-	def __init__(self, dispsize=DISPSIZE, fgc=FGC, bgc=BGC, screennr=SCREENNR, screen=None, **args):
+	def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
+		bgc=settings.BGC, screennr=settings.SCREENNR, screen=None, **args):
 
 		# See _display.basedisplay.BaseDisplay for documentation
 		
@@ -67,9 +63,9 @@ class PsychoPyDisplay:
 		self.mousevis = False
 
 		# create window
-		pygaze.expdisplay = Window(size=self.dispsize, pos=None, color= \
-			rgb2psychorgb(self.bgc), colorSpace='rgb', fullscr=FULLSCREEN, \
-			screen=self.screennr, units='pix')
+		pygaze.expdisplay = Window(size=self.dispsize, pos=None,
+			color=rgb2psychorgb(self.bgc), colorSpace='rgb',
+			fullscr=settings.FULLSCREEN, screen=self.screennr, units='pix')
 		# set mouse visibility
 		pygaze.expdisplay.setMouseVisible(self.mousevis)
 		# get screen in window
@@ -109,4 +105,3 @@ class PsychoPyDisplay:
 		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.close()
-

@@ -27,62 +27,34 @@ class pygaze_log(item):
 
 	description = u'Writes information to the eye-tracker logfile'
 
-	def __init__(self, name, experiment, script=None):
+	def reset(self):
 
 		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
+		desc:
+			Resets plug-in settings.
 		"""
-
-		self.msg = u''
-		self.auto_log = u'no'
-		self.throttle = 2
-		item.__init__(self, name, experiment, script)
-
-	def prepare(self):
-
-		"""The preparation phase of the plug-in goes here."""
-
-		item.prepare(self)
 		
+		self.var.msg = u''
+		self.var.auto_log = u'no'
+		self.var.throttle = 2
+	
 	def run(self):
 
 		"""The run phase of the plug-in goes here."""
 
 		self.set_item_onset()
-		for msg in self.msg.split(u'\n'):
-			self.experiment.pygaze_eyetracker.log(self.eval_text(msg))
-			self.sleep(self.throttle)
-		if self.auto_log == u'yes':
-			for logvar, _val, item in self.experiment.var_list():
-				val = self.get_check(logvar, default=u'NA')
-				self.experiment.pygaze_eyetracker.log_var(logvar, val)
-				self.sleep(self.throttle)
-		return True
+		for msg in self.var.msg.split(u'\n'):
+			self.experiment.pygaze_eyetracker.log(self.syntax.eval_text(msg))
+			self.clock.sleep(self.var.throttle)
+		if self.var.auto_log == u'yes':
+			for logvar, info in self.experiment.var.inspect().items():
+				self.experiment.pygaze_eyetracker.log_var(logvar,
+					info[u'value'])
+				self.clock.sleep(self.var.throttle)
 
 class qtpygaze_log(pygaze_log, qtautoplugin):
 	
-	"""Plug-in GUI definition."""
-	
 	def __init__(self, name, experiment, script=None):
 		
-		"""
-		Constructor.
-		
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-		
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
-
 		pygaze_log.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
-

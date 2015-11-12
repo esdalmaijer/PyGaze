@@ -19,13 +19,9 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
+from pygaze import settings
+from pygaze.py3compat import *
 from pygaze.libtime import clock
-try:
-	from constants import *
-except:
-	pass
-
 import pygaze
 from pygaze.screen import Screen
 from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
@@ -42,8 +38,7 @@ def message(msg):
 	
 	"""Prints a timestamp and message to the console"""
 	
-	print("%d\t%s" % (int(clock.get_time()), msg))
-
+	print(u"%d\t%s" % (int(clock.get_time()), msg))
 
 class DumbDummy(BaseEyeTracker):
 
@@ -64,7 +59,7 @@ class DumbDummy(BaseEyeTracker):
 		# try to copy docstrings (but ignore it if it fails, as we do
 		# not need it for actual functioning of the code)
 		try:
-			copy_docstr(BaseEyeTracker, DumbDummy)
+			copy_docsafe_decode(BaseEyeTracker, DumbDummy)
 		except:
 			# we're not even going to show a warning, since the copied
 			# docstring is useful for code editors; these load the docs
@@ -73,38 +68,38 @@ class DumbDummy(BaseEyeTracker):
 
 		self.recording = False
 		self.blinking = False
-		self.bbpos = (DISPSIZE[0]/2, DISPSIZE[1]/2)
+		self.bbpos = (settings.DISPSIZE[0]/2, settings.DISPSIZE[1]/2)
 
 		self.display = display
-		self.screen = Screen(disptype=DISPTYPE, mousevisible=False)
+		self.screen = Screen(disptype=settings.DISPTYPE, mousevisible=False)
 
 
 	def send_command(self, cmd):
 
 		"""Dummy command, messages command instead of sending it to the eyetracker"""
 
-		message("The following command would have been given to the eyetracker: " + str(cmd))
+		message(u"The following command would have been given to the eyetracker: " + safe_decode(cmd))
 
 
 	def log(self, msg):
 
 		"""Dummy log message, messages message instead of sending it to the eyetracker"""
 
-		message("The following message would have been logged to the EDF: " + str(msg))
+		message(u"The following message would have been logged to the EDF: " + safe_decode(msg))
 
 
 	def log_var(self, var, val):
 
 		"""Dummy varlog, messages variable and value instead of sending it to the eyetracker"""
 
-		message("The following variable would have been logged to the EDF: " + str(var) + ", value: " + str(val))
+		message(u"The following variable would have been logged to the EDF: " + safe_decode(var) + u", value: " + safe_decode(val))
 
 
 	def status_msg(self, msg):
 		
 		"""Dummy status message, messages message instead of sending it to the eyetracker"""
 
-		message("The following status message would have been visible on the experimentor PC: " + str(msg))
+		message(u"The following status message would have been visible on the experimentor PC: " + safe_decode(msg))
 
 
 	def connected(self):

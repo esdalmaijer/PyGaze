@@ -19,17 +19,13 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from pygaze.defaults import *
-try:
-	from constants import *
-except:
-	pass
-
-if DISPTYPE == u'psychopy':
+from pygaze.py3compat import *
+from pygaze import settings
+if settings.DISPTYPE == u'psychopy':
 	from pygaze._time.psychopytime import PsychoPyTime as Time
-elif DISPTYPE == u'pygame':
+elif settings.DISPTYPE == u'pygame':
 	from pygaze._time.pygametime import PyGameTime as Time
-elif DISPTYPE == u'opensesame':
+elif settings.DISPTYPE == u'opensesame':
 	from pygaze._time.ostime import OSTime as Time
 else:
 	raise Exception(u'Unexpected disptype : %s' % disptype)
