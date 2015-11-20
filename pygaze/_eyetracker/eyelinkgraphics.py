@@ -273,7 +273,8 @@ class EyelinkGraphics(custom_display):
 			self.display.fill(self.screen)
 			self.display.show()
 			# play beep
-			self.__target_beep__error__.play()
+			if settings.EYELINKCALBEEP:
+				self.__target_beep__error__.play()
 		elif beepid == pylink.CAL_GOOD_BEEP:
 			self.screen.clear()
 			if self.state == "calibration":
@@ -294,7 +295,8 @@ class EyelinkGraphics(custom_display):
 			self.display.fill(self.screen)
 			self.display.show()
 			# play beep
-			self.__target_beep__done__.play()
+			if settings.EYELINKCALBEEP:
+				self.__target_beep__done__.play()
 		else: #	DC_GOOD_BEEP	or DC_TARG_BEEP
 			pass
 
