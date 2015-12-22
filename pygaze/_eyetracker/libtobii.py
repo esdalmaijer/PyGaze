@@ -597,9 +597,27 @@ class TobiiTracker(BaseEyeTracker):
 	
 	def pupil_size(self):
 
-		"""Not supported for TobiiTracker (yet)"""
+		"""Returns newest available pupil size
 		
-		print("function not supported yet")
+		arguments
+		None
+		
+		returns
+		pupilsize	--	a float or -1 on an error
+		"""
+
+		# get new pupil size
+		pupilsize = self.controller.getCurrentPupilSize()
+
+		# if pupil size is invalid, return missing value
+		if None in pupilsize:
+			return -1
+
+		# return pupil size
+		if self.eye_used == self.left_eye or self.eye_used == self.binocular:
+			return pupilsize[0]
+		else:
+			return pupilsize[1]
 	
 	
 	def sample(self):
@@ -1731,7 +1749,43 @@ class TobiiController:
 		"""
 		
 		self.gazeData.append(gaze)
-	
+
+	def getPupilSize(self,gaze):
+
+		"""Extracts the pupil size of both eyes from the Tobii gaze struct.
+		
+		arguments
+		gaze		--	Tobii gaze struct
+		
+		keyword aguments
+		None
+		
+		returns
+		pupilsiez	--	a (L,R) tuple for the pupil size in mm of both eyes
+		"""
+
+		return (gaze.LeftPupil,
+				gaze.RightPupil)
+
+	def getCurrentPupilSize(self):
+
+		"""Provides the newest pupil size
+		
+		arguments
+		None
+		
+		keyword argument
+		None
+		
+		returns
+		pupilsize	--	a (L,R) tuple for the pupil size in mm of both eyes
+					or (None,None) if no new size is available
+		"""
+
+		if len(self.gazeData) == 0:
+			return (None,None)
+		else:
+			return self.getPupilSize(self.gazeData[-1])
 	
 	def getGazePosition(self,gaze):
 		
