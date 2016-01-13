@@ -59,6 +59,7 @@ JOYTIMEOUT = None # None for no timeout, or a value in milliseconds
 TRACKERTYPE = 'eyelink' # either 'smi', 'eyelink' or 'dummy' (NB: if DUMMYMODE is True, trackertype will be set to dummy automatically)
 SACCVELTHRESH = 35 # degrees per second, saccade velocity threshold
 SACCACCTHRESH = 9500 # degrees per second, saccade acceleration threshold
+BLINKTHRESH = 150 # milliseconds, blink detection threshold used in PyGaze method
 EVENTDETECTION = 'pygaze' # either 'pygaze' for PyGaze detection algorithms, or 'native' for manufacturer's event detection (if available)
 # EyeLink only
 EYELINKCALBEEP = True # Calibration beep with each jump
