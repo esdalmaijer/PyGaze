@@ -121,6 +121,11 @@ class pygaze_init(item):
 		settings.DISPSIZE = self.resolution()
 		settings.BGC = self.var.background
 		settings.FGC = self.var.foreground
+		
+		if self.var.calbeep == u'yes':
+			settings.EYELINKCALBEEP = True
+		else:
+			settings.EYELINKCALBEEP = False
 
 	def run(self):
 
