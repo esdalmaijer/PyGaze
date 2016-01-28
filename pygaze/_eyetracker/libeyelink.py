@@ -322,7 +322,7 @@ class libeyelink(BaseEyeTracker):
 		for i in range(2,len(sl)):
 			Xvar.append((sl[i][0]-sl[i-1][0])**2)
 			Yvar.append((sl[i][1]-sl[i-1][1])**2)
-		if len(Xvar) != 0 and len(Yvar) != 0: # check if properly recorded to avoid risk of division by zero error
+		if Xvar and Yvar: # check if properly recorded to avoid risk of division by zero error
 			XRMS = (sum(Xvar) / len(Xvar))**0.5
 			YRMS = (sum(Yvar) / len(Yvar))**0.5
 			self.pxdsttresh = (XRMS, YRMS)
@@ -333,11 +333,11 @@ class libeyelink(BaseEyeTracker):
 				self.pixpercm)/1000.0 # in pixels per millisecons
 			self.pxacctresh = deg2pix(self.screendist, self.accthresh,
 				self.pixpercm)/1000.0 # in pixels per millisecond**2
-		elif len(Xvar) == 0 or len(Yvar) == 0: # if nothing recorded, display message saying so
-			self.screen.fill()
+		else: # if nothing recorded, display message saying so
+			self.display.fill()
 			self.scr.draw_text(text="Noise calibration failed.\n\nPress space to return to calibration screen.", pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), center=True)
-			self.screen.fill(self.scr)
-			self.screen.show()
+			self.display.fill(self.scr)
+			self.display.show()
 			self.scr.clear()
 			# wait for spacepress, then return to calibration menu
 			self.kb.get_key(keylist=['space'], timeout=None)
