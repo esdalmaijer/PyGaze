@@ -339,8 +339,8 @@ class libeyelink(BaseEyeTracker):
 					self.display.fill()
 					self.scr.draw_text(text = \
 						"Noise calibration failed.\n\nPress r to retry,\nor press space to return to calibration screen.", \
-						pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), center= \
-						True)
+						pos=(self.resolution[0]/2, int(self.resolution[1]*0.2)), \
+						center=True, fontsize=self.fontsize)
 					self.display.fill(self.scr)
 					self.display.show()
 					self.scr.clear()
