@@ -1957,9 +1957,8 @@ class TobiiController:
 				ave = (g.LeftGazePoint2D.x,g.LeftGazePoint2D.y)
 			# if we have both samples, use both samples
 			else:
-				# shouldn't these additions be divided by 2?
-				ave = (g.LeftGazePoint2D.x+g.RightGazePoint2D.x,
-					   g.LeftGazePoint2D.y+g.RightGazePoint2D.y)
+				ave = ((g.LeftGazePoint2D.x + g.RightGazePoint2D.x) / 2.0,
+					   (g.LeftGazePoint2D.y + g.RightGazePoint2D.y) / 2.0)
 			
 			# write gaze position to the datafile, based on the selected sample(s)
 			self.datafile.write('\t%.4f\t%.4f\t'%ave)
