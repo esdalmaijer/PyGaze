@@ -41,6 +41,7 @@ import pylink
 from PIL import Image
 import copy
 import math
+import sys
 import os.path
 
 _eyelink = None
@@ -213,6 +214,7 @@ class libeyelink(BaseEyeTracker):
 				"link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,HTARGET")
 		else:
 			self.send_command(
+
 				"link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS")
 		# not quite sure what this means (according to Sebastiaan Mathot, it
 		# might be the button that is used to end drift correction?)
@@ -555,8 +557,13 @@ class libeyelink(BaseEyeTracker):
 		pylink.msecDelay(500)
 		print("libeyelink.libeyelink.close(): Transferring %s to %s" \
 			% (self.eyelink_data_file, self.local_data_file))
-		pylink.getEYELINK().receiveDataFile(self.eyelink_data_file,
-			self.local_data_file)
+		# During data transfer, suppress output
+		_out = sys.stdout
+		with open(os.devnull, 'w') as fd:
+			sys.stdout = fd
+			pylink.getEYELINK().receiveDataFile(self.eyelink_data_file,
+				self.local_data_file)
+			sys.stdout = _out
 		pylink.msecDelay(500)
 		print("libeyelink.libeyelink.close(): Closing eyelink")
 		pylink.getEYELINK().close();

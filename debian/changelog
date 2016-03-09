@@ -1,3 +1,9 @@
+python-pygaze (0.6.0~a8-ubuntu1) wily; urgency=medium
+
+  * Prerelease update
+
+ -- Sebastiaan Mathot <sebastiaan@mantis>  Mon, 23 Nov 2015 12:50:22 +0100
+
 python-pygaze (0.6.0~a4-ubuntu1) wily; urgency=medium
 
   * Prerelease update

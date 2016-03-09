@@ -1108,7 +1108,7 @@ class calibration:
 
 		self.connection = connection
 
-	def start(self, pointcount=9):
+	def start(self, pointcount=9, max_attempts=5):
 
 		"""Starts the calibration, using the passed number of calibration
 		points
@@ -1118,15 +1118,20 @@ class calibration:
 		pointcount	--	integer value indicating the amount of
 						calibration points that should be used, which
 						should be at least 7 (default = 9)
+		max_attempts --	the number of times that calibration should be restarted
+						if starting the calibration fails (default=5)
 		"""
-
-		# send the request
-		response = self.connection.request('calibration', 'start', {'pointcount':pointcount})
-		# return value or error
-		if response['statuscode'] == 200:
-			return True
-		else:
-			raise Exception("Error in calibration.start: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
+		
+		for attempt in range(max_attempts):
+		    # send the request
+		    response = self.connection.request('calibration', 'start',
+				{'pointcount':pointcount})
+		    # return value or error
+		    if response['statuscode'] == 200:
+		        return
+		    self.abort()
+		raise Exception("Error in calibration.start: %s (code %d)" \
+			% (response['values']['statusmessage'],response['statuscode']))		
 
 	def pointstart(self, x, y):
 
