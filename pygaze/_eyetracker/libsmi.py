@@ -127,7 +127,8 @@ class SMItracker(BaseEyeTracker):
 	def __init__(self, display, ip='127.0.0.1', sendport=4444,
 		receiveport=5555, logfile=settings.LOGFILE,
 		eventdetection=settings.EVENTDETECTION, saccade_velocity_threshold=35,
-		saccade_acceleration_threshold=9500, **args):
+		saccade_acceleration_threshold=9500, blink_threshold=settings.BLINKTHRESH,
+		**args):
 
 		"""Initializes the SMItracker object
 		
@@ -184,6 +185,7 @@ class SMItracker(BaseEyeTracker):
 		self.fixtimetresh = 100 # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
 		self.spdtresh = saccade_velocity_threshold # degrees per second; saccade velocity threshold
 		self.accthresh = saccade_acceleration_threshold # degrees per second**2; saccade acceleration threshold
+		self.blinkthresh = blink_threshold # milliseconds; blink detection threshold used in PyGaze method
 		self.eventdetection = eventdetection
 		self.set_detection_type(self.eventdetection)
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
@@ -918,8 +920,8 @@ class SMItracker(BaseEyeTracker):
 				t0 = clock.get_time()
 				# loop until a blink is determined, or a valid sample occurs
 				while not self.is_valid_sample(self.sample()):
-					# check if time has surpassed 150 ms
-					if clock.get_time()-t0 >= 150:
+					# check if time has surpassed BLINKTHRESH
+					if clock.get_time()-t0 >= self.blinkthresh:
 						# return timestamp of blink start
 						return t0
 		

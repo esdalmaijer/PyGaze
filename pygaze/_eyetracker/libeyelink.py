@@ -70,6 +70,7 @@ class libeyelink(BaseEyeTracker):
 		data_file=settings.LOGFILENAME+".edf", fg_color=settings.FGC,
 		bg_color=settings.BGC, eventdetection=settings.EVENTDETECTION,
 		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500,
+		blink_threshold=settings.BLINKTRESH,
 		force_drift_correct=True, pupil_size_mode=settings.EYELINKPUPILSIZEMODE,
 		**args):
 
@@ -108,6 +109,7 @@ class libeyelink(BaseEyeTracker):
 		self.recording = False
 		self.saccade_velocity_treshold = saccade_velocity_threshold
 		self.saccade_acceleration_treshold = saccade_acceleration_threshold
+		self.blink_threshold = blink_threshold
 		self.eye_used = None
 		self.left_eye = 0
 		self.right_eye = 1
@@ -930,7 +932,7 @@ class libeyelink(BaseEyeTracker):
 					# loop until a blink is determined, or a valid sample occurs
 					while not self.is_valid_sample(self.sample()):
 						# check if time has surpassed 150 ms
-						if clock.get_time()-t0 >= 150:
+						if clock.get_time()-t0 >= self.blink_threshold:
 							# return timestamp of blink start
 							return t0
 
