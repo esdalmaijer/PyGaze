@@ -71,7 +71,7 @@ class libeyelink(BaseEyeTracker):
 		data_file=settings.LOGFILENAME+".edf", fg_color=settings.FGC,
 		bg_color=settings.BGC, eventdetection=settings.EVENTDETECTION,
 		saccade_velocity_threshold=35, saccade_acceleration_threshold=9500,
-		blink_threshold=settings.BLINKTRESH,
+		blink_threshold=settings.BLINKTHRESH,
 		force_drift_correct=True, pupil_size_mode=settings.EYELINKPUPILSIZEMODE,
 		**args):
 
