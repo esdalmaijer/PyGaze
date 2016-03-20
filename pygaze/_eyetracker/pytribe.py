@@ -98,6 +98,10 @@ class EyeTribe:
 		if self._logdata:
 			self.log_message("stop_recording")
 			self._logdata = False
+			# write file object buffer to OS buffer
+			self._logfile.flush()
+			# write data from RAM to disk
+			os.fsync(self._logfile.fileno())
 
 	def log_message(self, message):
 
@@ -116,8 +120,8 @@ class EyeTribe:
 		line = self._separator.join(map(str,[u'MSG',ts,t, safe_decode(message)]))
 		# write message
 		self._logfile.write(line + u'\n') # to internal buffer
-		self._logfile.flush() # internal buffer to RAM
-		os.fsync(self._logfile.fileno()) # RAM file cache to disk
+
+
 
 	def sample(self):
 
@@ -313,8 +317,8 @@ class EyeTribe:
 								]))
 		# write line to log file
 		self._logfile.write(line + '\n') # to internal buffer
-		self._logfile.flush() # internal buffer to RAM
-		os.fsync(self._logfile.fileno()) # RAM file cache to disk
+
+
 
 	def _log_header(self):
 
@@ -606,7 +610,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['push'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['push'] == 'true'
+			return response['values']['push']
 		else:
 			raise Exception("Error in tracker.get_push: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
@@ -685,7 +689,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['iscalibrated'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['iscalibrated'] == 'true'
+			return response['values']['iscalibrated']
 		else:
 			raise Exception("Error in tracker.get_iscalibrated: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
@@ -698,7 +702,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['iscalibrating'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['iscalibrating'] == 'true'
+			return response['values']['iscalibrating']
 		else:
 			raise Exception("Error in tracker.get_iscalibrating: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
@@ -850,7 +854,7 @@ class tracker:
 		# parse response
 		return {	'timestamp':	response['values']['frame']['timestamp'],
 				'time':		response['values']['frame']['time'],
-				'fix':		response['values']['frame']['fix']=='true',
+				'fix':		response['values']['frame']['fix'],
 				'state':		response['values']['frame']['state'],
 				'rawx':		response['values']['frame']['raw']['x'],
 				'rawy':		response['values']['frame']['raw']['y'],
