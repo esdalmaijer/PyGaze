@@ -20,7 +20,14 @@ along with qnotero.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import glob
 import pygaze
-from distutils.core import setup
+from setuptools import setup
+
+def files(path):
+
+	l = [fname for fname in glob.glob(path) if os.path.isfile(fname) \
+		and not fname.endswith('.pyc')]
+	print(l)
+	return l
 
 def data_files():
 
@@ -38,20 +45,32 @@ def data_files():
 	if os.name == 'nt':
 		return []
 	return [
-		("/usr/share/opensesame/plugins/pygaze_init", glob.glob("opensesame_plugins/pygaze_init/*")),
-		("/usr/share/opensesame/plugins/pygaze_drift_correct", glob.glob("opensesame_plugins/pygaze_drift_correct/*")),
-		("/usr/share/opensesame/plugins/pygaze_log", glob.glob("opensesame_plugins/pygaze_log/*")),
-		("/usr/share/opensesame/plugins/pygaze_start_recording", glob.glob("opensesame_plugins/pygaze_start_recording/*")),
-		("/usr/share/opensesame/plugins/pygaze_stop_recording", glob.glob("opensesame_plugins/pygaze_stop_recording/*")),
-		("/usr/share/opensesame/plugins/pygaze_wait", glob.glob("opensesame_plugins/pygaze_wait/*"))
+		("/usr/share/opensesame/plugins/pygaze_init/resources/locale", files("opensesame_plugins/pygaze_init/resources/locale/*")),
+		("/usr/share/opensesame/plugins/pygaze_init", files("opensesame_plugins/pygaze_init/*")),
+		("/usr/share/opensesame/plugins/pygaze_drift_correct", files("opensesame_plugins/pygaze_drift_correct/*")),
+		("/usr/share/opensesame/plugins/pygaze_log", files("opensesame_plugins/pygaze_log/*")),
+		("/usr/share/opensesame/plugins/pygaze_start_recording", files("opensesame_plugins/pygaze_start_recording/*")),
+		("/usr/share/opensesame/plugins/pygaze_stop_recording", files("opensesame_plugins/pygaze_stop_recording/*")),
+		("/usr/share/opensesame/plugins/pygaze_wait", files("opensesame_plugins/pygaze_wait/*"))
 		]
 
-setup(name="python-pygaze",
-	version = pygaze.deb_version,
-	description = "A Python library for eye tracking",
-	author = "Edwin Dalmaijer",
-	author_email = "edwin.dalmaijer@psy.ox.ac.uk",
-	url = "http://www.pygaze.org/",
+setup(
+	name="python-pygaze",
+	version=pygaze.__version__,
+	description="A Python library for eye tracking",
+	author="Edwin Dalmaijer",
+	author_email="edwin.dalmaijer@psy.ox.ac.uk",
+	url="http://www.pygaze.org/",
+	classifiers=[
+		'Development Status :: 4 - Beta',
+		'Intended Audience :: Science/Research',
+		'Topic :: Scientific/Engineering',
+		'Environment :: MacOS X',
+		'Environment :: Win32 (MS Windows)',
+		'Environment :: X11 Applications',
+		'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+		'Programming Language :: Python :: 2',
+	],
 	packages = [
 		"pygaze",
 		"pygaze._display",
