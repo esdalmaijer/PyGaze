@@ -22,12 +22,14 @@ import glob
 import pygaze
 from setuptools import setup
 
+
 def files(path):
 
 	l = [fname for fname in glob.glob(path) if os.path.isfile(fname) \
 		and not fname.endswith('.pyc')]
 	print(l)
 	return l
+
 
 def data_files():
 
@@ -42,16 +44,21 @@ def data_files():
 		type:	list
 	"""
 
-	if os.name == 'nt':
-		return []
 	return [
-		("/usr/share/opensesame/plugins/pygaze_init/resources/locale", files("opensesame_plugins/pygaze_init/resources/locale/*")),
-		("/usr/share/opensesame/plugins/pygaze_init", files("opensesame_plugins/pygaze_init/*")),
-		("/usr/share/opensesame/plugins/pygaze_drift_correct", files("opensesame_plugins/pygaze_drift_correct/*")),
-		("/usr/share/opensesame/plugins/pygaze_log", files("opensesame_plugins/pygaze_log/*")),
-		("/usr/share/opensesame/plugins/pygaze_start_recording", files("opensesame_plugins/pygaze_start_recording/*")),
-		("/usr/share/opensesame/plugins/pygaze_stop_recording", files("opensesame_plugins/pygaze_stop_recording/*")),
-		("/usr/share/opensesame/plugins/pygaze_wait", files("opensesame_plugins/pygaze_wait/*"))
+		("opensesame_plugins/pygaze_init/resources/locale",
+			files("opensesame_plugins/pygaze_init/resources/locale/*")),
+		("opensesame_plugins/pygaze_init",
+			files("opensesame_plugins/pygaze_init/*")),
+		("opensesame_plugins/pygaze_drift_correct",
+			files("opensesame_plugins/pygaze_drift_correct/*")),
+		("opensesame_plugins/pygaze_log",
+			files("opensesame_plugins/pygaze_log/*")),
+		("opensesame_plugins/pygaze_start_recording",
+			files("opensesame_plugins/pygaze_start_recording/*")),
+		("opensesame_plugins/pygaze_stop_recording",
+			files("opensesame_plugins/pygaze_stop_recording/*")),
+		("opensesame_plugins/pygaze_wait",
+			files("opensesame_plugins/pygaze_wait/*"))
 		]
 
 setup(
@@ -71,6 +78,7 @@ setup(
 		'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
 		'Programming Language :: Python :: 2',
 	],
+	include_package_data=False,
 	packages = [
 		"pygaze",
 		"pygaze._display",
