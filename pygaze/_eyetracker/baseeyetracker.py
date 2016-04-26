@@ -54,14 +54,6 @@ class BaseEyeTracker:
 	"""
 	desc: |
 		A generic Python library for eye tracking.
-
-		__Function list:__
-
-		%--
-		toc:
-			mindepth: 2
-			maxdepth: 2
-		--%
 	"""
 
 	def __init__(self):

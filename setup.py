@@ -45,19 +45,19 @@ def data_files():
 	"""
 
 	return [
-		("opensesame_plugins/pygaze_init/resources/locale",
+		("share/opensesame_plugins/pygaze_init/resources/locale",
 			files("opensesame_plugins/pygaze_init/resources/locale/*")),
-		("opensesame_plugins/pygaze_init",
+		("share/opensesame_plugins/pygaze_init",
 			files("opensesame_plugins/pygaze_init/*")),
-		("opensesame_plugins/pygaze_drift_correct",
+		("share/opensesame_plugins/pygaze_drift_correct",
 			files("opensesame_plugins/pygaze_drift_correct/*")),
-		("opensesame_plugins/pygaze_log",
+		("share/opensesame_plugins/pygaze_log",
 			files("opensesame_plugins/pygaze_log/*")),
-		("opensesame_plugins/pygaze_start_recording",
+		("share/opensesame_plugins/pygaze_start_recording",
 			files("opensesame_plugins/pygaze_start_recording/*")),
-		("opensesame_plugins/pygaze_stop_recording",
+		("share/opensesame_plugins/pygaze_stop_recording",
 			files("opensesame_plugins/pygaze_stop_recording/*")),
-		("opensesame_plugins/pygaze_wait",
+		("share/opensesame_plugins/pygaze_wait",
 			files("opensesame_plugins/pygaze_wait/*"))
 		]
 
