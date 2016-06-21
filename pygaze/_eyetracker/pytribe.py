@@ -21,7 +21,7 @@ class EyeTribe:
 	"""class for eye tracking and data collection using an EyeTribe tracker
 	"""
 
-	def __init__(self, logfilename='default.txt'):
+	def __init__(self, logfilename='default'):
 
 		"""Initializes an EyeTribe instance
 
@@ -93,6 +93,12 @@ class EyeTribe:
 		"""Stops data recording
 		"""
 
+		# consolidate the data file on the hard drive
+		# internal buffer to RAM
+		self._logfile.flush()
+		# RAM file cache to disk
+		os.fsync(self._logfile.fileno())
+
 		# set self._logdata to False, so the data processing thread does not
 		# write samples to the log file
 		if self._logdata:
@@ -116,8 +122,6 @@ class EyeTribe:
 		line = self._separator.join(map(str,[u'MSG',ts,t, safe_decode(message)]))
 		# write message
 		self._logfile.write(line + u'\n') # to internal buffer
-		self._logfile.flush() # internal buffer to RAM
-		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 
 	def sample(self):
 
@@ -313,8 +317,6 @@ class EyeTribe:
 								]))
 		# write line to log file
 		self._logfile.write(line + '\n') # to internal buffer
-		self._logfile.flush() # internal buffer to RAM
-		os.fsync(self._logfile.fileno()) # RAM file cache to disk
 
 	def _log_header(self):
 
@@ -466,53 +468,19 @@ class connection:
 					the EyeTribe tracker
 		"""
 
-		# check if 'values' is a dict
-		if type(values) == dict:
-			# create a value string
-			valuestring = '''{\n'''
-			# loop through all keys of the value dict
-			for k in values.keys():
-				# add key and value
-				valuestring += '\t\t"%s": %s,\n' % (k, values[k])
-			# omit final comma
-			valuestring = valuestring[:-2]
-			valuestring += '\n\t}'
-		# check if 'values' is a tuple or a list
-		elif type(values) in [list,tuple]:
-			# create a value string
-			valuestring = '''[ "'''
-			# compose a string of all the values
-			valuestring += '", "'.join(values)
-			# append the list ending
-			valuestring += '" ]'
-		# check if there are no values
-		elif values == None:
-			pass
 		# error if the values are anything other than a dict, tuple or list
-		else:
+		if values is not None and type(values) not in [dict, list, tuple]:
 			raise Exception("values should be dict, tuple or list, not '%s' (values = %s)" % (type(values),values))
 
 		# create the json message
 		if request == None:
-			jsonmsg = '''
-{
-"category": "%s"
-}''' % (category)
+			jsondict = {"category":category}
 		elif values == None:
-			jsonmsg = '''
-{
-"category": "%s",
-"request": "%s",
-}''' % (category, request)
+			jsondict = {"category":category, "request":request}
 		else:
-			jsonmsg = '''
-{
-"category": "%s",
-"request": "%s",
-"values": %s
-}''' % (category, request, valuestring)
+			jsondict = {"category":category, "request":request, "values":values}
 
-		return jsonmsg
+		return json.dumps(jsondict)
 
 	def parse_json(self, jsonmsg):
 
@@ -847,30 +815,48 @@ class tracker:
 		# raise error if needed
 		if response['statuscode'] != 200:
 			raise Exception("Error in tracker.get_frame: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
-		# parse response
+		# calculate pupil size
+		# if both eyes are available, take the average
+		if response['values']['frame']['lefteye']['psize'] > 0 and \
+			response['values']['frame']['righteye']['psize'] > 0:
+			psize = (response['values']['frame']['lefteye']['psize'] + \
+				response['values']['frame']['righteye']['psize']) / 2.0
+		# if only the right eye is available, then use the right eye
+		elif response['values']['frame']['lefteye']['psize'] == 0 and \
+			response['values']['frame']['righteye']['psize'] > 0:
+			psize = response['values']['frame']['righteye']['psize']
+		# if only the left eye is available, then use the left eye
+		elif response['values']['frame']['lefteye']['psize'] > 0 and \
+			response['values']['frame']['righteye']['psize'] == 0:
+			psize = response['values']['frame']['lefteye']['psize']
+		# if neither eye is available, then use the EyeTribe's standard
+		# missing value (0.0)
+		else:
+			psize = 0.0
+		# return the data in a dict
 		return {	'timestamp':	response['values']['frame']['timestamp'],
 				'time':		response['values']['frame']['time'],
-				'fix':		response['values']['frame']['fix']=='true',
+				'fix':		response['values']['frame']['fix'],
 				'state':		response['values']['frame']['state'],
 				'rawx':		response['values']['frame']['raw']['x'],
 				'rawy':		response['values']['frame']['raw']['y'],
 				'avgx':		response['values']['frame']['avg']['x'],
 				'avgy':		response['values']['frame']['avg']['y'],
-				'psize':		(response['values']['frame']['lefteye']['psize']+response['values']['frame']['righteye']['psize'])/2.0,
+				'psize':		psize,
 				'Lrawx':		response['values']['frame']['lefteye']['raw']['x'],
 				'Lrawy':		response['values']['frame']['lefteye']['raw']['y'],
 				'Lavgx':		response['values']['frame']['lefteye']['avg']['x'],
 				'Lavgy':		response['values']['frame']['lefteye']['avg']['y'],
 				'Lpsize':		response['values']['frame']['lefteye']['psize'],
-				'Lpupilx':	response['values']['frame']['lefteye']['pcenter']['x'],
-				'Lpupily':	response['values']['frame']['lefteye']['pcenter']['y'],
+				'Lpupilx':		response['values']['frame']['lefteye']['pcenter']['x'],
+				'Lpupily':		response['values']['frame']['lefteye']['pcenter']['y'],
 				'Rrawx':		response['values']['frame']['righteye']['raw']['x'],
 				'Rrawy':		response['values']['frame']['righteye']['raw']['y'],
 				'Ravgx':		response['values']['frame']['righteye']['avg']['x'],
 				'Ravgy':		response['values']['frame']['righteye']['avg']['y'],
 				'Rpsize':		response['values']['frame']['righteye']['psize'],
-				'Rpupilx':	response['values']['frame']['righteye']['pcenter']['x'],
-				'Rpupily':	response['values']['frame']['righteye']['pcenter']['y']
+				'Rpupilx':		response['values']['frame']['righteye']['pcenter']['x'],
+				'Rpupily':		response['values']['frame']['righteye']['pcenter']['y']
 				}
 
 	def get_screenindex(self):
