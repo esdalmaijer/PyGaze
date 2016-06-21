@@ -574,7 +574,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['push'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['push'] == 'true'
+			return response['values']['push']
 		else:
 			raise Exception("Error in tracker.get_push: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
@@ -653,7 +653,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['iscalibrated'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['iscalibrated'] == 'true'
+			return response['values']['iscalibrated']
 		else:
 			raise Exception("Error in tracker.get_iscalibrated: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
@@ -666,7 +666,7 @@ class tracker:
 		response = self.connection.request('tracker', 'get', ['iscalibrating'])
 		# return value or error
 		if response['statuscode'] == 200:
-			return response['values']['iscalibrating'] == 'true'
+			return response['values']['iscalibrating']
 		else:
 			raise Exception("Error in tracker.get_iscalibrating: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
