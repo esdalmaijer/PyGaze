@@ -45,6 +45,7 @@ class EyeTribe:
 		# initialize connection
 		self._connection = connection(host=host, port=port)
 		self._tracker = tracker(self._connection)
+#		self._tracker.set_push(push=False)
 		self._heartbeat = heartbeat(self._connection)
 
 		# create a new Lock
@@ -69,6 +70,7 @@ class EyeTribe:
 
 		# initialize data processer
 		self._processing = True
+		self._processing_paused = False
 		self._logdata = False
 		self._currentsample = copy.deepcopy(self._newestframe)
 		self._dpthread = Thread(target=self._process_samples, args=[self._queue])
@@ -125,7 +127,7 @@ class EyeTribe:
 		
 		# Correct the time to EyeTribe time
 		if self._clockdiff != None:
-			t = int(t + self._clockdiff)
+			t = int(t*1000 + self._clockdiff)
 		else:
 			t = ''
 		# assemble line
@@ -192,15 +194,21 @@ class EyeTribe:
 		# close the connection
 		self._connection.close()
 
-	def _wait_while_calibrating(self):
+	def _pause_sample_processing(self):
 
-		"""Waits until the tracker is not in the calibration state
+		"""Halts the processing of samples. Make sure to call this when
+		you calibrate the tracker.
 		"""
 
-		while self._tracker.get_iscalibrating():
-			pass
+		self._processing_paused = True
 
-		return True
+	def _unpause_sample_processing(self):
+
+		"""Continues the processing of samples. Make sure to call this when
+		you are done calibrating the tracker.
+		"""
+
+		self._processing_paused = False
 
 	def _heartbeater(self, heartbeatinterval):
 
@@ -244,21 +252,21 @@ class EyeTribe:
 
 		# keep streaming until it is signalled that we should stop
 		while self._streaming:
-			# do not bother the tracker when it is calibrating
-			#self._wait_while_calibrating()
-			# wait for the Threading Lock to be released, then lock it
-			self._lock.acquire(True)
-			# get a new sample
-			sample = self._tracker.get_frame()
-			t1 = time.time()
-			# put the sample in the Queue
-			queue.put(sample)
-			# release the Threading Lock
-			self._lock.release()
-			# Update the newest frame
-			self._newestframe = copy.deepcopy(sample)
-			# Calculate the clock difference
-			self._clockdiff = sample['time'] - t1
+			# Only get a sample if the processing is not paused
+			if not self._processing_paused:
+				# wait for the Threading Lock to be released, then lock it
+				self._lock.acquire(True)
+				# get a new sample
+				sample = self._tracker.get_frame()
+				t1 = time.time() * 1000
+				# put the sample in the Queue
+				queue.put(sample)
+				# release the Threading Lock
+				self._lock.release()
+				# Update the newest frame
+				self._newestframe = copy.deepcopy(sample)
+				# Calculate the clock difference
+				self._clockdiff = sample['time'] - t1
 			# pause for half the intersample time, to avoid an overflow
 			# (but to make sure to not miss any samples)
 			time.sleep(self._intsampletime/2)
@@ -543,6 +551,7 @@ class connection:
 		self.host = host
 		self.port = port
 		self.resplist = []
+		self._unfinished_response = ''
 		self.DEBUG = False
 
 		# initialize a connection
@@ -561,12 +570,17 @@ class connection:
 		request	--	string indicating the actual request of the message
 		values	--	dict or list containing parameters of the request
 		"""
+		
+		# Trim the response list.
+		if len(self.resplist) > 100:
+			self.resplist = self.resplist[-99:]
 
 		# create a JSON formatted string
 		msg = self.create_json(category, request, values)
 		# send the message over the connection
 		self._request_lock.acquire()
 		self.sock.send(msg)
+		self._request_lock.release()
 		# print request in DEBUG mode
 		if self.DEBUG:
 			print("REQUEST: '%s'" % msg)
@@ -574,27 +588,50 @@ class connection:
 		# give the tracker a wee bit of time to reply
 		time.sleep(0.005)
 
-		# get new responses
-		success = self.get_response()
-		self._request_lock.release()
+		# Try finding the correct responses up to five times. The EyeTribe
+		# sends a lot of shit our way, so it can happen that the actual
+		# request gets drowned in frame requests.
+		for i in range(5):
+			# get new responses
+			self._request_lock.acquire()
+			success = self.get_response()
+			self._request_lock.release()
+	
+			# return the appropriate response
+			if success:
+				# Count from the most recent response down, to prevent
+				# returning old samples.
+				for i in range(len(self.resplist)-1, -1, -1):
+					# check if the category matches
+					if self.resplist[i]['category'] == category:
+						# if this is a heartbeat, return
+						if self.resplist[i]['category'] == 'heartbeat':
+							return self.resplist.pop(i)
+						# If this is a calibration, check whether
+						# the category matches with the request
+						elif self.resplist[i]['category'] == 'calibration':
+							if 'request' in self.resplist[i].keys() and \
+								self.resplist[i]['request'] == request:
+								return self.resplist.pop(i)
+						# If this is a tracker, check whether the
+						# request matches, and then check whether
+						# the values match. Tracker requests can be
+						# either 'get' or 'set', and their values
+						# determine what response will be returned.
+						elif self.resplist[i]['category'] == 'tracker':
+							if 'request' in self.resplist[i].keys() and \
+								self.resplist[i]['request'] == request:
+								if 'values' in self.resplist[i].keys() and \
+									values[0] in self.resplist[i]['values'].keys():
+									return self.resplist.pop(i)
+			# on a connection error, get_response returns False and a connection
+			# error should be returned
+			else:
+				return self.parse_json('{"statuscode":901,"values":{"statusmessage":"connection error"}}')
+		# If we couldn't find the response that matches our request, return
+		# a 404 status message.
+		return self.parse_json('{"statuscode":404,"values":{"statusmessage":"could not find response to this request"}}')
 
-		# return the appropriate response
-		if success:
-			for i in range(len(self.resplist)):
-				# check if the category matches
-				if self.resplist[i]['category'] == category:
-					# if this is a heartbeat, return
-					if self.resplist[i]['category'] == 'heartbeat':
-						return self.resplist.pop(i)
-					# if this is another category, check if the request
-					# matches
-					elif 'request' in self.resplist[i] and \
-						self.resplist[i]['request'] == request:
-						return self.resplist.pop(i)
-		# on a connection error, get_response returns False and a connection
-		# error should be returned
-		else:
-			return self.parse_json('{"statuscode":901,"values":{"statusmessage":"connection error"}}')
 
 	def get_response(self):
 
@@ -614,12 +651,29 @@ class connection:
 			self.revive()
 			response = '{"statuscode":901,"values":{"statusmessage":"connection error"}}'
 			return False
-		# split the responses (in case multiple came in)
+		# split the responses (usually, multiple come in)
 		response = response.split('\n')
 		# add parsed responses to the internal list
-		for r in response:
+		for i, r in enumerate(response):
 			if r:
-				self.resplist.append(self.parse_json(r))
+				resp = None
+				if i == 0:
+					try:
+						resp = self.parse_json(r)
+					except:
+						r = self._unfinished_response + r
+				elif i == len(response) - 1:
+					try:
+						resp = self.parse_json(r)
+					except:
+						self._unfinished_response = r
+				if not resp:
+					try:
+						resp = self.parse_json(r)
+					except:
+						print("WARNING: Could not parse response '%s'" % (r))
+				if resp:
+					self.resplist.append(resp)
 
 		return True
 

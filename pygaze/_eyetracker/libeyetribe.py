@@ -187,12 +187,16 @@ class EyeTribeTracker(BaseEyeTracker):
 		else:
 			quited = False
 		
+		# Pause the processing of samples during the calibration.
+#		self.eyetribe._pause_sample_processing()
 		# run until the user is statisfied, or quits
 		calibrated = False
 		calibresult = None
 		while not quited and not calibrated:
 			# start a new calibration
+			self.eyetribe._lock.acquire(True)
 			self.eyetribe.calibration.start(pointcount=len(calibpoints))
+			self.eyetribe._lock.release()
 			
 			# loop through calibration points
 			for cpos in calibpoints:
@@ -201,18 +205,24 @@ class EyeTribeTracker(BaseEyeTracker):
 				# the calibration point (#TODO: space press?)
 				clock.pause(settings.EYETRIBEPRECALIBDUR)
 				# start calibration of point
+				self.eyetribe._lock.acquire(True)
 				self.eyetribe.calibration.pointstart(cpos[0],cpos[1])
+				self.eyetribe._lock.release()
 				# wait for a second
 				clock.pause(settings.EYETRIBECALIBDUR)
 				# stop calibration of this point
+				self.eyetribe._lock.acquire(True)
 				result = self.eyetribe.calibration.pointend()
+				self.eyetribe._lock.release()
 				# the final calibration point returns a dict (does it?)
 				if type(result) == dict:
 					calibresult = copy.deepcopy(result)
 				# check if the Q key has been pressed
 				if self.kb.get_key(keylist=['q'],timeout=10,flush=False)[0] == 'q':
 					# abort calibration
+					self.eyetribe._lock.acquire(True)
 					self.eyetribe.calibration.abort()
+					self.eyetribe._lock.release()
 					# set quited variable and break this for loop
 					quited = True
 					break
@@ -242,7 +252,9 @@ class EyeTribeTracker(BaseEyeTracker):
 				# allow for a bit of calculation time
 				clock.pause(2000)
 				# get the result
+				self.eyetribe._lock.acquire(True)
 				calibresult = self.eyetribe._tracker.get_calibresult()
+				self.eyetribe._lock.release()
 
 			# results
 			# clear the screen
@@ -307,6 +319,9 @@ class EyeTribeTracker(BaseEyeTracker):
 			# process input
 			if key == 'space':
 				calibrated = True
+
+		# Continue the processing of samples after the calibration.
+#		self.eyetribe._unpause_sample_processing()
 
 		# calibration failed if the user quited
 		if quited:
