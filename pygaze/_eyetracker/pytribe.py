@@ -1408,7 +1408,7 @@ class calibration:
 			raise Exception("Error in calibration.pointend: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
 		# return True if this was not the final calibration point
-		if not 'calibresult' in response['values']:
+		if ('values' not in response.keys()) or ('calibresult' not in response['values'].keys()):
 			return True
 
 		# if this was the final calibration point, return the results
