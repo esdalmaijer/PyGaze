@@ -1,1 +1,3 @@
+recursive-include opensesame_plugins *
 global-exclude *.pyc
+global-exclude *.pyo

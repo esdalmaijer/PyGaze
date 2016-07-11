@@ -19,11 +19,13 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from pygaze.py3compat import *
 from pygaze.settings import settings
 from distutils.version import StrictVersion
+import sys
 import os
 
-__version__ = version = u'0.6.0a10'
+__version__ = version = u'0.6.0a15'
 strict_version = StrictVersion(__version__)
 # The version without the prerelease (if any): e.g. 3.0.0
 main_version = u'.'.join([str(i) for i in strict_version.version])
@@ -34,15 +36,17 @@ else:
 	deb_version = main_version + u'~%s%d' % strict_version.prerelease
 
 # directory stuff
-DIR = os.path.dirname(__file__)
+DIR = safe_decode(os.path.dirname(__file__), enc=sys.getfilesystemencoding())
 if os.path.exists(u'resources'):
 	RESDIR = u'resources'
 elif os.path.exists(os.path.join(DIR, u'resources')):
 	RESDIR = os.path.join(DIR, u'resources')
 elif os.path.exists(u'/usr/share/pygaze/resources'):
 	RESDIR = u'/usr/share/pygaze/resources'
-else:
+elif py3:
 	RESDIR = os.getcwd()
+else:
+	RESDIR = os.getcwdu()
 FONTDIR = os.path.join(RESDIR, u'fonts')
 SOUNDDIR = os.path.join(RESDIR, u'sounds')
 
