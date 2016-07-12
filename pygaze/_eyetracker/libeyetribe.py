@@ -193,6 +193,10 @@ class EyeTribeTracker(BaseEyeTracker):
 		calibrated = False
 		calibresult = None
 		while not quited and not calibrated:
+			
+			# Wait for a bit.
+			clock.pause(1500)
+
 			# start a new calibration
 			self.eyetribe._lock.acquire(True)
 			self.eyetribe.calibration.start(pointcount=len(calibpoints))
@@ -212,11 +216,8 @@ class EyeTribeTracker(BaseEyeTracker):
 				clock.pause(settings.EYETRIBECALIBDUR)
 				# stop calibration of this point
 				self.eyetribe._lock.acquire(True)
-				result = self.eyetribe.calibration.pointend()
+				self.eyetribe.calibration.pointend()
 				self.eyetribe._lock.release()
-				# the final calibration point returns a dict (does it?)
-				if type(result) == dict:
-					calibresult = copy.deepcopy(result)
 				# check if the Q key has been pressed
 				if self.kb.get_key(keylist=['q'],timeout=10,flush=False)[0] == 'q':
 					# abort calibration
@@ -244,17 +245,16 @@ class EyeTribeTracker(BaseEyeTracker):
 				# skip further processing
 				continue
 
-			# get the calibration result if it was not obtained yet
-			if type(calibresult) != dict:
-				# empty display
-				self.disp.fill()
-				self.disp.show()
-				# allow for a bit of calculation time
-				clock.pause(2000)
-				# get the result
-				self.eyetribe._lock.acquire(True)
-				calibresult = self.eyetribe._tracker.get_calibresult()
-				self.eyetribe._lock.release()
+			# empty display
+			self.disp.fill()
+			self.disp.show()
+			# allow for a bit of calculation time
+			# (this is waaaaaay too much)
+			clock.pause(1000)
+			# get the calibration result
+			self.eyetribe._lock.acquire(True)
+			calibresult = self.eyetribe._tracker.get_calibresult()
+			self.eyetribe._lock.release()
 
 			# results
 			# clear the screen

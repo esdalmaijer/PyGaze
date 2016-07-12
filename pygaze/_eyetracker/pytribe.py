@@ -547,18 +547,92 @@ class connection:
 					only 6555 is supported (default = 6555)
 		"""
 
-		# properties
+		# Define properties for this connection.
 		self.host = host
 		self.port = port
-		self.resplist = []
-		self._unfinished_response = ''
 		self.DEBUG = False
 
-		# initialize a connection
+		# Dict for the most recent responses. This dict is updated whenever
+		# a new response comes in from the tracker. It has top-level keys
+		# for each category ('tracker', 'calibration', and 'heartbeat'),
+		# second-level keys for each potential request (e.g. 'set' and
+		# 'get' for the tracker category), and third-level keys for each
+		# subtype of request (e.g. 'frame' for the 'get' request in the
+		# 'tracker' category).
+		self._responses = { \
+			'tracker':		{ \
+				'get':	{ \
+					'push':			None,
+					'heartbeatinterval':	None,
+					'version':			None,
+					'trackerstate':		None,
+					'framerate':		None,
+					'iscalibrated':		None,
+					'iscalibrating':		None,
+					'calibresult':		None,
+					'frame':			None,
+					'screenindex':		None,
+					'screenresw':		None,
+					'screenresh':		None,
+					'screenpsyw':		None,
+					'screenpsyh':		None
+					}, \
+				'set':	{ \
+					'push':			None,
+					'heartbeatinterval':	None,
+					'version':			None,
+					'trackerstate':		None,
+					'framerate':		None,
+					'iscalibrated':		None,
+					'iscalibrating':		None,
+					'calibresult':		None,
+					'frame':			None,
+					'screenindex':		None,
+					'screenresw':		None,
+					'screenresh':		None,
+					'screenpsyw':		None,
+					'screenpsyh':		None
+					} \
+				}, \
+			'calibration':	{ \
+				'start':				None, \
+				'pointstart':			None, \
+				'pointend':				None, \
+				'abort':				None, \
+				'clear':				None \
+				}, \
+			'heartbeat':				None \
+			}
+
+		# The reponse timeout (in seconds) determines how long we should
+		# wait for the relevant _responses dict field to be populated,
+		# after sending a request over the connection.		
+		self.response_timeout = 1.0
+
+		# Initialize a connection with the EyeTribe server.
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.connect((self.host,self.port))
-		# Create lock
+
+		# Create a request Lock to prevent simultaneous access to the
+		# connection.
 		self._request_lock = Lock()
+		
+		# Open a DEBUG text file in DEBUG mode. Also create a Lock, to
+		# prevent separate Threads simultaneously writing to the file.
+		if self.DEBUG:
+			self._debugfile = open('DEBUG_output.txt', 'w')
+			t = time.time()
+			self._debugfile.write("PYTRIBE DEBUG OUTPUT %s (%d)" % \
+				(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t)), t*1000))
+			self._debuglock = Lock()
+		
+		# Launch a Thread that monitors the connection, and processes every
+		# response from the EyeTribe that comes in over the connection.
+		self._listening = True
+		self._listenthread = Thread(target=self._get_responses, args=[])
+		self._listenthread.daemon = True
+		self._listenthread.name = 'listener'
+		self._listenthread.start()
 
 	def request(self, category, request, values):
 
@@ -571,111 +645,64 @@ class connection:
 		values	--	dict or list containing parameters of the request
 		"""
 		
-		# Trim the response list.
-		if len(self.resplist) > 100:
-			self.resplist = self.resplist[-99:]
-
-		# create a JSON formatted string
+		# Create a JSON-formatted string for the current request.
 		msg = self.create_json(category, request, values)
-		# send the message over the connection
+		
+		# Acquire the lock, to prevent simultaneous access.
+		self._request_lock.acquire()
+		# Clear the response that's currently in memory.
+		if category == 'heartbeat':
+			self._responses[category] = None
+		elif category == 'calibration':
+			self._responses[category][request] = None
+		elif category == 'tracker':
+			self._responses[category][request][values[0]] = None
+		# Release the lock, to allow other Threads to access the
+		# _responses dict again.
+		self._request_lock.release()
+
+		# Send the JSON-formatted message over the connection.
 		self._request_lock.acquire()
 		self.sock.send(msg)
 		self._request_lock.release()
-		# print request in DEBUG mode
+
+		# Store request in DEBUG mode.
 		if self.DEBUG:
-			print("REQUEST: '%s'" % msg)
-
-		# give the tracker a wee bit of time to reply
-		time.sleep(0.005)
-
-		# Try finding the correct responses up to five times. The EyeTribe
-		# sends a lot of shit our way, so it can happen that the actual
-		# request gets drowned in frame requests.
-		for i in range(5):
-			# get new responses
+			self._debuglock.acquire()
+			self._debugfile.write("\nREQUEST (%d): '%s'" % (time.time()*1000, msg))
+			self._debuglock.release()
+		
+		# Wait until a response is available.
+		r = None
+		t0 = time.time()
+		success = False
+		while time.time() - t0 <= self.response_timeout:
+			# Acquire the lock, to prevent simultaneous access.
 			self._request_lock.acquire()
-			success = self.get_response()
+			# Check if a response is available.
+			if category == 'heartbeat':
+				r = self._responses[category]
+			elif category == 'calibration':
+				r = self._responses[category][request]
+			elif category == 'tracker':
+				r = self._responses[category][request][values[0]]
+			# Release the lock, to allow other Threads to access the
+			# _responses dict again.
 			self._request_lock.release()
-	
-			# return the appropriate response
-			if success:
-				# Count from the most recent response down, to prevent
-				# returning old samples.
-				for i in range(len(self.resplist)-1, -1, -1):
-					# check if the category matches
-					if self.resplist[i]['category'] == category:
-						# if this is a heartbeat, return
-						if self.resplist[i]['category'] == 'heartbeat':
-							return self.resplist.pop(i)
-						# If this is a calibration, check whether
-						# the category matches with the request
-						elif self.resplist[i]['category'] == 'calibration':
-							if 'request' in self.resplist[i].keys() and \
-								self.resplist[i]['request'] == request:
-								return self.resplist.pop(i)
-						# If this is a tracker, check whether the
-						# request matches, and then check whether
-						# the values match. Tracker requests can be
-						# either 'get' or 'set', and their values
-						# determine what response will be returned.
-						elif self.resplist[i]['category'] == 'tracker':
-							if 'request' in self.resplist[i].keys() and \
-								self.resplist[i]['request'] == request:
-								if 'values' in self.resplist[i].keys() and \
-									values[0] in self.resplist[i]['values'].keys():
-									return self.resplist.pop(i)
-			# on a connection error, get_response returns False and a connection
-			# error should be returned
+			# Wait for a bit if no response is available.
+			if r == None:
+				time.sleep(0.005)
 			else:
-				return self.parse_json('{"statuscode":901,"values":{"statusmessage":"connection error"}}')
+				success = True
+				break
+
 		# If we couldn't find the response that matches our request, return
 		# a 404 status message.
-		return self.parse_json('{"statuscode":404,"values":{"statusmessage":"could not find response to this request"}}')
+		if not success:
+			r = self.parse_json('{"statuscode":404,"values":{"statusmessage":"could not find response to this request"}}')
 
-
-	def get_response(self):
-
-		"""Asks for a response, and adds these to the list of all received
-		responses (basically a very simple queue)
-		"""
-
-		# try to get a new response
-		try:
-			response = self.sock.recv(32768)
-			# print reply in DEBUG mode
-			if self.DEBUG:
-				print("REPLY: '%s'" % response)
-		# if it fails, revive the connection and return a connection error
-		except socket.error:
-			print("reviving connection")
-			self.revive()
-			response = '{"statuscode":901,"values":{"statusmessage":"connection error"}}'
-			return False
-		# split the responses (usually, multiple come in)
-		response = response.split('\n')
-		# add parsed responses to the internal list
-		for i, r in enumerate(response):
-			if r:
-				resp = None
-				if i == 0:
-					try:
-						resp = self.parse_json(r)
-					except:
-						r = self._unfinished_response + r
-				elif i == len(response) - 1:
-					try:
-						resp = self.parse_json(r)
-					except:
-						self._unfinished_response = r
-				if not resp:
-					try:
-						resp = self.parse_json(r)
-					except:
-						print("WARNING: Could not parse response '%s'" % (r))
-				if resp:
-					self.resplist.append(resp)
-
-		return True
+		# Parse and return the response.
+		return r
 
 	def create_json(self, category, request, values):
 
@@ -757,21 +784,146 @@ class connection:
 
 		"""Re-establishes a connection
 		"""
+		
+		# Acquire the request Lock, to prevent simultaneous access to the
+		# connection while we are reviving it.
+		self._request_lock.acquire()
 
-		# close old connection
+		# Close old connection.
 		self.close()
-		# initialize a connection
+
+		# Initialize a new connection.
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.connect((self.host,self.port))
 
+		# Release the lock, to allow other Threads to access the new
+		# connection.
+		self._request_lock.release()
 
 	def close(self):
 
 		"""Closes the connection to the EyeTribe tracker
 		"""
+		
+		# Stop the sub-Thread that listens to the EyeTribe and processes
+		# its responses.
+		self._listening = False
 
-		# close the socket connection
+		# Close the socket connection.
 		self.sock.close()
+
+
+	def _get_responses(self):
+
+		"""INTERNAL USE ONLY. This method is run in a sub-Thread, to listen
+		to the EyeTribe, and to process all its responses. Responses are
+		stored in a 
+		"""
+		
+		# Create a variable to store any unfinished responses.
+		unfinished = ''
+		
+		# Run until self._listening turns False.
+		while self._listening:
+			
+			# Try to get a response from the connection.
+			try:
+				responses = self.sock.recv(32768)
+			# If it fails, revive the connection and register a
+			# connection error.
+			except socket.error:
+				print("reviving connection")
+				self.revive()
+				responses = '{"statuscode":901,"values":{"statusmessage":"connection error"}}'
+			
+			# Store the raw responses in DEBUG mode.
+			if self.DEBUG:
+				self._debuglock.acquire()
+				self._debugfile.write("\nRAWRESPONSES (%d): '%s'" % (time.time()*1000, responses))
+				self._debuglock.release()
+
+			# Split the responses (usually, multiple come in at once).
+			responses = responses.split('\n')
+
+			# Parse the responses.
+			for i, r in enumerate(responses):
+
+				# Skip the response if it's empty.
+				if r == '':
+					continue
+
+				# Reset the resp variable.
+				resp = None
+
+				# Try to parse the response.
+				try:
+					resp = self.parse_json(r)
+				# If parsing the response fails, we probably received
+				# a half-formed response.
+				except:
+					# If we currently don't have half a respons
+					# stored, then the current response might well be
+					# the first half of a half-formed response.
+					if unfinished == '':
+						# Store the unfinished response.
+						unfinished = copy.deepcopy(r)
+					# If we do have an unfinished response stored, try
+					# to match it up with the current half-formed
+					# response.
+					else:
+						# Combine + parse the stored unfinished
+						# response, and the incoming half-formed
+						# response.
+						try:
+							resp = self.parse_json(unfinished + r)
+						# If we can't use the stored unfinished
+						# response and the incoming half-formed one,
+						# just do nothing.
+						except:
+							pass
+						# Reset the unfinished response.
+						unfinished = ''
+				
+				# In DEBUG mode, store the parsed response.
+				if self.DEBUG:
+					self._debuglock.acquire()
+					self._debugfile.write("\nPARSEDRESPONSE (%d): '%s'" % (time.time()*1000, resp))
+					self._debuglock.release()
+
+				# Store the parsed response in the _responses dict.
+				if resp != None:
+					if 'category' in resp.keys():
+						self._request_lock.acquire()
+						if resp['category'] == 'heartbeat':
+							self._responses[resp['category']] = \
+								copy.deepcopy(resp)
+						elif resp['category'] == 'calibration':
+							if 'request' in resp.keys():
+								# Special category: if the
+								# request was 'pointend', the
+								# 'calibresult' can be returned.
+								# We want to store this in the
+								# tracker.get.calibresult entry
+								# too.
+								self._responses[resp['category']][resp['request']] = \
+									copy.deepcopy(resp)
+								if resp['request'] == 'pointend' and \
+									'values' in resp.keys() and \
+									'calibresult' in resp['values'].keys():
+									self._responses['tracker']['get']['calibresult'] = \
+										copy.deepcopy(resp)
+							else:
+								print("Could not store response: '%s'" % (resp))
+						elif resp['category'] == 'tracker':
+							if ('request' in resp.keys()) and ('values' in resp.keys()):
+								for k in resp['values'].keys():
+									self._responses[resp['category']][resp['request']][k] = \
+										copy.deepcopy(resp)
+							else:
+								print("Could not store response: '%s'" % (resp))
+						self._request_lock.release()
+					else:
+						print("Could not store response: '%s'" % (resp))
 
 
 class tracker:
@@ -990,7 +1142,7 @@ class tracker:
 			raise Exception("Error in tracker.get_calibresult: %s (code %d)" % (response['values']['statusmessage'],response['statuscode']))
 
 		# return True if this was not the final calibration point
-		if not 'calibpoints' in response['values']:
+		if not 'calibresult' in response['values']:
 			return None
 
 		# if this was the final calibration point, return the results
