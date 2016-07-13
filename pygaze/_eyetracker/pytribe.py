@@ -1505,7 +1505,7 @@ class calibration:
 				{'pointcount':pointcount})
 		    # return value or error
 		    if response['statuscode'] == 200:
-		        return
+		        return True
 		    self.abort()
 		raise Exception("Error in calibration.start: %s (code %d)" \
 			% (response['values']['statusmessage'],response['statuscode']))		
