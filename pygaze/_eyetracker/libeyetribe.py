@@ -193,17 +193,32 @@ class EyeTribeTracker(BaseEyeTracker):
 		calibrated = False
 		calibresult = None
 		while not quited and not calibrated:
+
+			# Clear the existing calibration.
+			if self.eyetribe._tracker.get_iscalibrated():
+				self.eyetribe._lock.acquire(True)
+				self.eyetribe.calibration.clear()
+				self.eyetribe._lock.release()
 			
 			# Wait for a bit.
 			clock.pause(1500)
 
 			# start a new calibration
-			self.eyetribe._lock.acquire(True)
-			self.eyetribe.calibration.start(pointcount=len(calibpoints))
-			self.eyetribe._lock.release()
+			if not self.eyetribe._tracker.get_iscalibrating():
+				self.eyetribe._lock.acquire(True)
+				self.eyetribe.calibration.start(pointcount=len(calibpoints))
+				self.eyetribe._lock.release()
 			
 			# loop through calibration points
 			for cpos in calibpoints:
+				# Check whether the calibration is already done.
+				# (Not sure how or why, but for some reason some data
+				# can persist between calbrations, and the tracker will
+				# simply stop allowing further pointstart requests.)
+				if self.eyetribe._tracker.get_iscalibrated():
+					break
+				
+				# Draw a calibration target.
 				self.draw_calibration_target(cpos[0], cpos[1])
 				# wait for a bit to allow participant to start looking at
 				# the calibration point (#TODO: space press?)
