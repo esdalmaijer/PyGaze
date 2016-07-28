@@ -1,5 +1,6 @@
 category: PyGaze
 priority: 10
+help: manual/eyetracking/pygaze
 controls:
   - type: combobox
     var: tracker_type
@@ -42,7 +43,7 @@ controls:
     tooltip: Acceleration threshold for saccade detection algorithm
     name: spinbox_sacc_acc_thr
   - type: text
-    label: '<b>Warning:</b> PyLink is required for EyeLink functionality and is not installed. Visit http://osdoc.cogsci.nl/devices/eyelink for more information.'
+    label: '<b>Warning:</b> PyLink is required for EyeLink functionality and is not installed. Visit http://osdoc.cogsci.nl/manual/eyetracking/eyelink/ for more information.'
     name: text_eyelink_pylink_check
   - type: text
     label: DUMMY

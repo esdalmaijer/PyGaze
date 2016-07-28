@@ -1,5 +1,6 @@
 category: PyGaze
 priority: 10
+help: manual/eyetracking/pygaze
 controls:
   - type: line_edit
     var: xpos
