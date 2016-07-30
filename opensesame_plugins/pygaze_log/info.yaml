@@ -1,5 +1,6 @@
 category: PyGaze
 priority: 10
+icon: os-pygaze_log
 help: manual/eyetracking/pygaze
 controls:
   - type: spinbox
