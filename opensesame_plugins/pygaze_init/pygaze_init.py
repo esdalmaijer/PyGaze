@@ -121,7 +121,7 @@ class pygaze_init(item):
 		settings.DISPSIZE = self.resolution()
 		settings.BGC = self.var.background
 		settings.FGC = self.var.foreground
-		
+
 		if self.var.calbeep == u'yes':
 			settings.EYELINKCALBEEP = True
 		else:
@@ -184,6 +184,8 @@ class pygaze_init(item):
 				kwdict[u'data_file'] = logfile
 		else:
 			logfile = self.var._logfile
+		# Register the logfile with OpenSesame
+		self.experiment.data_files.append(logfile)
 		# Determine event detection. Currently, only the EyeLink has native
 		# event detection.
 		if tracker_type == u'eyelink':

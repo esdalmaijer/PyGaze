@@ -1,6 +1,7 @@
 category: PyGaze
 priority: 10
 help: manual/eyetracking/pygaze
+icon: os-pygaze_init
 controls:
   - type: combobox
     var: tracker_type
