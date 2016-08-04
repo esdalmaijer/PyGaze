@@ -1011,7 +1011,7 @@ class TobiiTracker(BaseEyeTracker):
 					# check if fixation time threshold has been surpassed
 					if t1 - t0 >= self.fixtimetresh:
 						# return time and starting position
-						return t1, spos
+						return t0, spos
 
 
 	def wait_for_saccade_end(self):
