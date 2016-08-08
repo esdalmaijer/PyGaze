@@ -160,3 +160,24 @@ class BaseDisplay:
 		"""
 
 		pass
+
+	def make_screenshot(self, filename='screenshot.png'):
+
+		"""
+		Make a screenshot from the current display.
+
+		arguments
+
+		None
+
+		keyword arguments
+
+		filename	--	path and filename, under wich the screenshot should
+						will be saved. Defaults to screenshot.png
+
+		returns
+
+		None
+		"""
+
+		pass
