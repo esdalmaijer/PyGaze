@@ -172,8 +172,8 @@ class BaseDisplay:
 
 		keyword arguments
 
-		filename	--	path and filename, under wich the screenshot should
-						will be saved. Defaults to screenshot.png
+		filename	--	path and filename, under wich the screenshot will be
+						saved. Defaults to screenshot.png
 
 		returns
 
