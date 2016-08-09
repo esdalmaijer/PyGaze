@@ -131,3 +131,10 @@ class PyGameDisplay(BaseDisplay):
 		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygame.display.quit()
+
+
+	def make_screenshot(self, filename='screenshot.png'):
+
+		# See _display.basedisplay.BaseDisplay for documentation
+
+		pygame.image.save(pygaze.expdisplay, filename)

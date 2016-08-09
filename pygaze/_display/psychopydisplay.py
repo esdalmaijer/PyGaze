@@ -105,3 +105,10 @@ class PsychoPyDisplay:
 		# See _display.basedisplay.BaseDisplay for documentation
 
 		pygaze.expdisplay.close()
+
+	def make_screenshot(self, filename='screenshot.png'):
+
+		# See _display.basedisplay.BaseDisplay for documentation
+
+		pygaze.expdisplay.getMovieFrame(buffer='front')
+		pygaze.expdisplay.saveMovieFrames(filename)
