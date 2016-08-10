@@ -281,8 +281,6 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		eyelink = self.var.tracker_type == u'EyeLink'
 		self.checkbox_eyelink_force_drift_correct.setEnabled(eyelink)
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
-		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
-		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
 		if eyelink:
 			try:
 				import pylink
