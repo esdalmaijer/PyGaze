@@ -30,7 +30,15 @@ from pygaze.sound import Sound
 import os
 import platform
 import array
-from PIL import Image
+
+# try importing PIL
+try:
+	from PIL import Image
+except:
+	try:
+		import Image
+	except:
+		print("Failed to import PIL.")
 
 import pylink
 custom_display = pylink.EyeLinkCustomDisplay

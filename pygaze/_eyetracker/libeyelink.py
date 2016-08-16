@@ -37,8 +37,16 @@ try:
 except:
 	pass
 
+# try importing PIL
+try:
+	from PIL import Image
+except:
+	try:
+		import Image
+	except:
+		print("Failed to import PIL.")
+
 import pylink
-from PIL import Image
 import copy
 import math
 import sys

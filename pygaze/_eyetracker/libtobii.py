@@ -63,8 +63,16 @@ from tobii.eye_tracking_io.types import Point2D, Blob
 import psychopy.visual
 import psychopy.event
 
-import Image
-import ImageDraw
+# try importing PIL
+try:
+	from PIL import Image
+	from PIL import ImageDraw
+except:
+	try:
+		import Image
+		import ImageDraw
+	except:
+		print("Failed to import PIL.")
 
 
 # # # # #
