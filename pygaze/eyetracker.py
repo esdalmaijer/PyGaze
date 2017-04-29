@@ -54,9 +54,9 @@ class EyeTracker(BaseEyeTracker):
 			trackertype = u'dummy'
 	
 		# correct wrong input
-		if trackertype not in [u'dumbdummy', u'dummy', u'eyelink', u'smi', u'tobii', u'eyetribe']:
+		if trackertype not in [u'dumbdummy', u'dummy', u'eyelink', u'smi', u'tobii', u'eyetribe', u'opengaze']:
 			raise Exception( \
-				u"Error in eyetracker.EyeTracker: trackertype '%s' not recognized; it should be one of 'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii', 'eyetribe'" % trackertype)
+				u"Error in eyetracker.EyeTracker: trackertype '%s' not recognized; it should be one of 'dumbdummy', 'dummy', 'eyelink', 'smi', 'tobii', 'eyetribe', u'opengaze'" % trackertype)
 
 		# EyeLink
 		if trackertype == u'eyelink':
@@ -91,6 +91,15 @@ class EyeTracker(BaseEyeTracker):
 			from pygaze._eyetracker.libeyetribe import EyeTribeTracker
 			# morph class
 			self.__class__ = EyeTribeTracker
+			# initialize
+			self.__class__.__init__(self, display, **args)
+
+		# OpenGaze
+		elif trackertype == u'opengaze':
+			# import libraries
+			from pygaze._eyetracker.libopengaze import OpenGazeTracker
+			# morph class
+			self.__class__ = OpenGazeTracker
 			# initialize
 			self.__class__.__init__(self, display, **args)
 
