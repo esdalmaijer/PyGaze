@@ -432,7 +432,7 @@ class PyGameScreen(BaseScreen):
 		lineh = font.get_linesize()
 		
 		for lnr in range(0,len(lines)):
-			txtsurf = font.render(lines[lnr], antialias, self.fgc)
+			txtsurf = font.render(lines[lnr], antialias, colour)
 			if center and len(lines) == 1:
 				linepos = (pos[0] - font.size(lines[lnr])[0]/2, pos[1] - font.size(lines[lnr])[1]/2)
 			elif center:
