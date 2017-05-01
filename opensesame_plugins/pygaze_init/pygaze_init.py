@@ -159,6 +159,8 @@ class pygaze_init(item):
 			kwdict[u'receiveport'] = self.var.smi_recv_port
 		elif self.var.tracker_type == u'EyeTribe':
 			tracker_type = u'eyetribe'
+		elif self.var.tracker_type == u'OpenGaze':
+			tracker_type = u'opengaze'
 		else:
 			raise osexception(
 				u'Unknown tracker type: %s' % self.var.tracker_type)

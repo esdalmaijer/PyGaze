@@ -13,6 +13,7 @@ controls:
       - SMI
       - Tobii
       - EyeTribe
+      - OpenGaze
     tooltip: A list of supported eye trackers
   - type: checkbox
     var: calibrate
