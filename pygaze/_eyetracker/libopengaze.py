@@ -157,8 +157,8 @@ class OpenGazeTracker(BaseEyeTracker):
 		self._elog("speed threshold: %s degrees/second" % self.spdtresh)
 		self._elog("acceleration threshold: %s degrees/second**2" % self.accthresh)
 		self._elog("pygaze initiation report end")
-	
-	
+
+
 	def _elog(self, msg):
 		
 		"""Logs a message to the additional log.
@@ -184,20 +184,33 @@ class OpenGazeTracker(BaseEyeTracker):
 				   thresholds for detection algorithms)
 		"""
 		
+		# show a message
+		self.screen.clear()
+		self.screen.draw_text(
+			text="Preparing the calibration, please wait...",
+			fontsize=20)
+		self.disp.fill(self.screen)
+		self.disp.show()
+		
 		# CALIBRATION
-		# determine the calibration points
+		# Set the 'restart' flag to False.
+		restart = False
+		# Set the duration of the calibration animation, and of the
+		# calibration point.
+		caldur = {'animation':1.5, 'point':1.0, 'timeout':10.0}
+		self.opengaze.calibrate_delay(caldur['animation'])
+		self.opengaze.calibrate_timeout(caldur['point'])
+		# Determine the calibration points.
 		calibpoints = []
-		for x in [0.1,0.5,0.9]:
-			for y in [0.1,0.5,0.9]:
-				calibpoints.append((int(x*self.dispsize[0]),int(y*self.dispsize[1])))
+		for x in [0.1, 0.5, 0.9]:
+			for y in [0.1, 0.5, 0.9]:
+				calibpoints.append((x,y))
 		random.shuffle(calibpoints)
 		
 		# Clear the OpenGaze calibration.
 		self.opengaze.calibrate_clear()
 		# Add all new points (as proportions of the display resolution).
 		for x, y in calibpoints:
-			x = x / float(self.dispsize[0])
-			y = y / float(self.dispsize[1])
 			self.opengaze.calibrate_addpoint(x, y)
 		
 		# show a message
@@ -238,34 +251,103 @@ class OpenGazeTracker(BaseEyeTracker):
 			# Clear the existing calibration results.
 			self.opengaze.clear_calibration_result()
 			# Show the calibration screen.
-			self.opengaze.calibrate_show(True)
+
+			# NOTE: THIS DOESN'T WORK IN FULL SCREEN MODE :(
+			#self.opengaze.calibrate_show(True)
+
 			# Start the calibration.
 			self.opengaze.calibrate_start(True)
+
+			# Show the calibration dots. The strategy is to wait for the
+			# next calibration point start, then to show that dot, and
+			# then to show the animation (hoping to Godzilla that the
+			# timing roughly matches that of the OpenGaze server), and
+			# then to keep the target on-screen until the start of the
+			# next calibration point.
+			pointnr = 0
+			n_points = len(calibpoints)
+			# On a restart, the calibration starts with the last point,
+			# before looping through all the other points. (DAMN YOU,
+			# GAZEPOINT, THAT DOES NOT MAKE SENSE!)
+			if restart:
+				n_points += 1
+			# Loop through all the points.
+			for i in range(n_points):
+				# Wait for the next calibration point.
+				pointnr, pos = self.opengaze.wait_for_calibration_point_start( \
+					timeout=caldur['timeout'])
+				# The wait_for_calibration_point_start function returns
+				# None if no point was started before a timeout. We
+				# should panic if no calibration point was started.
+				if pointnr is None:
+					# Break the calibration loop, and quit the current
+					# calibration.
+					quited = True
+					break
+				# Compute the point in display coordinates.
+				x = int(pos[0] * self.dispsize[0])
+				y = int(pos[1] * self.dispsize[1])
+				# Get a timestamp for the start of the animation.
+				t1 = clock.get_time()
+				t = clock.get_time()
+				# Show the animation.
+				while t - t1 < caldur['animation']*1000:
+					# Check if the Q key has been pressed, and break
+					# if it has.
+					if self.kb.get_key(keylist=['q'], timeout=10, \
+						flush=False)[0] == 'q':
+						quited = True
+						break
+					# Clear the screen.
+					self.screen.clear(colour=(0,0,0))
+					# Caculate at which point in the animation we are.
+					p = 1.0 - float(t-t1) / (caldur['animation']*1000)
+					# Draw the animated disk.
+					self.screen.draw_circle(colour=(255,255,255), \
+						pos=(x, y), r=max(1, int(30*p)), fill=True)
+					# Draw the calibration target.
+					self.screen.draw_circle(colour=(255,0,0), \
+						pos=(x, y), r=3, fill=True)
+					# Show the screen.
+					self.disp.fill(self.screen)
+					t = self.disp.show()
+				# Check if the Q key has been pressed, and break
+				# if it has.
+				if self.kb.get_key(keylist=['q'], timeout=1, \
+					flush=False)[0] == 'q':
+					quited = True
+				# Don't show the other points if Q was pressed.
+				if quited:
+					break
+
 			# Wait for the calibration result.
 			calibresult = None
-			while calibresult == None:
+			while (calibresult is None) and (not quited):
 				# Check if there is a result yet (returns None if there
 				# isn't).
 				calibresult = self.opengaze.get_calibration_result()
 				# Check if the Q key has been pressed, and break if it
 				# is.
-				if self.kb.get_key(keylist=['q'], timeout=100, flush=False)[0] == 'q':
+				if self.kb.get_key(keylist=['q'], timeout=100, \
+					flush=False)[0] == 'q':
 					quited = True
 					break
 			# Hide the calibration window.
-			self.calibrate_show(False)
+			# NOTE: No need for this in full-screen mode.
+			#self.opengaze.calibrate_show(False)
 
 			# Retry option if the calibration was aborted			
 			if quited:
 				# show retry message
 				self.screen.clear()
-				self.screen.draw_text(
-					"Calibration aborted. Press Space to restart or 'Q' to quit",
+				self.screen.draw_text( \
+					text="Calibration aborted. Press Space to restart or 'Q' to quit", \
 					fontsize=20)
 				self.disp.fill(self.screen)
 				self.disp.show()
 				# get input
-				key, keytime = self.kb.get_key(keylist=['q','space'], timeout=None, flush=True)
+				key, keytime = self.kb.get_key(keylist=['q','space'], \
+					timeout=None, flush=True)
 				if key == 'space':
 					# unset quited Boolean
 					quited = False
@@ -285,6 +367,13 @@ class OpenGazeTracker(BaseEyeTracker):
 				# Loop through all points.
 				for p in calibresult:
 					
+					# Convert the points (relative coordinates) to
+					# display coordinates.
+					for param in ['CALX', 'LX', 'RX']:
+						p[param] *= self.dispsize[0]
+					for param in ['CALY', 'LY', 'RY']:
+						p[param] *= self.dispsize[1]
+					
 					# Draw the target.
 					self.screen.draw_fixation(fixtype='dot',
 						colour=(115,210,22), \
@@ -302,9 +391,16 @@ class OpenGazeTracker(BaseEyeTracker):
 							y = p['%sY' % (eye)]
 							c = col[eye]
 						else:
-							x = p['CALX' % (eye)]
-							y = p['CALY' % (eye)]
+							x = p['CALX']
+							y = p['CALY']
 							c = (204,0,0)
+						# Draw a line between the estimated and the
+						# actual point.
+						if p['%sV' % (eye)]:
+							self.screen.draw_line(colour=c, \
+								spos=(p['CALX'], p['CALY']), \
+								epos=(x,y), \
+								pw=3)
 						# Draw the estimated gaze point.
 						self.screen.draw_fixation( \
 							fixtype='dot', pos=(x, y), colour=c)
@@ -333,6 +429,11 @@ class OpenGazeTracker(BaseEyeTracker):
 			# Process input.
 			if key == 'space':
 				calibrated = True
+
+			# Set the 'restart' flag to True, because everything that
+			# happens after this will be a repeated calibration or
+			# will have noting to do with the calibration.
+			restart = True
 
 		# Calibration failed if the user quited.
 		if quited:
@@ -464,7 +565,7 @@ class OpenGazeTracker(BaseEyeTracker):
 			pressed, presstime = self.kb.get_key()
 			if pressed:
 				if pressed == 'escape' or pressed == 'q':
-					print("libeyetribe.OpenGazeTracker.drift_correction: 'q' or 'escape' pressed")
+					print("libopengaze.OpenGazeTracker.drift_correction: 'q' or 'escape' pressed")
 					return self.calibrate()
 				gazepos = self.sample()
 				if ((gazepos[0]-pos[0])**2  + (gazepos[1]-pos[1])**2)**0.5 < self.pxerrdist:
@@ -532,7 +633,7 @@ class OpenGazeTracker(BaseEyeTracker):
 
 			# pressing escape enters the calibration screen
 			if self.kb.get_key()[0] in ['escape','q']:
-				print("libeyetribe.OpenGazeTracker.fix_triggered_drift_correction: 'q' or 'escape' pressed")
+				print("libopengaze.OpenGazeTracker.fix_triggered_drift_correction: 'q' or 'escape' pressed")
 				return self.calibrate()
 
 			# collect a sample
@@ -587,7 +688,7 @@ class OpenGazeTracker(BaseEyeTracker):
 
 	def prepare_drift_correction(self, pos):
 
-		"""Not supported for EyeTribeTracker (yet)"""
+		"""Not supported for OpenGazeTracker (yet)"""
 
 		print("function not supported yet")
 
@@ -631,16 +732,18 @@ class OpenGazeTracker(BaseEyeTracker):
 		sample	-- an (x,y) tuple or a (-1,-1) on an error
 		"""
 
-		# get newest sample
-		s = self.opengaze.sample()
+		# Get newest sample.
+		rs = self.opengaze.sample()
 		
-		# invalid data
-		if s == (None,None):
+		# Invalid data.
+		if rs == (None, None):
 			return (-1,-1)
 		
-		# check if the new sample is the same as the previous
+		# Convert relative coordinates to display coordinates.
+		s = (rs[0]*self.dispsize[0], rs[1]*self.dispsize[1])
+		# Check if the new sample is the same as the previous.
 		if s != self.prevsample:
-			# update the current sample
+			# Update the current sample.
 			self.prevsample = copy.copy(s)
 		
 		return self.prevsample
@@ -690,7 +793,7 @@ class OpenGazeTracker(BaseEyeTracker):
 				   successfully started
 		"""
 
-		self.eyetribe.stop_recording()
+		self.opengaze.stop_recording()
 		self.recording = False
 	
 	
@@ -1107,7 +1210,7 @@ class OpenGazeTracker(BaseEyeTracker):
 	
 	def is_valid_sample(self, gazepos):
 		
-		"""Checks if the sample provided is valid, based on EyeTribe specific
+		"""Checks if the sample provided is valid, based on OpenGaze specific
 		criteria (for internal use)
 		
 		arguments

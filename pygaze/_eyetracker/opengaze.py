@@ -61,7 +61,7 @@ class OpenGazeTracker:
 			self._debuglog = open('debug_%s.txt' % (dt), 'w')
 			self._debuglog.write("OPENGAZE PYTHON DEBUG LOG %s\n" % (dt))
 			self._debugcounter = 0
-			self._debugconsolidatefreq = 1
+			self._debugconsolidatefreq = 100
 		
 		# CONNECTION
 		# Save the ip and port numbers.
@@ -82,6 +82,8 @@ class OpenGazeTracker:
 		# closed. (This is what keeps the Threads running.)
 		self._connected = Event()
 		self._connected.set()
+		# Set the current calibration point.
+		self._current_calibration_point = None
 		
 		# LOGGING
 		self._debug_print("Opening new logfile '%s'" % (logfile))
@@ -193,14 +195,13 @@ class OpenGazeTracker:
 		self.user_data("0")
 
 	
-	def calibrate(self, reset=False):
+	def calibrate(self):
 		
 		"""Calibrates the eye tracker.
 		"""
 
-		# Reset the calibration to its default points.
-		if reset:
-			self.calibrate_reset()
+		# Reset the calibration.
+		self.clear_calibration_result()
 		# Show the calibration screen.
 		self.calibrate_show(True)
 		# Start the calibration.
@@ -218,17 +219,24 @@ class OpenGazeTracker:
 	def sample(self):
 
 		# If there is no current record yet, return None.
+		self._inlock.acquire()
 		if 'REC' not in self._incoming.keys():
-			return None
-		elif 'NO_ID' not in self._incoming.keys():
-			return None
-		elif 'BPOGX' not in self._incoming['REC']['NO_ID'].keys() or \
-			'BPOGY' not in self._incoming['REC']['NO_ID'].keys():
-			return None
+			x = None
+			y = None
+		elif 'NO_ID' not in self._incoming['REC'].keys():
+			x = None
+			y = None
+		elif ('BPOGX' not in self._incoming['REC']['NO_ID'].keys()) or \
+			('BPOGY' not in self._incoming['REC']['NO_ID'].keys()):
+			x = None
+			y = None
+		else:
+			x = float(self._incoming['REC']['NO_ID']['BPOGX'])
+			y = float(self._incoming['REC']['NO_ID']['BPOGY'])
+		self._inlock.release()
 
 		# Return the (x,y) coordinate.
-		return (float(self._incoming['REC']['NO_ID']['BPOGX']), \
-				float(self._incoming['REC']['NO_ID']['BPOGY']))
+		return x, y
 	
 	def pupil_size(self):
 		
@@ -236,15 +244,16 @@ class OpenGazeTracker:
 		"""
 
 		# If there is no current record yet, return None.
+		self._inlock.acquire()
 		if 'REC' not in self._incoming.keys():
-			return None
-		elif 'NO_ID' not in self._incoming.keys():
-			return None
-		elif 'LPV' not in self._incoming['REC']['NO_ID'].keys() or \
-			'LPS' not in self._incoming['REC']['NO_ID'].keys() or \
-			'RPV' not in self._incoming['REC']['NO_ID'].keys() or \
-			'RPS' not in self._incoming['REC']['NO_ID'].keys():
-			return None
+			psize =  None
+		elif 'NO_ID' not in self._incoming['REC'].keys():
+			psize = None
+		elif ('LPV' not in self._incoming['REC']['NO_ID'].keys()) or \
+			('LPS' not in self._incoming['REC']['NO_ID'].keys()) or \
+			('RPV' not in self._incoming['REC']['NO_ID'].keys()) or \
+			('RPS' not in self._incoming['REC']['NO_ID'].keys()):
+			psize = None
 
 		# Compute the pupil size, and return it if there is valid data.
 		n = 0
@@ -255,10 +264,13 @@ class OpenGazeTracker:
 		if str(self._incoming['REC']['NO_ID']['RPV']) == '1':
 			psize += float(self._incoming['REC']['NO_ID']['RPS'])
 			n += 1
+		self._inlock.release()
 		if n == 0:
-			return None
+			psize = None
 		else:
-			return psize / float(n)
+			psize = psize / float(n)
+
+		return psize
 	
 	def log(self, message):
 		
@@ -420,7 +432,7 @@ class OpenGazeTracker:
 				# properly received.
 				if command == 'ACK':
 					self._acklock.acquire()
-					self._acknowledgements[msg] = copy.copy(t)
+					self._acknowledgements[msgdict['ID']] = copy.copy(t)
 					self._acklock.release()
 				# Acquire the Lock for the incoming dict, so that it
 				# won't be accessed at the same time.
@@ -490,12 +502,10 @@ class OpenGazeTracker:
 		return
 	
 	def _send_message(self, command, ID, values=None, \
-		wait_for_acknowledgement=True, resend_timeout=1.0, maxwait=5.0):
+		wait_for_acknowledgement=True, resend_timeout=3.0, maxwait=9.0):
 		
 		# Format a message in an XML format that the Open Gaze API needs.
 		msg = self._format_msg(command, ID, values=values)
-		# Construct the expected acknowledgement.
-		ack = msg.replace(command, 'ACK', 1).replace('\r\n', '')
 
 		# Run until the message is acknowledged or a timeout occurs (or
 		# break if we're not supposed to wait for an acknowledgement.)
@@ -533,8 +543,8 @@ class OpenGazeTracker:
 					# match the sent message. Ideally, they should.)
 					else:
 						self._acklock.acquire()
-						if ack in self._acknowledgements.keys():
-							if self._acknowledgements[ack] >= t:
+						if ID in self._acknowledgements.keys():
+							if self._acknowledgements[ID] >= t:
 								acknowledged = True
 								self._debug_print("Outqueue acknowledged: %r" \
 									% (msg))
@@ -879,6 +889,12 @@ class OpenGazeTracker:
 		implement your own calibration visualisation; otherwise a call to
 		this function will make the calibration run in the background.
 		"""
+		
+		# Reset the current calibration point.
+		if state:
+			self._current_calibration_point = 0
+		else:
+			self._current_calibration_point = None
 
 		# Send the message (returns after the Server acknowledges receipt).
 		acknowledged, timeout = self._send_message('SET', \
@@ -1027,10 +1043,10 @@ class OpenGazeTracker:
 			self._inlock.acquire()
 			for i in range(self._incoming['ACK']['CALIBRATE_ADDPOINT']['PTS']):
 				points.append( \
-					copy.copy( \
-						self._incoming['ACK']['CALIBRATE_ADDPOINT']['X%d' % i+1]), \
-					copy.copy( \
-						self._incoming['ACK']['CALIBRATE_ADDPOINT']['Y%d' % i+1]) \
+					copy.copy(float( \
+						self._incoming['ACK']['CALIBRATE_ADDPOINT']['X%d' % i+1])), \
+					copy.copy(float( \
+						self._incoming['ACK']['CALIBRATE_ADDPOINT']['Y%d' % i+1])) \
 					)
 			self._inlock.release()
 		
@@ -1086,11 +1102,85 @@ class OpenGazeTracker:
 				for i in range(1, n_points+1):
 					p = {}
 					for par in params:
-						p['%s' % (par, i)] = cal['%s%d' % (par, i)]
+						if par in ['LV', 'RV']:
+							p['%s' % (par)] = cal['%s%d' % (par, i)] == '1'
+						else:
+							p['%s' % (par)] = float(cal['%s%d' % (par, i)])
 					points.append(copy.deepcopy(p))
 		self._inlock.release()
 		
 		return points
+	
+	def wait_for_calibration_point_start(self, timeout=10.0):
+		
+		"""Waits for the next calibration point start, which is defined as
+		the first unregistered point after the latest calibration start
+		message. This function allows for setting a timeout in seconds
+		(default = 10.0). Returns the (x,y) coordinate in relative
+		coordinates (proportions of the screen width and height) if the
+		point started, and None after a timeout. (Also updates the
+		internally stored latest registered calibration point number.)
+		"""
+
+		# Get the start time of this function.
+		start = time.time()
+		
+		# Get the most recent calibration start time.
+		t0 = None
+		while (t0 is None) and (time.time() - start < timeout):
+			self._inlock.acquire()
+			if 'ACK' in self._incoming.keys():
+				if 'CALIBRATE_START' in self._incoming['ACK'].keys():
+					t0 = copy.copy( \
+						self._incoming['ACK']['CALIBRATE_START']['t'])
+			self._inlock.release()
+			if t0 == None:
+				time.sleep(0.001)
+
+		# Return None if there was no calibration start.
+		if t0 is None:
+			return None
+		
+		# Wait for a new calibration point start, or a timeout.
+		pos = None
+		pt_nr = None
+		started = False
+		timed_out = False
+		while (not started) and (not timed_out):
+			# Get the latest calibration point start.
+			t1 = 0
+			self._inlock.acquire()
+			if 'CAL' in self._incoming.keys():
+				if 'CALIB_START_PT' in self._incoming['CAL'].keys():
+					t1 = copy.copy( \
+						self._incoming['CAL']['CALIB_START_PT']['t'])
+			self._inlock.release()
+			# Check if the point is later than the most recent
+			# calibration start.
+			if t1 >= t0:
+				# Check if the current point is already the latest
+				# registered point.
+				self._inlock.acquire()
+				pt_nr = int(copy.copy(self._incoming['CAL']['CALIB_START_PT']['PT']))
+				x = float(copy.copy(self._incoming['CAL']['CALIB_START_PT']['CALX']))
+				y = float(copy.copy(self._incoming['CAL']['CALIB_START_PT']['CALY']))
+				self._inlock.release()
+				if pt_nr != self._current_calibration_point:
+					self._current_calibration_point = copy.copy(pt_nr)
+					pos = (x, y)
+					started = True
+			# Check if there is a timeout.
+			if time.time() - start > timeout:
+				timed_out = True
+			# Wait for a short bit to avoid wasting too many resources,
+			# and to avoid hogging the incoming messages Lock.
+			if not timed_out:
+				time.sleep(0.001)
+		
+		if started:
+			return pt_nr, pos
+		else:
+			return None, None
 	
 	def user_data(self, value):
 		
