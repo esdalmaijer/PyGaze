@@ -63,6 +63,11 @@ class pygaze_init(item):
 		self.var.smi_ip = u'127.0.0.1'
 		self.var.smi_send_port = 4444
 		self.var.smi_recv_port = 5555
+		# Tobii Pro Glasses 2 settings
+		self.var.tobiiglasses_address = u'192.168.71.50'
+		self.var.tobiiglasses_udpport = 49152
+
+
 
 	def close(self):
 
@@ -157,6 +162,10 @@ class pygaze_init(item):
 			kwdict[u'ip'] = self.var.smi_ip
 			kwdict[u'sendport'] = self.var.smi_send_port
 			kwdict[u'receiveport'] = self.var.smi_recv_port
+		elif self.var.tracker_type == u'Tobii Pro Glasses 2':
+			tracker_type = u'tobiiglasses'
+			kwdict[u'address'] = self.var.tobiiglasses_address
+			kwdict[u'udpport'] = self.var.tobiiglasses_udpport
 		elif self.var.tracker_type == u'EyeTribe':
 			tracker_type = u'eyetribe'
 		elif self.var.tracker_type == u'OpenGaze':
@@ -285,6 +294,9 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 		self.combobox_eyelink_pupil_size_mode.setEnabled(eyelink)
 		self.spinbox_sacc_acc_thr.setDisabled(eyelink)
 		self.spinbox_sacc_vel_thr.setDisabled(eyelink)
+		tobiiglasses = self.var.tracker_type == u'Tobii Pro Glasses 2'
+		self.line_edit_tobiiglasses_address.setEnabled(tobiiglasses)
+		self.spinbox_tobiiglasses_udpport.setEnabled(tobiiglasses)
 		if eyelink:
 			try:
 				import pylink

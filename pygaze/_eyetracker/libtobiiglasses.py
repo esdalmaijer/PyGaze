@@ -1,0 +1,1045 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of PyGaze - the open-source toolbox for eye tracking
+#
+# PyGaze is a Python module for easily creating gaze contingent experiments
+# or other software (as well as non-gaze contingent experiments/software)
+# Copyright (C) 2012-2013 Edwin S. Dalmaijer
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>
+
+
+# TobiiGlassesTracker
+import copy
+import math
+import numpy
+
+
+from pygaze import settings
+from pygaze.libtime import clock
+import pygaze
+from pygaze.screen import Screen
+from pygaze.keyboard import Keyboard
+from pygaze.sound import Sound
+
+from pygaze._eyetracker.baseeyetracker import BaseEyeTracker
+# we try importing the copy_docstr function, but as we do not really need it
+# for a proper functioning of the code, we simply ignore it when it fails to
+# be imported correctly
+try:
+	from pygaze._misc.misc import copy_docstr
+except:
+	pass
+
+
+import os
+import datetime
+
+import signal
+import sys
+
+
+import urllib2
+import json
+import time
+import threading
+import socket
+import uuid
+
+import warnings
+warnings.filterwarnings("ignore", category=numpy.VisibleDeprecationWarning)
+
+
+# # # # #
+# TobiiGlassesController
+
+class TobiiGlassesController():
+
+	def __init__(self, address, udpport):
+
+		self.base_url = 'http://' + address
+		self.timeout = 1
+		self.connected = False
+		self.running = True
+
+		nd = {'ts': None, 'ac': None, 's': None}
+
+		self.data = {}
+		self.data['mems'] = { 'ac': nd, 'gy': nd }
+		self.data['right_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd, 'gp': nd, 'gp3': nd }
+		self.data['left_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd, 'gp': nd, 'gp3': nd }
+
+		# Keep-alive message content used to request live data streams
+		self.KA_DATA_MSG = "{\"type\": \"live.data.unicast\", \"key\": \""+ str(uuid.uuid4()) +"\", \"op\": \"start\"}"
+
+		self.peer = (address, udpport)
+
+		try:
+			self.data_socket = self.__mksock__()
+            self.connected = True
+    		self.__start_streaming__()
+		except:
+			print("An error occurs trying to connect to the Tobii Pro Glasses")
+
+	def __del__(self):
+
+
+                self.connected = False
+                self.td.join()
+                self.tg.join()
+
+				try:
+					self.data_socket.close()
+				except:
+					print("An error occurs closing the sockets of the Tobii Pro Glasses")
+
+	def __mksock__(self):
+		iptype = socket.AF_INET
+		if ':' in self.peer[0]:
+			iptype = socket.AF_INET6
+		return socket.socket(iptype, socket.SOCK_DGRAM)
+
+
+	def __send_keepalive_msg__(self, socket, msg):
+
+		while self.running:
+			socket.sendto(msg, self.peer)
+			time.sleep(self.timeout)
+
+
+	def __grab_data__(self, socket):
+
+		time.sleep(1)
+		while self.running:
+			data, address = socket.recvfrom(1024)
+			jdata = json.loads(data)
+			self.__refresh_data__(jdata)
+
+
+
+	def __refresh_data__(self, jsondata):
+
+		try:
+			gy = jsondata['gy']
+			ts = jsondata['ts']
+			if( (self.data['mems']['gy']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data['mems']['gy'] = jsondata
+		except:
+			pass
+
+		try:
+			ac = jsondata['ac']
+			ts = jsondata['ts']
+			if( (self.data['mems']['ac']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data['mems']['ac'] = jsondata
+		except:
+			pass
+
+        try:
+			pc = jsondata['pc']
+			ts = jsondata['ts']
+            eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['pc']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data[eye + '_eye']['pc'] = jsondata
+		except:
+            pass
+
+        try:
+			pd = jsondata['pd']
+			ts = jsondata['ts']
+            eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['pd']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data[eye + '_eye']['pd'] = jsondata
+		except:
+            pass
+
+        try:
+			gd = jsondata['gd']
+			ts = jsondata['ts']
+            eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['gd']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data[eye + '_eye']['gd'] = jsondata
+		except:
+            pass
+
+        try:
+			gp = jsondata['gp']
+			ts = jsondata['ts']
+            eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['gp']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data[eye + '_eye']['gp'] = jsondata
+		except:
+            pass
+
+        try:
+			gp3 = jsondata['gp3']
+			ts = jsondata['ts']
+            eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['gp3']['ts'] < ts) and (jsondata['s'] == 0]) ):
+				self.data[eye + '_eye']['gp3'] = jsondata
+		except:
+            pass
+
+	def __start_streaming__(self):
+
+		try:
+			self.running = True
+			self.td = threading.Timer(0, self.__send_keepalive_msg__, [self.data_socket, self.KA_DATA_MSG])
+			self.td.start()
+			self.tg = threading.Timer(0, self.__grab_data__, [self.data_socket])
+			self.tg.start()
+
+		except:
+			print("An error occurs trying to create the threads for receiving data")
+
+
+	def is_connected(self):
+
+		return self.connected
+
+	def __post_request__(self, api_action, data=None):
+
+		url = self.base_url + api_action
+		req = urllib2.Request(url)
+		req.add_header('Content-Type', 'application/json')
+		data = json.dumps(data)
+		response = urllib2.urlopen(req, data)
+		data = response.read()
+		json_data = json.loads(data)
+		return json_data
+
+	def wait_for_status(self, api_action, key, values):
+
+		url = self.base_url + api_action
+		self.running = True
+		while self.running:
+			req = urllib2.Request(url)
+			req.add_header('Content-Type', 'application/json')
+			response = urllib2.urlopen(req, None)
+			data = response.read()
+			json_data = json.loads(data)
+			if json_data[key] in values:
+				self.running = False
+			time.sleep(1)
+
+		return json_data[key]
+
+	def is_calibrated(self, calibration_id):
+
+		status = self.wait_for_status('/api/calibrations/' + calibration_id + '/status', 'ca_state', ['failed', 'calibrated'])
+
+		if status == 'failed':
+			print 'Calibration failed, using default calibration instead'
+			res_calibration = False
+		else:
+			print 'Calibration successful'
+			res_calibration = True
+
+		return res_calibration
+
+
+	def create_project(self):
+
+		json_data = self.__post_request__('/api/projects')
+		return json_data['pr_id']
+
+
+	def create_participant(self, project_id):
+
+		data = {'pa_project': project_id}
+		json_data = self.__post_request__('/api/participants', data)
+		return json_data['pa_id']
+
+	def create_calibration(self, project_id, participant_id):
+
+		data = {'ca_project': project_id, 'ca_type': 'default', 'ca_participant': participant_id}
+		json_data = self.__post_request__('/api/calibrations', data)
+		return json_data['ca_id']
+
+	def start_calibration(self, calibration_id):
+
+		self.__post_request__('/api/calibrations/' + calibration_id + '/start')
+
+	def create_recording(self, participant_id):
+
+		data = {'rec_participant': participant_id}
+		json_data = self.__post_request__('/api/recordings', data)
+		return json_data['rec_id']
+
+	def start_recording(self, recording_id):
+		self.__post_request__('/api/recordings/' + recording_id + '/start')
+
+	def stop_recording(self, recording_id):
+		self.__post_request__('/api/recordings/' + recording_id + '/stop')
+
+	def recordEvent(self, msg):
+		print "LOGGER: " + msg
+
+	def get_data(self):
+		return self.data
+
+
+
+
+# # # # #
+# classes
+
+class TobiiGlassesTracker(BaseEyeTracker):
+
+	"""A class for Tobii Pro Glasses 2 EyeTracker objects"""
+
+	def __init__(self, display, address='192.168.71.50', udpport=49152, logfile=settings.LOGFILE,
+		eventdetection=settings.EVENTDETECTION, saccade_velocity_threshold=35,
+		saccade_acceleration_threshold=9500, blink_threshold=settings.BLINKTHRESH, **args):
+
+		"""Initializes a TobiiProGlassesTracker instance
+
+		arguments
+		display	--	a pygaze.display.Display instance
+
+		keyword arguments
+		address	-- internal ipv4/ipv6 address for Tobii Pro Glasses 2 (default =
+				   '192.168.71.50', for IpV6 address use square brackets [fe80::xxxx:xxxx:xxxx:xxxx])
+		udpport	-- UDP port number for Tobii Pro Glasses data streaming (default = 49152)
+		"""
+
+
+		# try to copy docstrings (but ignore it if it fails, as we do
+		# not need it for actual functioning of the code)
+		try:
+			copy_docstr(BaseEyeTracker, TobiiProGlassesTracker)
+		except:
+			# we're not even going to show a warning, since the copied
+			# docstring is useful for code editors; these load the docs
+			# in a non-verbose manner, so warning messages would be lost
+			pass
+
+
+		# object properties
+		self.disp = display
+		self.screen = Screen()
+		self.dispsize = settings.DISPSIZE # display size in pixels
+		self.screensize = settings.SCREENSIZE # display size in cm
+		self.screendist = settings.SCREENDIST # distance between participant and screen in cm
+		self.pixpercm = (self.dispsize[0]/float(self.screensize[0]) + self.dispsize[1]/float(self.screensize[1])) / 2.0
+		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
+		self.errorbeep = Sound(osc='saw',freq=100, length=100)
+
+		# output file properties
+		self.outputfile = logfile
+		self.description = "experiment" # TODO: EXPERIMENT NAME
+		self.participant = "participant" # TODO: PP NAME
+
+		# eye tracker properties
+		self.connected = False
+		self.recording = False
+		self.eye_used = 0 # 0=left, 1=right, 2=binocular
+		self.left_eye = 0
+		self.right_eye = 1
+		self.binocular = 2
+
+
+		self.maxtries = 100 # number of samples obtained before giving up (for obtaining accuracy and tracker distance information, as well as starting or stopping recording)
+		self.prevsample = (-1,-1)
+
+		# validation properties
+		self.nvalsamples = 1000 # samples for one validation point
+
+		# event detection properties
+		self.fixtresh = 1.5 # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
+		self.fixtimetresh = 100 # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
+		self.spdtresh = saccade_velocity_threshold # degrees per second; saccade velocity threshold
+		self.accthresh = saccade_acceleration_threshold # degrees per second**2; saccade acceleration threshold
+		self.blinkthresh = blink_threshold # milliseconds; blink detection threshold used in PyGaze method
+		self.eventdetection = eventdetection
+		self.set_detection_type(self.eventdetection)
+		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
+
+
+		self.tobiiglasses = TobiiProGlassesController(address, udpport)
+
+
+		self.logging = False
+
+
+	def __data_logger__(self, frequency, keys, time_offset):
+
+		while self.logging:
+			row = ""
+			ac = []
+			gy = []
+			gc = []
+			pc = []
+			pd = None
+			gd = []
+			gp = []
+			gp3 = []
+
+
+			if "mems" in keys:
+
+				try:
+					for i in range(0, 3):
+						ac[i] = self.tobiiglasses.data['mems']['ac']['ac'][i]
+				except:
+					pass
+
+				try:
+					for i in range(0, 3):
+						gy[i] = self.tobiiglasses.data['mems']['gy']['gy'][i]
+				except:
+					pass
+
+				row += ("%s; %s; %s; %s; %s; %s; " % (ac[0], ac[1], ac[2], gy[0], gy[1], gy[2]))
+
+			if "left_eye" in keys:
+
+				try:
+					for i in range(0, 3):
+						pc[i] = self.tobiiglasses.data['left_eye']['pc']['pc'][i]
+				except:
+					pass
+
+				try:
+					pd = self.tobiiglasses.data['left_eye']['pd']['pd']
+				except:
+					pass
+
+				try:
+					for i in range(0, 3):
+						gd[i] = self.tobiiglasses.data['left_eye']['gd']['gd'][i]
+				except:
+					pass
+
+				try:
+					for i in range(0, 2):
+						gp[i] = self.tobiiglasses.data['left_eye']['gp']['gp'][i]
+				except:
+					pass
+
+				try:
+					for i in range(0, 3):
+						gp3[i] = self.tobiiglasses.data['left_eye']['gp3']['gp3'][i]
+				except:
+					pass
+
+				row += ("%s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2], gp[0], gp[1], gp3[0], gp3[1], gp3[2]))
+
+			if "right_eye" in keys:
+
+				try:
+					for i in range(0, 3):
+						pc[i] = self.tobiiglasses.data['right_eye']['pc']['pc'][i]
+				except:
+					pass
+
+				try:
+					pd = self.tobiiglasses.data['right_eye']['pd']['pd']
+				except:
+					pass
+
+				try:
+					for i in range(0, 3):
+						gd[i] = self.tobiiglasses.data['right_eye']['gd']['gd'][i]
+				except:
+					pass
+
+				try:
+					for i in range(0, 2):
+						gp[i] = self.tobiiglasses.data['right_eye']['gp']['gp'][i]
+				except:
+					pass
+
+				try:
+					for i in range(0, 3):
+						gp3[i] = self.tobiiglasses.data['right_eye']['gp3']['gp3'][i]
+				except:
+					pass
+
+				row += ("%s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2], gp[0], gp[1], gp3[0], gp3[1], gp3[2]))
+
+
+
+			row = row[:-2]
+			self.tobiiglasseslogfile.write("%s; %s \n" % (time_offset, row))
+			time_period = float(1.0/float(frequency))
+			time_offset += int(time_period*1000)
+			time.sleep(time_period)
+
+
+	def calibrate(self, calibrate=True, validate=True):
+
+		"""Calibrates the eye tracking system
+
+		arguments
+		None
+
+		keyword arguments
+		calibrate	--	Boolean indicating if calibration should be
+					performed (default = True)
+		validate	--	Boolean indicating if validation should be performed
+					(default = True)
+
+		returns
+		success	--	returns True if calibration succeeded, or False if
+					not; in addition a calibration log is added to the
+					log file and some properties are updated (i.e. the
+					thresholds for detection algorithms)
+		"""
+
+		self.project_id = self.tobiiglasses.create_project()
+		self.participant_id = self.tobiiglasses.create_participant(self.project_id)
+		self.calibration_id = self.tobiiglasses.create_calibration(self.project_id, self.participant_id)
+
+		print "Project: " + self.project_id, ", Participant: ", self.participant_id, ", Calibration: ", self.calibration_id, " "
+
+		#input_var = raw_input("Press enter to calibrate")
+		print ('Calibration started...')
+		self.tobiiglasses.start_calibration(self.calibration_id)
+
+		return self.tobiiglasses.is_calibrated(self.calibration_id)
+
+	def start_logging(self, logfile, frequency, keys = ["mems", "left_eye", "right_eye"], time_offset=0):
+
+		self.tobiiglasseslogfile = open(logfile, 'a')
+		header = "ts; "
+		if not os.path.getsize(logfile) > 0:
+			if "mems" in keys:
+				header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
+			if "left_eye" in keys:
+				header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; left_gp_x; left_gp_y; left_gp3_x [mm]; left_gp3_y [mm]; left_gp3_z [mm]; "
+			if "left_eye" in keys:
+				header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; right_gp_x; right_gp_y; right_gp3_x [mm]; right_gp3_y [mm]; right_gp3_z [mm]; "
+			header = header[:-2]
+			self.tobiiglasseslogfile.write(header + "\n")
+
+		self.logging = True
+		self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, time_offset])
+		self.logger.start()
+
+
+	def stop_logging(self):
+
+		self.logging = False
+		self.logger.join()
+		self.tobiiglasseslogfile.close()
+
+
+	def close(self):
+
+		"""Neatly close connection to tracker
+
+		arguments
+		None
+
+		returns
+		None		--	saves data and sets self.connected to False
+
+		"""
+
+		# stop tracking
+		if self.recording:
+			self.tobiiglasses.stop_recording()
+
+		if self.logging:
+			self.stop_logging()
+
+		self.connected = False
+
+
+
+	def connected(self):
+
+		"""Checks if the tracker is connected
+
+		arguments
+		None
+
+		returns
+		connected	--	True if connection is established, False if not
+
+		"""
+
+		return self.tobiiglasses.is_connected()
+
+
+	def drift_correction(self, pos=None, fix_triggered=False):
+
+		"""Performs a drift check
+
+		arguments
+		None
+
+		keyword arguments
+		pos			-- (x, y) position of the fixation dot or None for
+					   a central fixation (default = None)
+		fix_triggered	-- Boolean indicating if drift check should be
+					   performed based on gaze position (fix_triggered
+					   = True) or on spacepress (fix_triggered =
+					   False) (default = False)
+
+		returns
+		checked		-- Boolaan indicating if drift check is ok (True)
+					   or not (False); or calls self.calibrate if 'q'
+					   or 'escape' is pressed
+
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+
+	def fix_triggered_drift_correction(self, pos=None, min_samples=10, max_dev=60, reset_threshold=30):
+
+		"""Performs a fixation triggered drift correction by collecting
+		a number of samples and calculating the average distance from the
+		fixation position
+
+		arguments
+		None
+
+		keyword arguments
+		pos			-- (x, y) position of the fixation dot or None for
+					   a central fixation (default = None)
+		min_samples		-- minimal amount of samples after which an
+					   average deviation is calculated (default = 10)
+		max_dev		-- maximal deviation from fixation in pixels
+					   (default = 60)
+		reset_threshold	-- if the horizontal or vertical distance in
+					   pixels between two consecutive samples is
+					   larger than this threshold, the sample
+					   collection is reset (default = 30)
+
+		returns
+		checked		-- Boolaan indicating if drift check is ok (True)
+					   or not (False); or calls self.calibrate if 'q'
+					   or 'escape' is pressed
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def get_eyetracker_clock_async(self):
+
+		"""Retrieve difference between tracker time and experiment time
+
+		arguments
+		None
+
+		keyword arguments
+		None
+
+		returns
+		timediff	--	tracker time minus experiment time
+
+
+		return self.controller.syncmanager.convert_from_local_to_remote(self.controller.clock.get_time()) - clock.get_time()
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def log(self, msg):
+
+		"""Writes a message to the log file
+
+		arguments
+		msg		-- a string to include in the log file
+
+		returns
+		Nothing	-- uses native log function of iViewX to include a line
+				   in the log file
+
+		"""
+
+		self.tobiiglasses.recordEvent(msg)
+
+
+
+
+
+	def log_var(self, var, val):
+
+		"""Writes a variable to the log file
+
+		arguments
+		var		-- variable name
+		val		-- variable value
+
+		returns
+		Nothing	-- uses native log function of iViewX to include a line
+				   in the log file in a "var NAME VALUE" layout
+
+		"""
+
+		msg = "var %s %s" % (var, val)
+		self.log(msg)
+
+
+	def prepare_backdrop(self):
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def prepare_drift_correction(self, pos):
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def pupil_size(self):
+
+		"""Returns newest available pupil size
+
+		arguments
+		None
+
+		returns
+		pupilsize	--	a float or -1 on an error
+
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def sample(self):
+
+		"""Returns newest available gaze position
+
+		arguments
+		None
+
+		returns
+		sample	-- an (x,y) tuple or a (-1,-1) on an error
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def send_command(self, cmd):
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def set_backdrop(self):
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def set_eye_used(self):
+
+		"""Logs the eye_used variable, based on which eye was specified
+		(if both eyes are being tracked, the left eye is used)
+
+		arguments
+		None
+
+		returns
+		Nothing	-- logs which eye is used by calling self.log_var, e.g.
+				   self.log_var("eye_used", "right")
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def start_recording(self):
+
+		"""Starts recording eye position
+
+		arguments
+		None
+
+		returns
+		None		-- sets self.recording to True when recording is
+				   successfully started
+		"""
+
+		if not self.recording:
+			try:
+				self.current_recording_id = self.tobiiglasses.create_recording(self.participant_id)
+				self.tobiiglasses.start_recording(self.current_recording_id)
+				self.recording = True
+			except:
+				self.recording = False
+				raise Exception("Error in libtobiiproglasses.TobiiProGlassesController.start_recording: failed to start recording")
+
+		else:
+			print("WARNING! libtobiiproglasses.TobiiProGlassesController.start_recording: already recording!")
+
+
+	def status_msg(self, msg):
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def stop_recording(self):
+
+		"""Stop recording eye position
+
+		arguments
+		None
+
+		returns
+		Nothing	-- sets self.recording to False when recording is
+				   successfully started
+
+		"""
+
+		if self.recording:
+			try:
+				self.tobiiglasses.stop_recording(self.current_recording_id)
+				self.recording = False
+			except:
+				self.recording = True
+				raise Exception("Error in libtobii.TobiiProGlassesTracker.stop_recording: failed to stop recording")
+
+		else:
+			print("WARNING! libtobiiproglasses.TobiiProGlassesController.stop_recording: recording has not started yet!")
+
+
+	def set_detection_type(self, eventdetection):
+
+		"""Set the event detection type to either PyGaze algorithms, or
+		native algorithms as provided by the manufacturer (only if
+		available: detection type will default to PyGaze if no native
+		functions are available)
+
+		arguments
+		eventdetection	--	a string indicating which detection type
+						should be employed: either 'pygaze' for
+						PyGaze event detection algorithms or
+						'native' for manufacturers algorithms (only
+						if available; will default to 'pygaze' if no
+						native event detection is available)
+		returns		--	detection type for saccades, fixations and
+						blinks in a tuple, e.g.
+						('pygaze','native','native') when 'native'
+						was passed, but native detection was not
+						available for saccade detection
+
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def wait_for_event(self, event):
+
+		"""Waits for event
+
+		arguments
+		event		-- an integer event code, one of the following:
+					3 = STARTBLINK
+					4 = ENDBLINK
+					5 = STARTSACC
+					6 = ENDSACC
+					7 = STARTFIX
+					8 = ENDFIX
+
+		returns
+		outcome	-- a self.wait_for_* method is called, depending on the
+				   specified event; the return values of corresponding
+				   method are returned
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def wait_for_blink_end(self):
+
+		"""Waits for a blink end and returns the blink ending time
+
+		arguments
+		None
+
+		returns
+		timestamp		--	blink ending time in milliseconds, as
+						measured from experiment begin time
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+	def wait_for_blink_start(self):
+
+		"""Waits for a blink start and returns the blink starting time
+
+		arguments
+		None
+
+		returns
+		timestamp		--	blink starting time in milliseconds, as
+						measured from experiment begin time
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def wait_for_fixation_end(self):
+
+		"""Returns time and gaze position when a fixation has ended;
+		function assumes that a 'fixation' has ended when a deviation of
+		more than self.pxfixtresh from the initial fixation position has
+		been detected (self.pxfixtresh is created in self.calibration,
+		based on self.fixtresh, a property defined in self.__init__)
+
+		arguments
+		None
+
+		returns
+		time, gazepos	-- time is the starting time in milliseconds (from
+					   expstart), gazepos is a (x,y) gaze position
+					   tuple of the position from which the fixation
+					   was initiated
+
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+	def wait_for_fixation_start(self):
+
+		"""Returns starting time and position when a fixation is started;
+		function assumes a 'fixation' has started when gaze position
+		remains reasonably stable (i.e. when most deviant samples are
+		within self.pxfixtresh) for five samples in a row (self.pxfixtresh
+		is created in self.calibration, based on self.fixtresh, a property
+		defined in self.__init__)
+
+		arguments
+		None
+
+		returns
+		time, gazepos	-- time is the starting time in milliseconds (from
+					   expstart), gazepos is a (x,y) gaze position
+					   tuple of the position from which the fixation
+					   was initiated
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def wait_for_saccade_end(self):
+
+		"""Returns ending time, starting and end position when a saccade is
+		ended; based on Dalmaijer et al. (2013) online saccade detection
+		algorithm
+
+		arguments
+		None
+
+		returns
+		endtime, startpos, endpos	-- endtime in milliseconds (from
+							   expbegintime); startpos and endpos
+							   are (x,y) gaze position tuples
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+	def wait_for_saccade_start(self):
+
+		"""Returns starting time and starting position when a saccade is
+		started; based on Dalmaijer et al. (2013) online saccade detection
+		algorithm
+
+		arguments
+		None
+
+		returns
+		endtime, startpos	-- endtime in milliseconds (from expbegintime);
+					   startpos is an (x,y) gaze position tuple
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+
+	def is_valid_sample(self, gazepos):
+
+		"""Checks if the sample provided is valid, based on Tobii specific
+		criteria (for internal use)
+
+		arguments
+		gazepos		--	a (x,y) gaze position tuple, as returned by
+						self.sample()
+
+		returns
+		valid			--	a Boolean: True on a valid sample, False on
+						an invalid sample
+
+		"""
+
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
+
+	def get_data(self):
+
+		return self.tobiiglasses.data
+
+	def get_mems(self):
+
+		return self.tobiiglasses.data['mems']
+
+	def get_lefteyedata(self):
+
+		return self.tobiiglasses.data['left_eye']
+
+	def get_righteyedata(self):
+
+		return self.tobiiglasses.data['right_eye']

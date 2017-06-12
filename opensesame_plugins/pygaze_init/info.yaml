@@ -13,7 +13,7 @@ controls:
       - SMI
       - Tobii
       - EyeTribe
-      - OpenGaze
+      - Tobii Pro Glasses 2
     tooltip: A list of supported eye trackers
   - type: checkbox
     var: calibrate
@@ -82,3 +82,15 @@ controls:
     max_val: 100000
     name: spinbox_smi_recv_port
     tooltip: Port number for receiving messages from the SMI tracker
+  - type: line_edit
+    label: Tobii Glasses IPV4/IPv6 address
+    var: tobiiglasses_address
+    name: line_edit_tobiiproglasses_address
+    tooltip: "The Tobii Pro Glasses IPv4/IPv6 address"
+  - type: spinbox
+    label: Tobii Glasses UDP port number
+    var: tobiiglasses_udpport
+    min_val: 0
+    max_val: 100000
+    name: spinbox_tobiiproglasses_udpport
+    tooltip: "Port number for the Tobii Pro Glasses 2 eye-tracker"
