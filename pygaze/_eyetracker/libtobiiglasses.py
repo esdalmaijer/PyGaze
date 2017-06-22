@@ -73,12 +73,13 @@ class TobiiGlassesController():
 		self.connected = False
 		self.running = True
 
-		nd = {'ts': None, 'ac': None, 's': None}
-
 		self.data = {}
+		nd = {'ts': -1}
 		self.data['mems'] = { 'ac': nd, 'gy': nd }
-		self.data['right_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd, 'gp': nd, 'gp3': nd }
-		self.data['left_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd, 'gp': nd, 'gp3': nd }
+		self.data['right_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd}
+		self.data['left_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd}
+		self.data['gp'] = nd
+		self.data['gp3'] = nd
 
 		# Keep-alive message content used to request live data streams
 		self.KA_DATA_MSG = "{\"type\": \"live.data.unicast\", \"key\": \""+ str(uuid.uuid4()) +"\", \"op\": \"start\"}"
@@ -87,22 +88,26 @@ class TobiiGlassesController():
 
 		try:
 			self.data_socket = self.__mksock__()
-            self.connected = True
-    		self.__start_streaming__()
+			self.connected = True
+			self.__start_streaming__()
+
 		except:
 			print("An error occurs trying to connect to the Tobii Pro Glasses")
 
 	def __del__(self):
+		self.close()
 
+	def close(self):
+		self.running = False
+		self.td.join()
+		self.tg.join()
+		self.connected = False
 
-                self.connected = False
-                self.td.join()
-                self.tg.join()
+		try:
+			self.data_socket.close()
+		except:
+			print("An error occurs closing the sockets of the Tobii Pro Glasses")
 
-				try:
-					self.data_socket.close()
-				except:
-					print("An error occurs closing the sockets of the Tobii Pro Glasses")
 
 	def __mksock__(self):
 		iptype = socket.AF_INET
@@ -133,7 +138,7 @@ class TobiiGlassesController():
 		try:
 			gy = jsondata['gy']
 			ts = jsondata['ts']
-			if( (self.data['mems']['gy']['ts'] < ts) and (jsondata['s'] == 0]) ):
+			if( (self.data['mems']['gy']['ts'] < ts) and (jsondata['s'] == 0) ):
 				self.data['mems']['gy'] = jsondata
 		except:
 			pass
@@ -141,55 +146,55 @@ class TobiiGlassesController():
 		try:
 			ac = jsondata['ac']
 			ts = jsondata['ts']
-			if( (self.data['mems']['ac']['ts'] < ts) and (jsondata['s'] == 0]) ):
+			if( (self.data['mems']['ac']['ts'] < ts) and (jsondata['s'] == 0) ):
 				self.data['mems']['ac'] = jsondata
 		except:
 			pass
 
-        try:
+		try:
 			pc = jsondata['pc']
 			ts = jsondata['ts']
-            eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['pc']['ts'] < ts) and (jsondata['s'] == 0]) ):
+			eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['pc']['ts'] < ts) and (jsondata['s'] == 0) ):
 				self.data[eye + '_eye']['pc'] = jsondata
 		except:
-            pass
+			pass
 
-        try:
+		try:
 			pd = jsondata['pd']
 			ts = jsondata['ts']
-            eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['pd']['ts'] < ts) and (jsondata['s'] == 0]) ):
+			eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['pd']['ts'] < ts) and (jsondata['s'] == 0) ):
 				self.data[eye + '_eye']['pd'] = jsondata
 		except:
-            pass
+			pass
 
-        try:
+		try:
 			gd = jsondata['gd']
 			ts = jsondata['ts']
-            eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['gd']['ts'] < ts) and (jsondata['s'] == 0]) ):
+			eye = jsondata['eye']
+			if( (self.data[eye + '_eye']['gd']['ts'] < ts) and (jsondata['s'] == 0) ):
 				self.data[eye + '_eye']['gd'] = jsondata
 		except:
-            pass
+			pass
 
-        try:
+		try:
 			gp = jsondata['gp']
 			ts = jsondata['ts']
-            eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['gp']['ts'] < ts) and (jsondata['s'] == 0]) ):
-				self.data[eye + '_eye']['gp'] = jsondata
-		except:
-            pass
+			if( (self.data['gp']['ts'] < ts) and (jsondata['s'] == 0) ):
+				self.data['gp'] = jsondata
 
-        try:
+		except:
+			pass
+
+		try:
 			gp3 = jsondata['gp3']
 			ts = jsondata['ts']
-            eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['gp3']['ts'] < ts) and (jsondata['s'] == 0]) ):
-				self.data[eye + '_eye']['gp3'] = jsondata
+			if( (self.data['gp3']['ts'] < ts) and (jsondata['s'] == 0) ):
+				self.data['gp3'] = jsondata
 		except:
-            pass
+			pass
+
 
 	def __start_streaming__(self):
 
@@ -199,7 +204,6 @@ class TobiiGlassesController():
 			self.td.start()
 			self.tg = threading.Timer(0, self.__grab_data__, [self.data_socket])
 			self.tg.start()
-
 		except:
 			print("An error occurs trying to create the threads for receiving data")
 
@@ -240,10 +244,10 @@ class TobiiGlassesController():
 		status = self.wait_for_status('/api/calibrations/' + calibration_id + '/status', 'ca_state', ['failed', 'calibrated'])
 
 		if status == 'failed':
-			print 'Calibration failed, using default calibration instead'
+			print "Calibration " + calibration_id + " failed, using default calibration instead"
 			res_calibration = False
 		else:
-			print 'Calibration successful'
+			print "Calibration " + calibration_id + " successful"
 			res_calibration = True
 
 		return res_calibration
@@ -314,7 +318,6 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		udpport	-- UDP port number for Tobii Pro Glasses data streaming (default = 49152)
 		"""
 
-
 		# try to copy docstrings (but ignore it if it fails, as we do
 		# not need it for actual functioning of the code)
 		try:
@@ -342,7 +345,6 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		self.participant = "participant" # TODO: PP NAME
 
 		# eye tracker properties
-		self.connected = False
 		self.recording = False
 		self.eye_used = 0 # 0=left, 1=right, 2=binocular
 		self.left_eye = 0
@@ -367,46 +369,73 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 
 
-		self.tobiiglasses = TobiiProGlassesController(address, udpport)
+		self.tobiiglasses = TobiiGlassesController(address, udpport)
+		self.triggers_values = {}
+
 
 
 		self.logging = False
 
 
-	def __data_logger__(self, frequency, keys, time_offset):
+	def __data_logger__(self, frequency, keys, triggers, time_offset):
+
 
 		while self.logging:
-			row = ""
-			ac = []
-			gy = []
-			gc = []
-			pc = []
-			pd = None
-			gd = []
-			gp = []
-			gp3 = []
 
+			row = ""
+			ac = [None, None, None]
+			gy = [None, None, None]
 
 			if "mems" in keys:
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						ac[i] = self.tobiiglasses.data['mems']['ac']['ac'][i]
 				except:
 					pass
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						gy[i] = self.tobiiglasses.data['mems']['gy']['gy'][i]
 				except:
 					pass
 
 				row += ("%s; %s; %s; %s; %s; %s; " % (ac[0], ac[1], ac[2], gy[0], gy[1], gy[2]))
 
+			gp = [None, None]
+
+			if "gp" in keys:
+
+				try:
+					for i in range(0,2):
+						gp[i] = self.tobiiglasses.data['gp']['gp'][i]
+				except:
+					pass
+
+				row += ("%s; %s; " % (gp[0], gp[1]))
+
+
+			gp3 = [None, None, None]
+
+			if "gp3" in keys:
+
+				try:
+					for i in range(0,3):
+						gp3[i] = self.tobiiglasses.data['gp3']['gp3'][i]
+				except:
+					pass
+
+				row += ("%s; %s; %s; " % (gp3[0], gp3[1], gp3[2]))
+
+
+			pc = [None, None, None]
+			pd = None
+			gd = [None, None, None]
+
 			if "left_eye" in keys:
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						pc[i] = self.tobiiglasses.data['left_eye']['pc']['pc'][i]
 				except:
 					pass
@@ -417,29 +446,22 @@ class TobiiGlassesTracker(BaseEyeTracker):
 					pass
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						gd[i] = self.tobiiglasses.data['left_eye']['gd']['gd'][i]
 				except:
 					pass
 
-				try:
-					for i in range(0, 2):
-						gp[i] = self.tobiiglasses.data['left_eye']['gp']['gp'][i]
-				except:
-					pass
 
-				try:
-					for i in range(0, 3):
-						gp3[i] = self.tobiiglasses.data['left_eye']['gp3']['gp3'][i]
-				except:
-					pass
+				row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
 
-				row += ("%s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2], gp[0], gp[1], gp3[0], gp3[1], gp3[2]))
+			pc = [None, None, None]
+			pd = None
+			gd = [None, None, None]
 
 			if "right_eye" in keys:
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						pc[i] = self.tobiiglasses.data['right_eye']['pc']['pc'][i]
 				except:
 					pass
@@ -450,26 +472,16 @@ class TobiiGlassesTracker(BaseEyeTracker):
 					pass
 
 				try:
-					for i in range(0, 3):
+					for i in range(0,3):
 						gd[i] = self.tobiiglasses.data['right_eye']['gd']['gd'][i]
 				except:
 					pass
 
-				try:
-					for i in range(0, 2):
-						gp[i] = self.tobiiglasses.data['right_eye']['gp']['gp'][i]
-				except:
-					pass
+				row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
 
-				try:
-					for i in range(0, 3):
-						gp3[i] = self.tobiiglasses.data['right_eye']['gp3']['gp3'][i]
-				except:
-					pass
-
-				row += ("%s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2], gp[0], gp[1], gp3[0], gp3[1], gp3[2]))
-
-
+			if len(triggers) > 0:
+				for trigger in triggers:
+					row += ("%s; " % self.triggers_values[trigger])
 
 			row = row[:-2]
 			self.tobiiglasseslogfile.write("%s; %s \n" % (time_offset, row))
@@ -498,35 +510,76 @@ class TobiiGlassesTracker(BaseEyeTracker):
 					thresholds for detection algorithms)
 		"""
 
-		self.project_id = self.tobiiglasses.create_project()
-		self.participant_id = self.tobiiglasses.create_participant(self.project_id)
-		self.calibration_id = self.tobiiglasses.create_calibration(self.project_id, self.participant_id)
+		self.project_id = self.create_project()
+		self.participant_id = self.create_participant(self.project_id)
+		self.calibration_id = self.create_calibration(self.project_id, self.participant_id)
 
-		print "Project: " + self.project_id, ", Participant: ", self.participant_id, ", Calibration: ", self.calibration_id, " "
+		self.start_calibration(self.calibration_id)
 
-		#input_var = raw_input("Press enter to calibrate")
-		print ('Calibration started...')
-		self.tobiiglasses.start_calibration(self.calibration_id)
+		return self.is_calibrated(self.calibration_id)
 
-		return self.tobiiglasses.is_calibrated(self.calibration_id)
+	def create_project(self):
 
-	def start_logging(self, logfile, frequency, keys = ["mems", "left_eye", "right_eye"], time_offset=0):
+		project_id = self.tobiiglasses.create_project()
+		print "Project " + project_id + " created!"
+		return project_id
+
+	def create_participant(self, project_id):
+
+		participant_id = self.tobiiglasses.create_participant(project_id)
+		print "Participant " + participant_id + " created! Project " + project_id
+		return participant_id
+
+	def create_calibration(self, project_id, participant_id):
+
+		calibration_id = self.tobiiglasses.create_calibration(project_id, participant_id)
+		print "Calibration " + calibration_id + "created! Project: " + project_id + ", Participant: " + participant_id
+		return calibration_id
+
+	def start_calibration(self, calibration_id):
+
+		print "Calibration " + calibration_id + "started..."
+		return self.tobiiglasses.start_calibration(calibration_id)
+
+	def is_calibrated(self, calibration_id):
+
+		return self.tobiiglasses.is_calibrated(calibration_id)
+
+	def start_logging(self, logfile, frequency, keys = ["mems", "gp", "gp3", "left_eye", "right_eye"], triggers = [], time_offset=0):
 
 		self.tobiiglasseslogfile = open(logfile, 'a')
 		header = "ts; "
 		if not os.path.getsize(logfile) > 0:
 			if "mems" in keys:
 				header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
+			if "gp" in keys:
+				header+="gp_x; gp_y; "
+			if "gp3" in keys:
+				header+="gp3_x [mm]; gp3_y [mm]; gp3_z [mm]; "
 			if "left_eye" in keys:
-				header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; left_gp_x; left_gp_y; left_gp3_x [mm]; left_gp3_y [mm]; left_gp3_z [mm]; "
+				header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; "
 			if "left_eye" in keys:
-				header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; right_gp_x; right_gp_y; right_gp3_x [mm]; right_gp3_y [mm]; right_gp3_z [mm]; "
+				header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; "
+
+			if len(triggers) > 0:
+				for trigger in triggers:
+					header+=trigger + "; "
+					self.triggers_values[trigger] = None
+
 			header = header[:-2]
 			self.tobiiglasseslogfile.write(header + "\n")
 
 		self.logging = True
-		self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, time_offset])
+		self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, triggers, time_offset])
 		self.logger.start()
+
+
+	def trigger(self, trigger_key, trigger_value):
+
+		try:
+			self.triggers_values[trigger_key] = trigger_value
+		except:
+			pass
 
 
 	def stop_logging(self):
@@ -555,6 +608,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		if self.logging:
 			self.stop_logging()
 
+		self.tobiiglasses.close()
 		self.connected = False
 
 
@@ -776,30 +830,36 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		print("function not supported yet")
 
+	def create_recording(self, participant_id):
 
-	def start_recording(self):
+		recording_id = self.current_recording_id = self.tobiiglasses.create_recording(participant_id)
+		print "Recording " + recording_id + " created!"
+		return recording_id
+
+
+
+
+	def start_recording(self, recording_id = None):
 
 		"""Starts recording eye position
 
 		arguments
-		None
+		recording_id
 
 		returns
 		None		-- sets self.recording to True when recording is
 				   successfully started
 		"""
 
-		if not self.recording:
+		if (not self.recording) and (not recording_id is None):
 			try:
-				self.current_recording_id = self.tobiiglasses.create_recording(self.participant_id)
-				self.tobiiglasses.start_recording(self.current_recording_id)
+				self.tobiiglasses.start_recording(recording_id)
 				self.recording = True
 			except:
 				self.recording = False
 				raise Exception("Error in libtobiiproglasses.TobiiProGlassesController.start_recording: failed to start recording")
-
 		else:
-			print("WARNING! libtobiiproglasses.TobiiProGlassesController.start_recording: already recording!")
+			print("ERROR! libtobiiproglasses.TobiiProGlassesController.start_recording: The Tobii Pro Glasses is already recording!")
 
 
 	def status_msg(self, msg):
@@ -809,7 +869,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		print("function not supported yet")
 
 
-	def stop_recording(self):
+	def stop_recording(self, recording_id = None):
 
 		"""Stop recording eye position
 
@@ -822,16 +882,22 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-		if self.recording:
+		if self.recording and (not recording_id is None):
+
 			try:
-				self.tobiiglasses.stop_recording(self.current_recording_id)
+				self.tobiiglasses.stop_recording(recording_id)
 				self.recording = False
+				status = self.tobiiglasses.wait_for_status('/api/recordings/' + recording_id + '/status', 'rec_state', ['failed', 'done'])
+				if status == 'failed':
+					print "Recording " + recording_id + " failed!"
+				else:
+					print "Recording " + recording_id + " successful!"
 			except:
 				self.recording = True
 				raise Exception("Error in libtobii.TobiiProGlassesTracker.stop_recording: failed to stop recording")
 
 		else:
-			print("WARNING! libtobiiproglasses.TobiiProGlassesController.stop_recording: recording has not started yet!")
+			print("Error in libtobiiproglasses.TobiiProGlassesController.stop_recording: There is not recordings started!")
 
 
 	def set_detection_type(self, eventdetection):
@@ -1036,6 +1102,14 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		return self.tobiiglasses.data['mems']
 
+	def get_gp(self):
+
+		return self.tobiiglasses.data['gp']
+
+	def get_gp3(self):
+
+		return self.tobiiglasses.data['gp3']
+
 	def get_lefteyedata(self):
 
 		return self.tobiiglasses.data['left_eye']
@@ -1043,3 +1117,4 @@ class TobiiGlassesTracker(BaseEyeTracker):
 	def get_righteyedata(self):
 
 		return self.tobiiglasses.data['right_eye']
+

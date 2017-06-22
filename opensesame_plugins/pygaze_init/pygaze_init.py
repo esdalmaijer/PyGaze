@@ -308,3 +308,4 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 				self.text_eyelink_pylink_check.hide()
 		else:
 			self.text_eyelink_pylink_check.hide()
+
