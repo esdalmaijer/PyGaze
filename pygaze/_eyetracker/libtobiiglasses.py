@@ -56,6 +56,7 @@ import time
 import threading
 import socket
 import uuid
+import logging as log
 
 import warnings
 warnings.filterwarnings("ignore", category=numpy.VisibleDeprecationWarning)
@@ -64,235 +65,7 @@ warnings.filterwarnings("ignore", category=numpy.VisibleDeprecationWarning)
 # # # # #
 # TobiiGlassesController
 
-class TobiiGlassesController():
-
-	def __init__(self, address, udpport):
-
-		self.base_url = 'http://' + address
-		self.timeout = 1
-		self.connected = False
-		self.running = True
-
-		self.data = {}
-		nd = {'ts': -1}
-		self.data['mems'] = { 'ac': nd, 'gy': nd }
-		self.data['right_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd}
-		self.data['left_eye'] = { 'pc': nd, 'pd': nd, 'gd': nd}
-		self.data['gp'] = nd
-		self.data['gp3'] = nd
-
-		# Keep-alive message content used to request live data streams
-		self.KA_DATA_MSG = "{\"type\": \"live.data.unicast\", \"key\": \""+ str(uuid.uuid4()) +"\", \"op\": \"start\"}"
-
-		self.peer = (address, udpport)
-
-		try:
-			self.data_socket = self.__mksock__()
-			self.connected = True
-			self.__start_streaming__()
-
-		except:
-			print("An error occurs trying to connect to the Tobii Pro Glasses")
-
-	def __del__(self):
-		self.close()
-
-	def close(self):
-		self.running = False
-		self.td.join()
-		self.tg.join()
-		self.connected = False
-
-		try:
-			self.data_socket.close()
-		except:
-			print("An error occurs closing the sockets of the Tobii Pro Glasses")
-
-
-	def __mksock__(self):
-		iptype = socket.AF_INET
-		if ':' in self.peer[0]:
-			iptype = socket.AF_INET6
-		return socket.socket(iptype, socket.SOCK_DGRAM)
-
-
-	def __send_keepalive_msg__(self, socket, msg):
-
-		while self.running:
-			socket.sendto(msg, self.peer)
-			time.sleep(self.timeout)
-
-
-	def __grab_data__(self, socket):
-
-		time.sleep(1)
-		while self.running:
-			data, address = socket.recvfrom(1024)
-			jdata = json.loads(data)
-			self.__refresh_data__(jdata)
-
-
-
-	def __refresh_data__(self, jsondata):
-
-		try:
-			gy = jsondata['gy']
-			ts = jsondata['ts']
-			if( (self.data['mems']['gy']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data['mems']['gy'] = jsondata
-		except:
-			pass
-
-		try:
-			ac = jsondata['ac']
-			ts = jsondata['ts']
-			if( (self.data['mems']['ac']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data['mems']['ac'] = jsondata
-		except:
-			pass
-
-		try:
-			pc = jsondata['pc']
-			ts = jsondata['ts']
-			eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['pc']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data[eye + '_eye']['pc'] = jsondata
-		except:
-			pass
-
-		try:
-			pd = jsondata['pd']
-			ts = jsondata['ts']
-			eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['pd']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data[eye + '_eye']['pd'] = jsondata
-		except:
-			pass
-
-		try:
-			gd = jsondata['gd']
-			ts = jsondata['ts']
-			eye = jsondata['eye']
-			if( (self.data[eye + '_eye']['gd']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data[eye + '_eye']['gd'] = jsondata
-		except:
-			pass
-
-		try:
-			gp = jsondata['gp']
-			ts = jsondata['ts']
-			if( (self.data['gp']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data['gp'] = jsondata
-
-		except:
-			pass
-
-		try:
-			gp3 = jsondata['gp3']
-			ts = jsondata['ts']
-			if( (self.data['gp3']['ts'] < ts) and (jsondata['s'] == 0) ):
-				self.data['gp3'] = jsondata
-		except:
-			pass
-
-
-	def __start_streaming__(self):
-
-		try:
-			self.running = True
-			self.td = threading.Timer(0, self.__send_keepalive_msg__, [self.data_socket, self.KA_DATA_MSG])
-			self.td.start()
-			self.tg = threading.Timer(0, self.__grab_data__, [self.data_socket])
-			self.tg.start()
-		except:
-			print("An error occurs trying to create the threads for receiving data")
-
-
-	def is_connected(self):
-
-		return self.connected
-
-	def __post_request__(self, api_action, data=None):
-
-		url = self.base_url + api_action
-		req = urllib2.Request(url)
-		req.add_header('Content-Type', 'application/json')
-		data = json.dumps(data)
-		response = urllib2.urlopen(req, data)
-		data = response.read()
-		json_data = json.loads(data)
-		return json_data
-
-	def wait_for_status(self, api_action, key, values):
-
-		url = self.base_url + api_action
-		self.running = True
-		while self.running:
-			req = urllib2.Request(url)
-			req.add_header('Content-Type', 'application/json')
-			response = urllib2.urlopen(req, None)
-			data = response.read()
-			json_data = json.loads(data)
-			if json_data[key] in values:
-				self.running = False
-			time.sleep(1)
-
-		return json_data[key]
-
-	def is_calibrated(self, calibration_id):
-
-		status = self.wait_for_status('/api/calibrations/' + calibration_id + '/status', 'ca_state', ['failed', 'calibrated'])
-
-		if status == 'failed':
-			print "Calibration " + calibration_id + " failed, using default calibration instead"
-			res_calibration = False
-		else:
-			print "Calibration " + calibration_id + " successful"
-			res_calibration = True
-
-		return res_calibration
-
-
-	def create_project(self):
-
-		json_data = self.__post_request__('/api/projects')
-		return json_data['pr_id']
-
-
-	def create_participant(self, project_id):
-
-		data = {'pa_project': project_id}
-		json_data = self.__post_request__('/api/participants', data)
-		return json_data['pa_id']
-
-	def create_calibration(self, project_id, participant_id):
-
-		data = {'ca_project': project_id, 'ca_type': 'default', 'ca_participant': participant_id}
-		json_data = self.__post_request__('/api/calibrations', data)
-		return json_data['ca_id']
-
-	def start_calibration(self, calibration_id):
-
-		self.__post_request__('/api/calibrations/' + calibration_id + '/start')
-
-	def create_recording(self, participant_id):
-
-		data = {'rec_participant': participant_id}
-		json_data = self.__post_request__('/api/recordings', data)
-		return json_data['rec_id']
-
-	def start_recording(self, recording_id):
-		self.__post_request__('/api/recordings/' + recording_id + '/start')
-
-	def stop_recording(self, recording_id):
-		self.__post_request__('/api/recordings/' + recording_id + '/stop')
-
-	def recordEvent(self, msg):
-		print "LOGGER: " + msg
-
-	def get_data(self):
-		return self.data
-
+from tobiiglasses.tobiiglassescontroller import TobiiGlassesController
 
 
 
@@ -346,6 +119,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		# eye tracker properties
 		self.recording = False
+		self.capturing = False
 		self.eye_used = 0 # 0=left, 1=right, 2=binocular
 		self.left_eye = 0
 		self.right_eye = 1
@@ -369,12 +143,16 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 
 
-		self.tobiiglasses = TobiiGlassesController(address, udpport)
+		self.tobiiglasses = TobiiGlassesController(udpport, address)
+		self.tobiiglasses.connect()
+
 		self.triggers_values = {}
 
-
-
 		self.logging = False
+
+	def __del__(self):
+
+		self.close()
 
 
 	def __data_logger__(self, frequency, keys, triggers, time_offset):
@@ -489,8 +267,27 @@ class TobiiGlassesTracker(BaseEyeTracker):
 			time_offset += int(time_period*1000)
 			time.sleep(time_period)
 
+	def start_capturing(self):
 
-	def calibrate(self, calibrate=True, validate=True):
+		if not self.capturing:
+			self.tobiiglasses.start_streaming()
+			self.capturing = True
+		else:
+			log.error("The eye-tracker is already in capturing mode.")
+
+		return self.capturing
+
+	def stop_capturing(self):
+
+		if self.capturing:
+			self.tobiiglasses.stop_streaming()
+			self.capturing = False
+		else:
+			log.error("The eye-tracker is not in capturing mode.")
+
+		return not self.capturing
+
+	def calibrate(self, calibrate=True, validate=True, project_name=None, participant_name=None):
 
 		"""Calibrates the eye tracking system
 
@@ -510,36 +307,47 @@ class TobiiGlassesTracker(BaseEyeTracker):
 					thresholds for detection algorithms)
 		"""
 
-		self.project_id = self.create_project()
-		self.participant_id = self.create_participant(self.project_id)
+
+		self.project_id = self.create_project(project_name)
+
+		self.participant_id = self.create_participant(self.project_id, participant_name)
+
 		self.calibration_id = self.create_calibration(self.project_id, self.participant_id)
 
 		self.start_calibration(self.calibration_id)
 
 		return self.is_calibrated(self.calibration_id)
 
-	def create_project(self):
+	def create_project(self, project_name = None):
 
-		project_id = self.tobiiglasses.create_project()
-		print "Project " + project_id + " created!"
+		if not project_name is None:
+			project_id = self.tobiiglasses.create_project(project_name)
+		else:
+			project_id = self.tobiiglasses.create_project()
+
+		log.debug("Project " + project_id + " created!")
 		return project_id
 
-	def create_participant(self, project_id):
+	def create_participant(self, project_id, participant_name = None):
 
-		participant_id = self.tobiiglasses.create_participant(project_id)
-		print "Participant " + participant_id + " created! Project " + project_id
+		if not participant_name is None:
+			participant_id = self.tobiiglasses.create_participant(project_id, participant_name)
+		else:
+			participant_id = self.tobiiglasses.create_participant(project_id)
+
+		log.debug("Participant " + participant_id + " created! Project " + project_id)
 		return participant_id
 
 	def create_calibration(self, project_id, participant_id):
 
 		calibration_id = self.tobiiglasses.create_calibration(project_id, participant_id)
-		print "Calibration " + calibration_id + "created! Project: " + project_id + ", Participant: " + participant_id
+		log.debug("Calibration " + calibration_id + "created! Project: " + project_id + ", Participant: " + participant_id)
 		return calibration_id
 
 	def start_calibration(self, calibration_id):
 
-		print "Calibration " + calibration_id + "started..."
-		return self.tobiiglasses.start_calibration(calibration_id)
+		self.tobiiglasses.start_calibration(calibration_id)
+		log.debug("Calibration " + calibration_id + " started...")
 
 	def is_calibrated(self, calibration_id):
 
@@ -547,47 +355,58 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 	def start_logging(self, logfile, frequency, keys = ["mems", "gp", "gp3", "left_eye", "right_eye"], triggers = [], time_offset=0):
 
-		self.tobiiglasseslogfile = open(logfile, 'a')
-		header = "ts; "
-		if not os.path.getsize(logfile) > 0:
-			if "mems" in keys:
-				header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
-			if "gp" in keys:
-				header+="gp_x; gp_y; "
-			if "gp3" in keys:
-				header+="gp3_x [mm]; gp3_y [mm]; gp3_z [mm]; "
-			if "left_eye" in keys:
-				header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; "
-			if "left_eye" in keys:
-				header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; "
+		if not self.logging:
+			self.tobiiglasseslogfile = open(logfile, 'a')
+			header = "ts; "
+			if not os.path.getsize(logfile) > 0:
+				if "mems" in keys:
+					header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
+				if "gp" in keys:
+					header+="gp_x; gp_y; "
+				if "gp3" in keys:
+					header+="gp3_x [mm]; gp3_y [mm]; gp3_z [mm]; "
+				if "left_eye" in keys:
+					header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; "
+				if "left_eye" in keys:
+					header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; "
 
-			if len(triggers) > 0:
-				for trigger in triggers:
-					header+=trigger + "; "
-					self.triggers_values[trigger] = None
+				if len(triggers) > 0:
+					for trigger in triggers:
+						header+=trigger + "; "
+						self.triggers_values[trigger] = None
 
-			header = header[:-2]
-			self.tobiiglasseslogfile.write(header + "\n")
+				header = header[:-2]
+				self.tobiiglasseslogfile.write(header + "\n")
 
-		self.logging = True
-		self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, triggers, time_offset])
-		self.logger.start()
+			self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, triggers, time_offset])
+			self.logger.start()
+			self.logging = True
+			log.debug("Start logging selected data in file " + logfile + " ...")
+		else:
+			log.error("The eye-tracker is already in logging mode.")
 
+		return self.logging
 
 	def trigger(self, trigger_key, trigger_value):
 
 		try:
 			self.triggers_values[trigger_key] = trigger_value
+			log.debug("Trigger received! Key: " + trigger_key + " Value: " + trigger_value)
 		except:
 			pass
 
 
 	def stop_logging(self):
 
-		self.logging = False
-		self.logger.join()
-		self.tobiiglasseslogfile.close()
+		if self.logging:
+			self.logger.join()
+			self.tobiiglasseslogfile.close()
+			self.logging = False
+			log.debug("Stop logging!")
+		else:
+			log.error("The eye-tracker is not in logging mode.")
 
+		return not self.logging
 
 	def close(self):
 
@@ -597,19 +416,19 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		None
 
 		returns
-		None		--	saves data and sets self.connected to False
+		None
 
 		"""
 
-		# stop tracking
+
 		if self.recording:
 			self.tobiiglasses.stop_recording()
 
 		if self.logging:
 			self.stop_logging()
 
-		self.tobiiglasses.close()
-		self.connected = False
+		if self.capturing:
+			self.stop_capturing()
 
 
 
@@ -725,7 +544,9 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-		self.tobiiglasses.recordEvent(msg)
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
 
 
 
@@ -745,8 +566,9 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-		msg = "var %s %s" % (var, val)
-		self.log(msg)
+		"""Not supported for TobiiProGlassesTracker (yet)"""
+
+		print("function not supported yet")
 
 
 	def prepare_backdrop(self):
@@ -833,7 +655,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 	def create_recording(self, participant_id):
 
 		recording_id = self.current_recording_id = self.tobiiglasses.create_recording(participant_id)
-		print "Recording " + recording_id + " created!"
+		log.debug("Recording " + recording_id + " created!")
 		return recording_id
 
 
@@ -859,7 +681,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 				self.recording = False
 				raise Exception("Error in libtobiiproglasses.TobiiProGlassesController.start_recording: failed to start recording")
 		else:
-			print("ERROR! libtobiiproglasses.TobiiProGlassesController.start_recording: The Tobii Pro Glasses is already recording!")
+			log.error("The Tobii Pro Glasses is already recording!")
 
 
 	def status_msg(self, msg):
@@ -889,15 +711,15 @@ class TobiiGlassesTracker(BaseEyeTracker):
 				self.recording = False
 				status = self.tobiiglasses.wait_for_status('/api/recordings/' + recording_id + '/status', 'rec_state', ['failed', 'done'])
 				if status == 'failed':
-					print "Recording " + recording_id + " failed!"
+					log.error("Recording " + recording_id + " failed!")
 				else:
-					print "Recording " + recording_id + " successful!"
+					log.debug("Recording " + recording_id + " stored successful!")
 			except:
 				self.recording = True
 				raise Exception("Error in libtobii.TobiiProGlassesTracker.stop_recording: failed to stop recording")
 
 		else:
-			print("Error in libtobiiproglasses.TobiiProGlassesController.stop_recording: There is not recordings started!")
+			log.error("There is not recordings started!")
 
 
 	def set_detection_type(self, eventdetection):
@@ -1117,4 +939,3 @@ class TobiiGlassesTracker(BaseEyeTracker):
 	def get_righteyedata(self):
 
 		return self.tobiiglasses.data['right_eye']
-
