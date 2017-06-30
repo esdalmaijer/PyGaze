@@ -146,6 +146,8 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		self.tobiiglasses = TobiiGlassesController(udpport, address)
 		self.tobiiglasses.connect()
 
+		self.start_capturing()
+
 		self.triggers_values = {}
 
 		self.logging = False
@@ -399,9 +401,9 @@ class TobiiGlassesTracker(BaseEyeTracker):
 	def stop_logging(self):
 
 		if self.logging:
+			self.logging = False
 			self.logger.join()
 			self.tobiiglasseslogfile.close()
-			self.logging = False
 			log.debug("Stop logging!")
 		else:
 			log.error("The eye-tracker is not in logging mode.")
