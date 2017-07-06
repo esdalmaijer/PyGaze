@@ -13,6 +13,7 @@ controls:
       - SMI
       - Tobii
       - EyeTribe
+      - OpenGaze
       - Tobii Pro Glasses 2
     tooltip: A list of supported eye trackers
   - type: checkbox
