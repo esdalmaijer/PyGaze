@@ -118,8 +118,6 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		self.participant = "participant" # TODO: PP NAME
 
 		# eye tracker properties
-		self.recording = False
-		self.capturing = False
 		self.eye_used = 0 # 0=left, 1=right, 2=binocular
 		self.left_eye = 0
 		self.right_eye = 1
@@ -144,152 +142,181 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 
 		self.tobiiglasses = TobiiGlassesController(udpport, address)
-		self.tobiiglasses.connect()
-
-		self.start_capturing()
 
 		self.triggers_values = {}
 
 		self.logging = False
+		self.current_recording_id = None
+		self.current_participant_id = None
+		self.current_project_id = None
+
 
 	def __del__(self):
 
 		self.close()
 
+	def __get_log_row__(self, keys, triggers):
 
-	def __data_logger__(self, frequency, keys, triggers, time_offset):
+		row = ""
+		ac = [None, None, None]
+		gy = [None, None, None]
+		if "mems" in keys:
 
+			try:
+				for i in range(0,3):
+					ac[i] = self.tobiiglasses.data['mems']['ac']['ac'][i]
+			except:
+				pass
 
-		while self.logging:
+			try:
+				for i in range(0,3):
+					gy[i] = self.tobiiglasses.data['mems']['gy']['gy'][i]
+			except:
+				pass
 
-			row = ""
-			ac = [None, None, None]
-			gy = [None, None, None]
-
-			if "mems" in keys:
-
-				try:
-					for i in range(0,3):
-						ac[i] = self.tobiiglasses.data['mems']['ac']['ac'][i]
-				except:
-					pass
-
-				try:
-					for i in range(0,3):
-						gy[i] = self.tobiiglasses.data['mems']['gy']['gy'][i]
-				except:
-					pass
-
-				row += ("%s; %s; %s; %s; %s; %s; " % (ac[0], ac[1], ac[2], gy[0], gy[1], gy[2]))
-
-			gp = [None, None]
-
-			if "gp" in keys:
-
-				try:
-					for i in range(0,2):
-						gp[i] = self.tobiiglasses.data['gp']['gp'][i]
-				except:
-					pass
-
-				row += ("%s; %s; " % (gp[0], gp[1]))
+			row += ("%s; %s; %s; %s; %s; %s; " % (ac[0], ac[1], ac[2], gy[0], gy[1], gy[2]))
 
 
-			gp3 = [None, None, None]
+		gp = [None, None]
+		if "gp" in keys:
 
-			if "gp3" in keys:
+			try:
+				for i in range(0,2):
+					gp[i] = self.tobiiglasses.data['gp']['gp'][i]
+			except:
+				pass
 
-				try:
-					for i in range(0,3):
-						gp3[i] = self.tobiiglasses.data['gp3']['gp3'][i]
-				except:
-					pass
-
-				row += ("%s; %s; %s; " % (gp3[0], gp3[1], gp3[2]))
-
-
-			pc = [None, None, None]
-			pd = None
-			gd = [None, None, None]
-
-			if "left_eye" in keys:
-
-				try:
-					for i in range(0,3):
-						pc[i] = self.tobiiglasses.data['left_eye']['pc']['pc'][i]
-				except:
-					pass
-
-				try:
-					pd = self.tobiiglasses.data['left_eye']['pd']['pd']
-				except:
-					pass
-
-				try:
-					for i in range(0,3):
-						gd[i] = self.tobiiglasses.data['left_eye']['gd']['gd'][i]
-				except:
-					pass
+			row += ("%s; %s; " % (gp[0], gp[1]))
 
 
-				row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
+		gp3 = [None, None, None]
+		if "gp3" in keys:
 
-			pc = [None, None, None]
-			pd = None
-			gd = [None, None, None]
+			try:
+				for i in range(0,3):
+					gp3[i] = self.tobiiglasses.data['gp3']['gp3'][i]
+			except:
+				pass
 
-			if "right_eye" in keys:
+			row += ("%s; %s; %s; " % (gp3[0], gp3[1], gp3[2]))
 
-				try:
-					for i in range(0,3):
-						pc[i] = self.tobiiglasses.data['right_eye']['pc']['pc'][i]
-				except:
-					pass
 
-				try:
-					pd = self.tobiiglasses.data['right_eye']['pd']['pd']
-				except:
-					pass
+		pc = [None, None, None]
+		pd = None
+		gd = [None, None, None]
+		if "left_eye" in keys:
 
-				try:
-					for i in range(0,3):
-						gd[i] = self.tobiiglasses.data['right_eye']['gd']['gd'][i]
-				except:
-					pass
+			try:
+				for i in range(0,3):
+					pc[i] = self.tobiiglasses.data['left_eye']['pc']['pc'][i]
+			except:
+				pass
 
-				row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
+			try:
+				pd = self.tobiiglasses.data['left_eye']['pd']['pd']
+			except:
+				pass
 
-			if len(triggers) > 0:
-				for trigger in triggers:
-					row += ("%s; " % self.triggers_values[trigger])
+			try:
+				for i in range(0,3):
+					gd[i] = self.tobiiglasses.data['left_eye']['gd']['gd'][i]
+			except:
+				pass
 
-			row = row[:-2]
-			self.tobiiglasseslogfile.write("%s; %s \n" % (time_offset, row))
-			time_period = float(1.0/float(frequency))
-			time_offset += int(time_period*1000)
-			time.sleep(time_period)
+
+			row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
+
+		pc = [None, None, None]
+		pd = None
+		gd = [None, None, None]
+		if "right_eye" in keys:
+
+			try:
+				for i in range(0,3):
+					pc[i] = self.tobiiglasses.data['right_eye']['pc']['pc'][i]
+			except:
+				pass
+
+			try:
+				pd = self.tobiiglasses.data['right_eye']['pd']['pd']
+			except:
+				pass
+
+			try:
+				for i in range(0,3):
+					gd[i] = self.tobiiglasses.data['right_eye']['gd']['gd'][i]
+			except:
+				pass
+
+			row += ("%s; %s; %s; %s; %s; %s; %s; " % (pc[0], pc[1], pc[2], pd, gd[0], gd[1], gd[2]))
+
+		if len(triggers) > 0:
+			for trigger in triggers:
+				row += ("%s; " % self.triggers_values[trigger])
+
+		row = row[:-2]
+		return row
+
+	def __get_log_header__(self, keys, triggers):
+
+		header = "ts; "
+
+		if "mems" in keys:
+			header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
+		if "gp" in keys:
+			header+="gp_x; gp_y; "
+		if "gp3" in keys:
+			header+="gp3_x [mm]; gp3_y [mm]; gp3_z [mm]; "
+		if "left_eye" in keys:
+			header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; "
+		if "left_eye" in keys:
+			header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; "
+
+		if len(triggers) > 0:
+			for trigger in triggers:
+				header+=trigger + "; "
+				self.triggers_values[trigger] = None
+
+		header = header[:-2]
+		return header
+
+
+
+	def __data_logger__(self, logfile, frequency, keys, triggers, time_offset):
+
+		with open(logfile, 'a') as f:
+
+			header = self.__get_log_header__(keys, triggers)
+			f.write(header + "\n")
+
+			while self.logging:
+
+				row = self.__get_log_row__(keys, triggers)
+				f.write("%s; %s \n" % (time_offset, row))
+				time_period = float(1.0/float(frequency))
+				time_offset += int(time_period*1000)
+				time.sleep(time_period)
+
 
 	def start_capturing(self):
 
-		if not self.capturing:
+		if not self.tobiiglasses.is_streaming():
 			self.tobiiglasses.start_streaming()
-			self.capturing = True
 		else:
 			log.error("The eye-tracker is already in capturing mode.")
 
-		return self.capturing
+		return self.tobiiglasses.is_streaming()
 
 	def stop_capturing(self):
 
-		if self.capturing:
+		if self.tobiiglasses.is_streaming():
 			self.tobiiglasses.stop_streaming()
-			self.capturing = False
 		else:
 			log.error("The eye-tracker is not in capturing mode.")
 
-		return not self.capturing
+		return not self.tobiiglasses.is_streaming()
 
-	def calibrate(self, calibrate=True, validate=True, project_name=None, participant_name=None):
+	def calibrate(self, calibrate=True, validate=True):
 
 		"""Calibrates the eye tracking system
 
@@ -309,80 +336,49 @@ class TobiiGlassesTracker(BaseEyeTracker):
 					thresholds for detection algorithms)
 		"""
 
+		if self.current_project_id is None:
+			self.current_project_id = self.set_project()
 
-		self.project_id = self.create_project(project_name)
+		if self.current_participant_id is None:
+			self.current_participant_id = self.create_participant(self.current_project_id)
 
-		self.participant_id = self.create_participant(self.project_id, participant_name)
-
-		self.calibration_id = self.create_calibration(self.project_id, self.participant_id)
-
-		self.start_calibration(self.calibration_id)
-
-		return self.is_calibrated(self.calibration_id)
-
-	def create_project(self, project_name = None):
-
-		if not project_name is None:
-			project_id = self.tobiiglasses.create_project(project_name)
-		else:
-			project_id = self.tobiiglasses.create_project()
-
-		log.debug("Project " + project_id + " created!")
-		return project_id
-
-	def create_participant(self, project_id, participant_name = None):
-
-		if not participant_name is None:
-			participant_id = self.tobiiglasses.create_participant(project_id, participant_name)
-		else:
-			participant_id = self.tobiiglasses.create_participant(project_id)
-
-		log.debug("Participant " + participant_id + " created! Project " + project_id)
-		return participant_id
-
-	def create_calibration(self, project_id, participant_id):
-
-		calibration_id = self.tobiiglasses.create_calibration(project_id, participant_id)
-		log.debug("Calibration " + calibration_id + "created! Project: " + project_id + ", Participant: " + participant_id)
-		return calibration_id
-
-	def start_calibration(self, calibration_id):
+		calibration_id = self.__create_calibration__(self.current_project_id, self.current_participant_id)
 
 		self.tobiiglasses.start_calibration(calibration_id)
-		log.debug("Calibration " + calibration_id + " started...")
 
-	def is_calibrated(self, calibration_id):
+		res = self.tobiiglasses.wait_until_is_calibrated(calibration_id)
 
-		return self.tobiiglasses.is_calibrated(calibration_id)
+		return res
+
+	def set_current_project(self, project_name = None):
+
+		if project_name is None:
+			self.current_project_id = self.tobiiglasses.create_project()
+		else:
+			self.current_project_id = self.tobiiglasses.create_project(project_name)
+
+	def set_current_participant(self, participant_name = None):
+
+		if self.current_project_id is None:
+			log.error("There is no project to assign a participant.")
+		else:
+			if participant_name is None:
+				self.current_participant_id = self.tobiiglasses.create_participant(self.current_project_id)
+			else:
+				self.current_participant_id = self.tobiiglasses.create_participant(self.current_project_id, participant_name)
+
+	def __create_calibration__(self, project_id, participant_id):
+
+		calibration_id = self.tobiiglasses.create_calibration(project_id, participant_id)
+		return calibration_id
+
 
 	def start_logging(self, logfile, frequency, keys = ["mems", "gp", "gp3", "left_eye", "right_eye"], triggers = [], time_offset=0):
 
 		if not self.logging:
-			self.tobiiglasseslogfile = open(logfile, 'a')
-			header = "ts; "
-			if not os.path.getsize(logfile) > 0:
-				if "mems" in keys:
-					header+="ac_x [m/s^2]; ac_y [m/s^2]; ac_z [m/s^2]; gy_x [°/s]; gy_y [°/s]; gy_z [°/s]; "
-				if "gp" in keys:
-					header+="gp_x; gp_y; "
-				if "gp3" in keys:
-					header+="gp3_x [mm]; gp3_y [mm]; gp3_z [mm]; "
-				if "left_eye" in keys:
-					header+="left_pc_x [mm]; left_pc_y [mm]; left_pc_z [mm]; left_pd [mm]; left_gd_x; left_gd_y; left_gd_z; "
-				if "left_eye" in keys:
-					header+="right_pc_x [mm]; right_pc_y [mm]; right_pc_z [mm]; right_pd [mm]; right_gd_x; right_gd_y; right_gd_z; "
-
-				if len(triggers) > 0:
-					for trigger in triggers:
-						header+=trigger + "; "
-						self.triggers_values[trigger] = None
-
-				header = header[:-2]
-				self.tobiiglasseslogfile.write(header + "\n")
-
-			self.logger = threading.Timer(0, self.__data_logger__, [frequency, keys, triggers, time_offset])
-			self.logger.start()
+			self.logger = threading.Timer(0, self.__data_logger__, [logfile, frequency, keys, triggers, time_offset])
 			self.logging = True
+			self.logger.start()
 			log.debug("Start logging selected data in file " + logfile + " ...")
 		else:
 			log.error("The eye-tracker is already in logging mode.")
@@ -403,7 +399,6 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		if self.logging:
 			self.logging = False
 			self.logger.join()
-			self.tobiiglasseslogfile.close()
 			log.debug("Stop logging!")
 		else:
 			log.error("The eye-tracker is not in logging mode.")
@@ -422,14 +417,10 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-
-		if self.recording:
-			self.tobiiglasses.stop_recording()
-
 		if self.logging:
 			self.stop_logging()
 
-		if self.capturing:
+		if self.tobiiglasses.is_streaming():
 			self.stop_capturing()
 
 
@@ -446,7 +437,9 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-		return self.tobiiglasses.is_connected()
+		res = self.tobiiglasses.wait_until_status_is_ok()
+
+		return res
 
 
 	def drift_correction(self, pos=None, fix_triggered=False):
@@ -654,16 +647,8 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		print("function not supported yet")
 
-	def create_recording(self, participant_id):
 
-		recording_id = self.current_recording_id = self.tobiiglasses.create_recording(participant_id)
-		log.debug("Recording " + recording_id + " created!")
-		return recording_id
-
-
-
-
-	def start_recording(self, recording_id = None):
+	def start_recording(self):
 
 		"""Starts recording eye position
 
@@ -675,12 +660,13 @@ class TobiiGlassesTracker(BaseEyeTracker):
 				   successfully started
 		"""
 
-		if (not self.recording) and (not recording_id is None):
+		if self.current_recording_id is None:
+
+			self.current_recording_id = self.tobiiglasses.create_recording(self.current_participant_id)
 			try:
-				self.tobiiglasses.start_recording(recording_id)
-				self.recording = True
+				self.tobiiglasses.start_recording(self.current_recording_id)
+				log.debug("Recording " + self.current_recording_id + " started!")
 			except:
-				self.recording = False
 				raise Exception("Error in libtobiiproglasses.TobiiProGlassesController.start_recording: failed to start recording")
 		else:
 			log.error("The Tobii Pro Glasses is already recording!")
@@ -693,7 +679,7 @@ class TobiiGlassesTracker(BaseEyeTracker):
 		print("function not supported yet")
 
 
-	def stop_recording(self, recording_id = None):
+	def stop_recording(self):
 
 		"""Stop recording eye position
 
@@ -706,22 +692,13 @@ class TobiiGlassesTracker(BaseEyeTracker):
 
 		"""
 
-		if self.recording and (not recording_id is None):
-
-			try:
-				self.tobiiglasses.stop_recording(recording_id)
-				self.recording = False
-				status = self.tobiiglasses.wait_for_status('/api/recordings/' + recording_id + '/status', 'rec_state', ['failed', 'done'])
-				if status == 'failed':
-					log.error("Recording " + recording_id + " failed!")
-				else:
-					log.debug("Recording " + recording_id + " stored successful!")
-			except:
-				self.recording = True
-				raise Exception("Error in libtobii.TobiiProGlassesTracker.stop_recording: failed to stop recording")
+		if self.current_recording_id is None:
+			log.error("There is no recordings started!")
 
 		else:
-			log.error("There is not recordings started!")
+			self.tobiiglasses.stop_recording(self.current_recording_id)
+			res = self.tobiiglasses.wait_until_recording_is_done(self.current_recording_id)					
+			self.current_recording_id = None
 
 
 	def set_detection_type(self, eventdetection):
