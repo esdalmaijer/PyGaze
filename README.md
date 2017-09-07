@@ -1,7 +1,7 @@
 [PyGaze - the open-source toolbox for eye tracking](http://www.pygaze.org/)
 ===========================================================================
 
-version 0.5 (01-10-2014)
+version 0.6.0 (07-09-2017)
 
 
 IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
