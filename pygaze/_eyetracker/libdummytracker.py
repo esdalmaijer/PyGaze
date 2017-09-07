@@ -36,7 +36,7 @@ try:
 except:
 	pass
 
-
+FGC = (0,0,0,255)
 
 class Dummy(DumbDummy):
 
