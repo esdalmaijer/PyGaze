@@ -398,8 +398,8 @@ class Dummy(DumbDummy):
 		"""
 		
 		self.screen.clear()
-		self.screen.draw_fixation(fixtype='dot', colour=FGC, pos=(x,y), pw=0, \
-			diameter=12)
+		self.screen.draw_fixation(fixtype='dot', colour=settings.FGC, \
+			pos=(x,y), pw=0, diameter=12)
 		self.display.fill(self.screen)
 		self.display.show()
 		
