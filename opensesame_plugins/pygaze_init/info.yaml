@@ -11,9 +11,10 @@ controls:
       - Advanced dummy (mouse simulation)
       - EyeLink
       - SMI
-      - Tobii
       - EyeTribe
       - OpenGaze
+      - Tobii
+      - Tobii-legacy
       - Tobii Pro Glasses 2
     tooltip: A list of supported eye trackers
   - type: checkbox

@@ -152,8 +152,6 @@ class pygaze_init(item):
 			tracker_type = u'dummy'
 		elif self.var.tracker_type == u'EyeLink':
 			tracker_type = u'eyelink'
-		elif self.var.tracker_type == u'Tobii':
-			tracker_type = u'tobii'
 			kwdict[u'eyelink_force_drift_correct'] = \
 				self.var.eyelink_force_drift_correct == u'yes'
 			kwdict[u'pupil_size_mode'] = self.var.eyelink_pupil_size_mode
@@ -162,14 +160,18 @@ class pygaze_init(item):
 			kwdict[u'ip'] = self.var.smi_ip
 			kwdict[u'sendport'] = self.var.smi_send_port
 			kwdict[u'receiveport'] = self.var.smi_recv_port
-		elif self.var.tracker_type == u'Tobii Pro Glasses 2':
-			tracker_type = u'tobiiglasses'
-			kwdict[u'address'] = self.var.tobiiglasses_address
-			kwdict[u'udpport'] = self.var.tobiiglasses_udpport
 		elif self.var.tracker_type == u'EyeTribe':
 			tracker_type = u'eyetribe'
 		elif self.var.tracker_type == u'OpenGaze':
 			tracker_type = u'opengaze'
+		elif self.var.tracker_type == u'Tobii':
+			tracker_type = u'tobii'
+		elif self.var.tracker_type == u'Tobii-legacy':
+			tracker_type = u'tobii-legacy'
+		elif self.var.tracker_type == u'Tobii Pro Glasses 2':
+			tracker_type = u'tobiiglasses'
+			kwdict[u'address'] = self.var.tobiiglasses_address
+			kwdict[u'udpport'] = self.var.tobiiglasses_udpport
 		else:
 			raise osexception(
 				u'Unknown tracker type: %s' % self.var.tracker_type)
