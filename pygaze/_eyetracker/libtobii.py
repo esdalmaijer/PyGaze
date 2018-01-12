@@ -216,6 +216,7 @@ class TobiiProTracker(BaseEyeTracker):
             self.eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA)
             self.recording = False
             self.event_data = []
+            self._flush_to_file()
         else:
             print("WARNING! libtobii.TobiiProTracker.stop_recording: A recording has not been started!")
 
@@ -1126,7 +1127,6 @@ class TobiiProTracker(BaseEyeTracker):
             self._write_header()
 
         self.datafile.write('%.4f\t%s\n' % ((t - self.t0) / 1000.0, msg))
-        self._flush_to_file()
 
     def _flush_to_file(self):
         # write data to disk
@@ -1190,8 +1190,6 @@ class TobiiProTracker(BaseEyeTracker):
                             sample['right_pupil_validity']))
 
         self.datafile.write('\n')
-
-        self._flush_to_file()
 
     def close(self):
         """Closes the currently used log file.
