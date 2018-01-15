@@ -75,16 +75,27 @@ class TobiiProTracker(BaseEyeTracker):
         self.points_to_calibrate = [self._norm_2_px(p) for p in [(lb, ub), (rb, ub), (xc, yc), (lb, bb), (rb, bb)]]
 
         # event detection properties
-        self.fixtresh = 1.5  # degrees; maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
-        self.fixtimetresh = 100  # milliseconds; amount of time gaze has to linger within self.fixtresh to be marked as a fixation
-        self.spdtresh = saccade_velocity_threshold  # degrees per second; saccade velocity threshold
-        self.accthresh = saccade_acceleration_threshold  # degrees per second**2; saccade acceleration threshold
-        self.blinkthresh = blink_threshold  # milliseconds; blink detection threshold used in PyGaze method
+
+        # maximal distance from fixation start (if gaze wanders beyond this, fixation has stopped)
+        self.fixtresh = 1.5  # degrees
+        # amount of time gaze has to linger within self.fixtresh to be marked as a fixation
+        self.fixtimetresh = 100  # milliseconds
+        # saccade velocity threshold
+        self.spdtresh = saccade_velocity_threshold  # degrees per second
+        # saccade acceleration threshold
+        self.accthresh = saccade_acceleration_threshold  # degrees per second**2
+        # blink detection threshold used in PyGaze method
+        self.blinkthresh = blink_threshold  # milliseconds
+
+        # weighted distance, used for determining whether a movement is due to measurement error
+        # (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
+        self.weightdist = 10
+
         self.eventdetection = eventdetection
-        self.weightdist = 10  # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 
         self.screensize = settings.SCREENSIZE  # display size in cm
-        self.pixpercm = (self.disp.dispsize[0] / float(self.screensize[0]) + self.disp.dispsize[1] / float(self.screensize[1])) / 2.0
+        self.pixpercm = (self.disp.dispsize[0] / float(self.screensize[0]) +
+                         self.disp.dispsize[1] / float(self.screensize[1])) / 2.0
         self.errdist = 2  # degrees; maximal error for drift correction
         self.pxerrdist = self._deg2pix(self.screendist, self.errdist, self.pixpercm)
 
@@ -105,7 +116,8 @@ class TobiiProTracker(BaseEyeTracker):
         self.datafile.write("pygaze initiation report end\n")
 
     def _norm_2_px(self, normalized_point):
-        return (round(normalized_point[0] * self.disp.dispsize[0], 0), round(normalized_point[1] * self.disp.dispsize[1], 0))
+        return (round(normalized_point[0] * self.disp.dispsize[0], 0),
+                round(normalized_point[1] * self.disp.dispsize[1], 0))
 
     def _px_2_norm(self, pixelized_point):
         return (pixelized_point[0] / self.disp.dispsize[0], pixelized_point[1] / self.disp.dispsize[1])
@@ -204,6 +216,7 @@ class TobiiProTracker(BaseEyeTracker):
             self.eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA)
             self.recording = False
             self.event_data = []
+            self._flush_to_file()
         else:
             print("WARNING! libtobii.TobiiProTracker.stop_recording: A recording has not been started!")
 
@@ -302,26 +315,46 @@ class TobiiProTracker(BaseEyeTracker):
                     if left_validity and right_validity:
                         validity_colour = (0, 255, 0)
 
-                self.screen.draw_text(text="When correctly positioned press \'space\' to start the calibration.", pos=(int(self.disp.dispsize[0] / 2), int(self.disp.dispsize[1] * 0.1)), colour=(255, 255, 255), fontsize=20)
+                self.screen.draw_text(text="When correctly positioned press \'space\' to start the calibration.",
+                                      pos=(int(self.disp.dispsize[0] / 2), int(self.disp.dispsize[1] * 0.1)),
+                                      colour=(255, 255, 255),
+                                      fontsize=20)
                 self.screen.draw_line(colour=validity_colour, spos=origin, epos=(origin[0] + size[0], origin[1]), pw=1)
                 self.screen.draw_line(colour=validity_colour, spos=origin, epos=(origin[0], origin[1] + size[1]), pw=1)
-                self.screen.draw_line(colour=validity_colour, spos=(origin[0], origin[1] + size[1]), epos=(origin[0] + size[0], origin[1] + size[1]), pw=1)
-                self.screen.draw_line(colour=validity_colour, spos=(origin[0] + size[0], origin[1] + size[1]), epos=(origin[0] + size[0], origin[1]), pw=1)
+                self.screen.draw_line(colour=validity_colour,
+                                      spos=(origin[0], origin[1] + size[1]),
+                                      epos=(origin[0] + size[0], origin[1] + size[1]),
+                                      pw=1)
+                self.screen.draw_line(colour=validity_colour,
+                                      spos=(origin[0] + size[0], origin[1] + size[1]),
+                                      epos=(origin[0] + size[0], origin[1]),
+                                      pw=1)
 
                 right_eye, left_eye, distance = None, None, []
                 if gaze_sample['right_gaze_origin_validity']:
                     distance.append(round(gaze_sample['right_gaze_origin_in_user_coordinate_system'][2] / 10, 1))
-                    right_eye = ((1 - gaze_sample['right_gaze_origin_in_trackbox_coordinate_system'][0]) * size[0] + origin[0],
-                                gaze_sample['right_gaze_origin_in_trackbox_coordinate_system'][1] * size[1] + origin[1])
-                    self.screen.draw_circle(colour=validity_colour, pos=right_eye, r=int(self.disp.dispsize[0] / 100), pw=5, fill=True)
+                    right_pos = gaze_sample['right_gaze_origin_in_trackbox_coordinate_system']
+                    right_eye = ((1 - right_pos[0]) * size[0] + origin[0], right_pos[1] * size[1] + origin[1])
+                    self.screen.draw_circle(colour=validity_colour,
+                                            pos=right_eye,
+                                            r=int(self.disp.dispsize[0] / 100),
+                                            pw=5,
+                                            fill=True)
 
                 if gaze_sample['left_gaze_origin_validity']:
                     distance.append(round(gaze_sample['left_gaze_origin_in_user_coordinate_system'][2] / 10, 1))
-                    left_eye = ((1 - gaze_sample['left_gaze_origin_in_trackbox_coordinate_system'][0]) * size[0] + origin[0],
-                                gaze_sample['left_gaze_origin_in_trackbox_coordinate_system'][1] * size[1] + origin[1])
-                    self.screen.draw_circle(colour=validity_colour, pos=left_eye, r=int(self.disp.dispsize[0] / 100), pw=5, fill=True)
+                    left_pos = gaze_sample['left_gaze_origin_in_trackbox_coordinate_system']
+                    left_eye = ((1 - left_pos[0]) * size[0] + origin[0], left_pos[1] * size[1] + origin[1])
+                    self.screen.draw_circle(colour=validity_colour,
+                                            pos=left_eye,
+                                            r=int(self.disp.dispsize[0] / 100),
+                                            pw=5,
+                                            fill=True)
 
-                self.screen.draw_text(text="Current distance to the eye tracker: {0} cm.".format(self._mean(distance)), pos=(int(self.disp.dispsize[0] / 2), int(self.disp.dispsize[1] * 0.9)), colour=(255, 255, 255), fontsize=20)
+                self.screen.draw_text(text="Current distance to the eye tracker: {0} cm.".format(self._mean(distance)),
+                                      pos=(int(self.disp.dispsize[0] / 2), int(self.disp.dispsize[1] * 0.9)),
+                                      colour=(255, 255, 255),
+                                      fontsize=20)
 
                 self.disp.fill(self.screen)
                 self.disp.show()
@@ -343,8 +376,16 @@ class TobiiProTracker(BaseEyeTracker):
 
                 for point in self.points_to_calibrate:
                     self.screen.clear()
-                    self.screen.draw_circle(colour=(255, 255, 255), pos=point, r=int(self.disp.dispsize[0] / 100.0), pw=5, fill=True)
-                    self.screen.draw_circle(colour=(255, 0, 0), pos=point, r=int(self.disp.dispsize[0] / 400.0), pw=5, fill=True)
+                    self.screen.draw_circle(colour=(255, 255, 255),
+                                            pos=point,
+                                            r=int(self.disp.dispsize[0] / 100.0),
+                                            pw=5,
+                                            fill=True)
+                    self.screen.draw_circle(colour=(255, 0, 0),
+                                            pos=point,
+                                            r=int(self.disp.dispsize[0] / 400.0),
+                                            pw=5,
+                                            fill=True)
                     self.disp.fill(self.screen)
                     self.disp.show()
 
@@ -353,7 +394,9 @@ class TobiiProTracker(BaseEyeTracker):
 
                     normalized_point = self._px_2_norm(point)
 
-                    if calibration.collect_data(normalized_point[0], normalized_point[1]) != tr.CALIBRATION_STATUS_SUCCESS:
+                    collect_result = calibration.collect_data(normalized_point[0], normalized_point[1])
+
+                    if collect_result != tr.CALIBRATION_STATUS_SUCCESS:
                         # Try again if it didn't go well the first time.
                         # Not all eye tracker models will fail at this point, but instead fail on ComputeAndApply.
                         calibration.collect_data(normalized_point[0], normalized_point[1])
@@ -367,8 +410,8 @@ class TobiiProTracker(BaseEyeTracker):
 
                 calibration.leave_calibration_mode()
 
-                print "Compute and apply returned {0} and collected at {1} points.".\
-                    format(calibration_result.status, len(calibration_result.calibration_points))
+                print("Compute and apply returned {0} and collected at {1} points.".
+                      format(calibration_result.status, len(calibration_result.calibration_points)))
 
                 if calibration_result.status != tr.CALIBRATION_STATUS_SUCCESS:
                     self.stop_recording()
@@ -377,19 +420,41 @@ class TobiiProTracker(BaseEyeTracker):
 
                 self.screen.clear()
                 for point in calibration_result.calibration_points:
-                    self.screen.draw_circle(colour=(255, 255, 255), pos=self._norm_2_px(point.position_on_display_area), r=self.disp.dispsize[0] / 200, pw=1, fill=False)
+                    self.screen.draw_circle(colour=(255, 255, 255),
+                                            pos=self._norm_2_px(point.position_on_display_area),
+                                            r=self.disp.dispsize[0] / 200,
+                                            pw=1,
+                                            fill=False)
                     for sample in point.calibration_samples:
                         if sample.left_eye.validity == tr.VALIDITY_VALID_AND_USED:
-                            self.screen.draw_circle(colour=(255, 0, 0), pos=self._norm_2_px(sample.left_eye.position_on_display_area), r=self.disp.dispsize[0] / 450, pw=self.disp.dispsize[0] / 450, fill=False)
-                            self.screen.draw_line(colour=(255, 0, 0), spos=self._norm_2_px(point.position_on_display_area), epos=self._norm_2_px(sample.left_eye.position_on_display_area), pw=1)
+                            self.screen.draw_circle(colour=(255, 0, 0),
+                                                    pos=self._norm_2_px(sample.left_eye.position_on_display_area),
+                                                    r=self.disp.dispsize[0] / 450,
+                                                    pw=self.disp.dispsize[0] / 450,
+                                                    fill=False)
+                            self.screen.draw_line(colour=(255, 0, 0),
+                                                  spos=self._norm_2_px(point.position_on_display_area),
+                                                  epos=self._norm_2_px(sample.left_eye.position_on_display_area),
+                                                  pw=1)
                         if sample.right_eye.validity == tr.VALIDITY_VALID_AND_USED:
-                            self.screen.draw_circle(colour=(0, 0, 255), pos=self._norm_2_px(sample.right_eye.position_on_display_area), r=self.disp.dispsize[0] / 450, pw=self.disp.dispsize[0] / 450, fill=False)
-                            self.screen.draw_line(colour=(0, 0, 255), spos=self._norm_2_px(point.position_on_display_area), epos=self._norm_2_px(sample.right_eye.position_on_display_area), pw=1)
+                            self.screen.draw_circle(colour=(0, 0, 255),
+                                                    pos=self._norm_2_px(sample.right_eye.position_on_display_area),
+                                                    r=self.disp.dispsize[0] / 450,
+                                                    pw=self.disp.dispsize[0] / 450,
+                                                    fill=False)
+                            self.screen.draw_line(colour=(0, 0, 255),
+                                                  spos=self._norm_2_px(point.position_on_display_area),
+                                                  epos=self._norm_2_px(sample.right_eye.position_on_display_area),
+                                                  pw=1)
 
-                self.screen.draw_text("Press the \'R\' key to recalibrate or \'Space\' to continue....", pos=(0.5 * self.disp.dispsize[0], 0.95 * self.disp.dispsize[1]), colour=(255, 255, 255), fontsize=20)
+                self.screen.draw_text("Press the \'R\' key to recalibrate or \'Space\' to continue....",
+                                      pos=(0.5 * self.disp.dispsize[0], 0.95 * self.disp.dispsize[1]),
+                                      colour=(255, 255, 255), fontsize=20)
 
-                self.screen.draw_text("Left Eye", pos=(0.5 * self.disp.dispsize[0], 0.01 * self.disp.dispsize[1]), colour=(255, 0, 0), fontsize=20)
-                self.screen.draw_text("Right Eye", pos=(0.5 * self.disp.dispsize[0], 0.03 * self.disp.dispsize[1]), colour=(0, 0, 255), fontsize=20)
+                self.screen.draw_text("Left Eye", pos=(0.5 * self.disp.dispsize[0], 0.01 * self.disp.dispsize[1]),
+                                      colour=(255, 0, 0), fontsize=20)
+                self.screen.draw_text("Right Eye", pos=(0.5 * self.disp.dispsize[0], 0.03 * self.disp.dispsize[1]),
+                                      colour=(0, 0, 255), fontsize=20)
 
                 self.disp.fill(self.screen)
                 self.disp.show()
@@ -453,8 +518,10 @@ class TobiiProTracker(BaseEyeTracker):
             # calculate intersample times
             timestamps = []
             gaze_samples = copy.copy(self.gaze)
-            for i in xrange(0, len(gaze_samples) - 1):
-                timestamps.append((gaze_samples[i + 1]['system_time_stamp'] - gaze_samples[i]['system_time_stamp']) / 1000.0)
+            for i in range(0, len(gaze_samples) - 1):
+                next_sample = gaze_samples[i + 1]['system_time_stamp']
+                current_sample = gaze_samples[i]['system_time_stamp']
+                timestamps.append((next_sample - current_sample) / 1000.0)
 
             # mean intersample time
             self.sampletime = self._mean(timestamps)
@@ -465,7 +532,9 @@ class TobiiProTracker(BaseEyeTracker):
 
             # # present instructions
             self.screen.clear()
-            self.screen.draw_text(text="Noise calibration: please look at the dot\n\n(press space to start)", pos=(self.disp.dispsize[0] / 2, int(self.disp.dispsize[1] * 0.2)), colour=(255, 255, 255), fontsize=20)
+            self.screen.draw_text(text="Noise calibration: please look at the dot\n\n(press space to start)",
+                                  pos=(self.disp.dispsize[0] / 2, int(self.disp.dispsize[1] * 0.2)),
+                                  colour=(255, 255, 255), fontsize=20)
             self.screen.draw_fixation(fixtype='dot', colour=(255, 255, 255))
             self.disp.fill(self.screen)
             self.disp.show()
@@ -483,7 +552,9 @@ class TobiiProTracker(BaseEyeTracker):
             clock.pause(500)
 
             # # get samples
-            sl = [self.sample()]  # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error; first sample will be ignored for RMS calculation
+            # samplelist, prefilled with 1 sample to prevent sl[-1] from producing an error
+            # first sample will be ignored for RMS calculation
+            sl = [self.sample()]
             t0 = clock.get_time()  # starting time
             while clock.get_time() - t0 < 1000:
                 s = self.sample()  # sample
@@ -492,7 +563,7 @@ class TobiiProTracker(BaseEyeTracker):
 
             # # calculate RMS noise
             Xvar, Yvar = [], []
-            for i in xrange(2, len(sl)):
+            for i in range(2, len(sl)):
                 Xvar.append((sl[i][0] - sl[i - 1][0])**2)
                 Yvar.append((sl[i][1] - sl[i - 1][1])**2)
             XRMS = (self._mean(Xvar))**0.5
@@ -504,14 +575,19 @@ class TobiiProTracker(BaseEyeTracker):
 
             # # # # recalculate thresholds (degrees to pixels)
             self.pxfixtresh = self._deg2pix(self.screendist, self.fixtresh, self.pixpercm)
-            self.pxspdtresh = self._deg2pix(self.screendist, self.spdtresh / 1000.0, self.pixpercm)  # in pixels per millisecons
-            self.pxacctresh = self._deg2pix(self.screendist, self.accthresh / 1000.0, self.pixpercm)  # in pixels per millisecond**2
+            # in pixels per millisecons
+            self.pxspdtresh = self._deg2pix(self.screendist, self.spdtresh / 1000.0, self.pixpercm)
+            # in pixels per millisecond**2
+            self.pxacctresh = self._deg2pix(self.screendist, self.accthresh / 1000.0, self.pixpercm)
 
             data_to_write = ''
             data_to_write += "pygaze calibration report start\n"
             data_to_write += "samplerate: %s Hz\n" % self.samplerate
             data_to_write += "sampletime: %s ms\n" % self.sampletime
-            data_to_write += "accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s\n" % (self.pxaccuracy[0][0], self.pxaccuracy[0][1], self.pxaccuracy[1][0], self.pxaccuracy[1][1])
+            data_to_write += "accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s\n" % (self.pxaccuracy[0][0],
+                                                                                     self.pxaccuracy[0][1],
+                                                                                     self.pxaccuracy[1][0],
+                                                                                     self.pxaccuracy[1][1])
             data_to_write += "precision (RMS noise in pixels): X=%s, Y=%s\n" % (self.pxdsttresh[0], self.pxdsttresh[1])
             data_to_write += "distance between participant and display: %s cm\n" % self.screendist
             data_to_write += "fixation threshold: %s pixels\n" % self.pxfixtresh
@@ -523,7 +599,8 @@ class TobiiProTracker(BaseEyeTracker):
             self.datafile.write(data_to_write)
 
             self.screen.clear()
-            self.screen.draw_text(text=data_to_write, pos=(self.disp.dispsize[0] / 2, int(self.disp.dispsize[1] / 2)), colour=(255, 255, 255), fontsize=20)
+            self.screen.draw_text(text=data_to_write, pos=(self.disp.dispsize[0] / 2, int(self.disp.dispsize[1] / 2)),
+                                  colour=(255, 255, 255), fontsize=20)
             self.disp.fill(self.screen)
             self.disp.show()
 
@@ -840,7 +917,8 @@ class TobiiProTracker(BaseEyeTracker):
                 # check if distance is larger than precision error
                 sx = newpos[0] - prevpos[0]
                 sy = newpos[1] - prevpos[1]
-                if (sx / self.pxdsttresh[0])**2 + (sy / self.pxdsttresh[1])**2 > self.weightdist:  # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
+                # weigthed distance: (sx/tx)**2 + (sy/ty)**2 > 1 means movement larger than RMS noise
+                if (sx / self.pxdsttresh[0])**2 + (sy / self.pxdsttresh[1])**2 > self.weightdist:
                     # calculate distance
                     s = ((sx)**2 + (sy)**2)**0.5  # intersampledistance = speed in pixels/ms
                     # calculate velocity
@@ -921,7 +999,8 @@ class TobiiProTracker(BaseEyeTracker):
                 # calculate velocity
                 v1 = s / (t1 - t0)
                 # calculate acceleration
-                a = (v1 - v0) / (t1 - t0)  # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+                # acceleration in pixels/sample**2 (actually is v1-v0 / t1-t0; but t1-t0 = 1 sample)
+                a = (v1 - v0) / (t1 - t0)
                 # check if velocity and acceleration are below threshold
                 if v1 < self.pxspdtresh and (a > -1 * self.pxacctresh and a < 0):
                     saccadic = False
@@ -1048,7 +1127,6 @@ class TobiiProTracker(BaseEyeTracker):
             self._write_header()
 
         self.datafile.write('%.4f\t%s\n' % ((t - self.t0) / 1000.0, msg))
-        self._flush_to_file()
 
     def _flush_to_file(self):
         # write data to disk
@@ -1075,8 +1153,8 @@ class TobiiProTracker(BaseEyeTracker):
 
     def _write_sample(self, sample):
         # write timestamp and gaze position for both eyes to the datafile
-        left_gaze_point = self._norm_2_px(sample['left_gaze_point_on_display_area']) if sample['left_gaze_point_validity'] else (-1, -1)
-        right_gaze_point = self._norm_2_px(sample['right_gaze_point_on_display_area']) if sample['right_gaze_point_validity'] else (-1, -1)
+        left_gaze_point = self._norm_2_px(sample['left_gaze_point_on_display_area']) if sample['left_gaze_point_validity'] else (-1, -1)  # noqa: E501
+        right_gaze_point = self._norm_2_px(sample['right_gaze_point_on_display_area']) if sample['right_gaze_point_validity'] else (-1, -1)  # noqa: E501
         self.datafile.write('%.4f\t\t%d\t%d\t%d\t%d\t%d\t%d' % (
                             (sample['system_time_stamp'] - self.t0) / 1000.0,
                             left_gaze_point[0],
@@ -1112,8 +1190,6 @@ class TobiiProTracker(BaseEyeTracker):
                             sample['right_pupil_validity']))
 
         self.datafile.write('\n')
-
-        self._flush_to_file()
 
     def close(self):
         """Closes the currently used log file.
