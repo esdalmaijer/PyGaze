@@ -62,7 +62,7 @@ class OSMouse(BaseMouse):
 
 		"""Convert OpenSesame coordinates to PyGaze coordinates."""
 
-		if not self.uniform_coordinates:
+		if pos is None or not self.uniform_coordinates:
 			return pos
 		return pos[0]+self.mouse._xcenter, pos[1]+self.mouse._ycenter
 
@@ -70,7 +70,7 @@ class OSMouse(BaseMouse):
 
 		"""Convert PyGaze coordinates to OpenSesame coordinates."""
 
-		if not self.uniform_coordinates:
+		if pos is None or not self.uniform_coordinates:
 			return pos
 		return pos[0]-self.mouse._xcenter, pos[1]-self.mouse._ycenter
 
