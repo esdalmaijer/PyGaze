@@ -524,14 +524,24 @@ class EyelinkGraphics(custom_display):
 			try:
 				# This is based on PyLink >= 1.1
 				self.cam_img = pygame.image.fromstring(
-					self.imagebuffer.tostring(), self._size, 'RGBX')
-			except:
+					self.imagebuffer.tostring(), self._size, 'RGBX'
+				)
+			except ValueError:
 				# This is for PyLink <= 1.0. This try ... except construction
 				# is a hack. It would be better to understand the difference
 				# between these two versions.
-				self.cam_img = pygame.image.fromstring(
-					self.imagebuffer.tostring(), self.size, 'RGBX')
-				self.scale = 1.
+				try:
+					self.cam_img = pygame.image.fromstring(
+						self.imagebuffer.tostring(), self.size, 'RGBX'
+					)
+					self.scale = 1.
+				# In some cases, the conversion fails because the imagebuffer
+				# is too long to begin with. Therefore, we need to make sure
+				# that it's cleared.
+				except ValueError:
+					print('EyelinkGraphics.draw_image_line(): clearing invalid imagebuffer')
+					self.imagebuffer = self.new_array()
+					return
 			if self.extra_info:
 				self.draw_cross_hair()
 				self.draw_title()
