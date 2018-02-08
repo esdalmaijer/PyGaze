@@ -232,8 +232,10 @@ class TobiiProTracker(BaseEyeTracker):
         returns
         sample	-- an (x,y) tuple or a (-1,-1) on an error
         """
-        gaze_sample = copy.copy(self.gaze[-1])
 
+        if not self.gaze: # If no gaze samples have been collected
+            return -1, -1
+        gaze_sample = copy.copy(self.gaze[-1])
         if self.eye_used == self.LEFT_EYE and gaze_sample["left_gaze_point_validity"]:
             return self._norm_2_px(gaze_sample["left_gaze_point_on_display_area"])
         if self.eye_used == self.RIGHT_EYE and gaze_sample["right_gaze_point_validity"]:
@@ -247,7 +249,6 @@ class TobiiProTracker(BaseEyeTracker):
                 return self._norm_2_px(gaze_sample["left_gaze_point_on_display_area"])
             if gaze_sample["right_gaze_point_validity"]:
                 return self._norm_2_px(gaze_sample["right_gaze_point_on_display_area"])
-
         return (-1, -1)
 
     def pupil_size(self):
@@ -303,6 +304,11 @@ class TobiiProTracker(BaseEyeTracker):
             size = (int(2 * self.disp.dispsize[0] / 4), int(2 * self.disp.dispsize[1] / 4))
 
             while not self.kb.get_key(keylist=['space'], flush=False)[0]:
+                # TODO: What should we do when there are no gaze samples yet?
+                # Should we wait or raise an Exception to indicate that
+                # something went wrong.
+                if not self.gaze:
+                    continue
                 gaze_sample = copy.copy(self.gaze[-1])
 
                 self.screen.clear()
