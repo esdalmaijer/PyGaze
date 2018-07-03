@@ -549,6 +549,7 @@ class TobiiProTracker(BaseEyeTracker):
             self.kb.get_key(keylist=['space'], flush=True, timeout=None)
 
             # # show fixation
+            self.screen.clear()
             self.screen.draw_fixation(fixtype='dot', colour=(255, 255, 255))
             self.disp.fill(self.screen)
             self.disp.show()
