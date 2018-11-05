@@ -6,6 +6,7 @@
 # Version 1 (27-Apr-2016)
 
 import os
+import re
 import copy
 import time
 import socket
@@ -347,6 +348,16 @@ class OpenGazeTracker:
 
 	def _parse_msg(self, xml):
 		
+#		# Fix for GazePoint API bug.
+#  		if xml == '<ACK ID="USER_DATA" VALUE="0"DUR="0" />':
+#			xml = '<ACK ID="USER_DATA" VALUE="0" DUR="0" />'
+
+		# Attempt to fix all malformed XML strings. (GazePoint frequently
+		# manages to send malformed XML messages, which causes an error for
+		# lxml decoding.)
+		xml = re.sub(r'(=".+?")', r'\1 ', xml)
+
+		# Parse the xml string.
 		e = lxml.etree.fromstring(xml)
 	
 		return (e.tag, e.attrib)
@@ -1041,12 +1052,12 @@ class OpenGazeTracker:
 		if acknowledged:
 			points = []
 			self._inlock.acquire()
-			for i in range(self._incoming['ACK']['CALIBRATE_ADDPOINT']['PTS']):
+			for i in range(int(self._incoming['ACK']['CALIBRATE_ADDPOINT']['PTS'])):
 				points.append( \
+					(copy.copy(float( \
+						self._incoming['ACK']['CALIBRATE_ADDPOINT']['X%d' % (i+1)])), \
 					copy.copy(float( \
-						self._incoming['ACK']['CALIBRATE_ADDPOINT']['X%d' % i+1])), \
-					copy.copy(float( \
-						self._incoming['ACK']['CALIBRATE_ADDPOINT']['Y%d' % i+1])) \
+						self._incoming['ACK']['CALIBRATE_ADDPOINT']['Y%d' % (i+1)]))) \
 					)
 			self._inlock.release()
 		

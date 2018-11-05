@@ -114,12 +114,21 @@ class OpenGazeTracker(BaseEyeTracker):
 		self.kb = Keyboard(keylist=['space', 'escape', 'q'], timeout=1)
 		self.errorbeep = Sound(osc='saw', freq=100, length=100)
 		
+		# show a message
+		self.screen.clear()
+		self.screen.draw_text(
+			text="Initialising the eye tracker, please wait...",
+			fontsize=20)
+		self.disp.fill(self.screen)
+		self.disp.show()
+		
 		# output file properties
 		self.outputfile = logfile + '.tsv'
 		self.extralogname = logfile + '_log.txt'
 		self.extralogfile = open(self.extralogname, 'w')
 		
 		# eye tracker properties
+		self.has_been_calibrated_before = False
 		self.connected = False
 		self.recording = False
 		self.errdist = 2 # degrees; maximal error for drift correction
@@ -193,14 +202,13 @@ class OpenGazeTracker(BaseEyeTracker):
 		self.disp.show()
 		
 		# CALIBRATION
-		# Set the 'restart' flag to False.
-		restart = False
 		# Set the duration of the calibration animation, and of the
 		# calibration point.
 		caldur = {'animation':1.5, 'point':1.0, 'timeout':10.0}
 		self.opengaze.calibrate_delay(caldur['animation'])
 		self.opengaze.calibrate_timeout(caldur['point'])
 		# Determine the calibration points.
+		#calibpoints = [(0.1,0.5), (0.5, 0.1), (0.5, 0.5), (0.5, 0.9), (0.9, 0.5)]
 		calibpoints = []
 		for x in [0.1, 0.5, 0.9]:
 			for y in [0.1, 0.5, 0.9]:
@@ -250,8 +258,14 @@ class OpenGazeTracker(BaseEyeTracker):
 
 			# Clear the existing calibration results.
 			self.opengaze.clear_calibration_result()
-			# Show the calibration screen.
+			
+			# Make sure we have the right calibration points.
+			# NOTE: Somehow polling this results in no weird OpenGaze errors
+			# on calibrations that occur after the first one.
+			# (WTF, Gazepoint?!)
+			calibpoints = self.opengaze.get_calibration_points()
 
+			# Show the calibration screen.
 			# NOTE: THIS DOESN'T WORK IN FULL SCREEN MODE :(
 			#self.opengaze.calibrate_show(True)
 
@@ -269,7 +283,7 @@ class OpenGazeTracker(BaseEyeTracker):
 			# On a restart, the calibration starts with the last point,
 			# before looping through all the other points. (DAMN YOU,
 			# GAZEPOINT, THAT DOES NOT MAKE SENSE!)
-			if restart:
+			if self.has_been_calibrated_before:
 				n_points += 1
 			# Loop through all the points.
 			for i in range(n_points):
@@ -433,7 +447,7 @@ class OpenGazeTracker(BaseEyeTracker):
 			# Set the 'restart' flag to True, because everything that
 			# happens after this will be a repeated calibration or
 			# will have noting to do with the calibration.
-			restart = True
+			self.has_been_calibrated_before = True
 
 		# Calibration failed if the user quited.
 		if quited:
@@ -558,8 +572,14 @@ class OpenGazeTracker(BaseEyeTracker):
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
 		if fix_triggered:
-			return self.fix_triggered_drift_correction(pos)		
+			return self.fix_triggered_drift_correction(pos)
+		
+		# DEBUG #
+		print("Running drift correction, pos=(%d, %d)" % (pos[0], pos[1]))
+		# # # # #
+
 		self.draw_drift_correction_target(pos[0], pos[1])
+
 		pressed = False
 		while not pressed:
 			pressed, presstime = self.kb.get_key()
@@ -595,7 +615,7 @@ class OpenGazeTracker(BaseEyeTracker):
 		
 		self.draw_drift_correction_target(x, y)
 
-	def fix_triggered_drift_correction(self, pos=None, min_samples=10, max_dev=60, reset_threshold=30):
+	def fix_triggered_drift_correction(self, pos=None, min_samples=4, max_dev=120, timeout=10000):
 
 		"""Performs a fixation triggered drift correction by collecting
 		a number of samples and calculating the average distance from the
@@ -607,61 +627,59 @@ class OpenGazeTracker(BaseEyeTracker):
 		keyword arguments
 		pos			-- (x, y) position of the fixation dot or None for
 					   a central fixation (default = None)
-		min_samples		-- minimal amount of samples after which an
-					   average deviation is calculated (default = 10)
+		min_samples	-- minimal amount of samples after which a
+					   fixation is accepted (default = 4)
 		max_dev		-- maximal deviation from fixation in pixels
-					   (default = 60)
-		reset_threshold	-- if the horizontal or vertical distance in
-					   pixels between two consecutive samples is
-					   larger than this threshold, the sample
-					   collection is reset (default = 30)
+					   (default = 120)
+		timeout		-- Time in milliseconds until fixation-triggering is
+					   given up on, and calibration is started 
+					   (default = 10000)
 		
 		returns
-		checked		-- Boolaan indicating if drift check is ok (True)
+		checked		-- Boolean indicating if drift check is ok (True)
 					   or not (False); or calls self.calibrate if 'q'
 					   or 'escape' is pressed
 		"""
 
-		self.draw_drift_correction_target(pos[0], pos[1])
 		if pos == None:
 			pos = self.dispsize[0] / 2, self.dispsize[1] / 2
 
-		# loop until we have sufficient samples
-		lx = []
-		ly = []
-		while len(lx) < min_samples:
+		self.draw_drift_correction_target(pos[0], pos[1])
+		
+		t0 = clock.get_time()
+		consecutive_count = 0
+		while consecutive_count < min_samples:
 
-			# pressing escape enters the calibration screen
+			# Get new sample.
+			x, y = self.sample()
+
+			# Ignore empty samples.
+			if (x is None) or (y is None):
+				continue
+
+			# Measure the distance to the target position.
+			d = ((x-pos[0])**2 + (y-pos[1])**2)**0.5
+			# Check whether the distance is below the allowed distance.
+			if d <= max_dev:
+				# Increment count.
+				consecutive_count += 1
+			else:
+				# Reset count.
+				consecutive_count = 0
+			
+			# Check for a timeout.
+			if clock.get_time() - t0 > timeout:
+				print("libopengaze.OpenGazeTracker.fix_triggered_drift_correction: timeout during fixation-triggered drift check")
+				return self.calibrate()
+				
+
+			# Pressing escape enters the calibration screen.
 			if self.kb.get_key()[0] in ['escape','q']:
 				print("libopengaze.OpenGazeTracker.fix_triggered_drift_correction: 'q' or 'escape' pressed")
 				return self.calibrate()
+		
+		return True
 
-			# collect a sample
-			x, y = self.sample()
-
-			if len(lx) == 0 or x != lx[-1] or y != ly[-1]:
-
-				# if present sample deviates too much from previous sample, reset counting
-				if len(lx) > 0 and (abs(x - lx[-1]) > reset_threshold or abs(y - ly[-1]) > reset_threshold):
-					lx = []
-					ly = []
-
-				# collect samples
-				else:
-					lx.append(x)
-					ly.append(y)
-
-			if len(lx) == min_samples:
-
-				avg_x = sum(lx) / len(lx)
-				avg_y = sum(ly) / len(ly)
-				d = ((avg_x - pos[0]) ** 2 + (avg_y - pos[1]) ** 2)**0.5
-
-				if d < max_dev:
-					return True
-				else:
-					lx = []
-					ly = []			
 
 	def get_eyetracker_clock_async(self):
 
