@@ -573,8 +573,14 @@ class TobiiProTracker(BaseEyeTracker):
             for i in range(2, len(sl)):
                 Xvar.append((sl[i][0] - sl[i - 1][0])**2)
                 Yvar.append((sl[i][1] - sl[i - 1][1])**2)
-            XRMS = (self._mean(Xvar))**0.5
-            YRMS = (self._mean(Yvar))**0.5
+            if len(Xvar) == 0:
+                XRMS = 60.0
+            else:
+                XRMS = (self._mean(Xvar))**0.5
+            if len(Yvar) == 0:
+                YRMS = 90.0
+            else:
+                YRMS = (self._mean(Yvar))**0.5
             self.pxdsttresh = (XRMS, YRMS)
 
             # # # # # # #
