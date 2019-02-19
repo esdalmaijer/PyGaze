@@ -19,6 +19,6 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from keyboard import Keyboard
-from mouse import Mouse
-from joystick import Joystick
+from pygaze.keyboard import Keyboard
+from pygaze.mouse import Mouse
+from pygaze.joystick import Joystick

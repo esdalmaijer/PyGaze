@@ -31,86 +31,86 @@ from psychopy.visual import Window
 # for a proper functioning of the code, we simply ignore it when it fails to
 # be imported correctly
 try:
-	from pygaze._misc.misc import copy_docstr
+    from pygaze._misc.misc import copy_docstr
 except:
-	pass
+    pass
 
 
 #class PsychoPyDisplay(BaseDisplay):
 class PsychoPyDisplay:
 
-	# See _display.basedisplay.BaseDisplay for documentation
+    # See _display.basedisplay.BaseDisplay for documentation
 
-	def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
-		bgc=settings.BGC, screennr=settings.SCREENNR, monitor = None, screen=None, **args):
+        def __init__(self, dispsize=settings.DISPSIZE, fgc=settings.FGC,
+                bgc=settings.BGC, screennr=settings.SCREENNR, monitor = None, screen=None, **args):
 
-		# See _display.basedisplay.BaseDisplay for documentation
-		
-		# try to import copy docstring (but ignore it if it fails, as we do
-		# not need it for actual functioning of the code)
-		try:
-			copy_docstr(BaseDisplay, PsychoPyDisplay)
-		except:
-			# we're not even going to show a warning, since the copied
-			# docstring is useful for code editors; these load the docs
-			# in a non-verbose manner, so warning messages would be lost
-			pass
+            # See _display.basedisplay.BaseDisplay for documentation
 
-		self.dispsize = dispsize
-		self.fgc = fgc
-		self.bgc = bgc
-		self.screennr = screennr
-		self.mousevis = False
-  		self.monitor = monitor
+                # try to import copy docstring (but ignore it if it fails, as we do
+                # not need it for actual functioning of the code)
+                try:
+                    copy_docstr(BaseDisplay, PsychoPyDisplay)
+                except:
+                    # we're not even going to show a warning, since the copied
+                        # docstring is useful for code editors; these load the docs
+                        # in a non-verbose manner, so warning messages would be lost
+                        pass
 
-		# create window
-		pygaze.expdisplay = Window(size=self.dispsize, pos=None,
-			color=rgb2psychorgb(self.bgc), colorSpace='rgb',
-			fullscr=settings.FULLSCREEN, monitor=self.monitor, 
-			screen=self.screennr, units='pix')
-		# set mouse visibility
-		pygaze.expdisplay.setMouseVisible(self.mousevis)
-		# get screen in window
-		if screen:
-			for s in screen.screen:
-				s.draw()
+                self.dispsize = dispsize
+                self.fgc = fgc
+                self.bgc = bgc
+                self.screennr = screennr
+                self.mousevis = False
+                self.monitor = monitor
 
-	def show(self):
+                # create window
+                pygaze.expdisplay = Window(size=self.dispsize, pos=None,
+                        color=rgb2psychorgb(self.bgc), colorSpace='rgb',
+                        fullscr=settings.FULLSCREEN, monitor=self.monitor, 
+                        screen=self.screennr, units='pix')
+                # set mouse visibility
+                pygaze.expdisplay.setMouseVisible(self.mousevis)
+                # get screen in window
+                if screen:
+                    for s in screen.screen:
+                        s.draw()
 
-		# See _display.basedisplay.BaseDisplay for documentation
+        def show(self):
 
-		pygaze.expdisplay.flip()
-		return clock.get_time()
+            # See _display.basedisplay.BaseDisplay for documentation
 
-	def show_part(self, rect, screen=None):
+                pygaze.expdisplay.flip()
+                return clock.get_time()
 
-		# See _display.basedisplay.BaseDisplay for documentation
+        def show_part(self, rect, screen=None):
 
-		self.fill(screen)
-		self.show()
-		print("WARNING! screen.Display.show_part not available for PsychoPy display type; fill() and show() are used instead")
-		
-		return clock.get_time()
+            # See _display.basedisplay.BaseDisplay for documentation
+
+                self.fill(screen)
+                self.show()
+                print("WARNING! screen.Display.show_part not available for PsychoPy display type; fill() and show() are used instead")
+
+                return clock.get_time()
 
 
-	def fill(self, screen=None):
+        def fill(self, screen=None):
 
-		# See _display.basedisplay.BaseDisplay for documentation
+            # See _display.basedisplay.BaseDisplay for documentation
 
-		pygaze.expdisplay.clearBuffer()
-		if screen != None:
-			for s in screen.screen:
-				s.draw()
+                pygaze.expdisplay.clearBuffer()
+                if screen != None:
+                    for s in screen.screen:
+                        s.draw()
 
-	def close(self):
+        def close(self):
 
-		# See _display.basedisplay.BaseDisplay for documentation
+            # See _display.basedisplay.BaseDisplay for documentation
 
-		pygaze.expdisplay.close()
+                pygaze.expdisplay.close()
 
-	def make_screenshot(self, filename='screenshot.png'):
+        def make_screenshot(self, filename='screenshot.png'):
 
-		# See _display.basedisplay.BaseDisplay for documentation
+            # See _display.basedisplay.BaseDisplay for documentation
 
-		pygaze.expdisplay.getMovieFrame(buffer='front')
-		pygaze.expdisplay.saveMovieFrames(filename)
+                pygaze.expdisplay.getMovieFrame(buffer='front')
+                pygaze.expdisplay.saveMovieFrames(filename)
