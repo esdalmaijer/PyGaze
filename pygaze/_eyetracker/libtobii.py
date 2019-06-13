@@ -1165,17 +1165,17 @@ class TobiiProTracker(BaseEyeTracker):
         self._flush_to_file()
 
     def _write_sample(self, sample):
-        # write timestamp and gaze position for both eyes to the datafile
+        _write_buffer = ""
+        # write timestamp and gaze position for both eyes
         left_gaze_point = self._norm_2_px(sample['left_gaze_point_on_display_area']) if sample['left_gaze_point_validity'] else (-1, -1)  # noqa: E501
         right_gaze_point = self._norm_2_px(sample['right_gaze_point_on_display_area']) if sample['right_gaze_point_validity'] else (-1, -1)  # noqa: E501
-        self.datafile.write('%.4f\t\t%d\t%d\t%d\t%d\t%d\t%d' % (
-                            (sample['system_time_stamp'] - self.t0) / 1000.0,
-                            left_gaze_point[0],
-                            left_gaze_point[1],
-                            sample['left_gaze_point_validity'],
-                            right_gaze_point[0],
-                            right_gaze_point[1],
-                            sample['right_gaze_point_validity']))
+        _write_buffer += '\t%d\t%d\t%d\t%d\t%d\t%d' % (
+            left_gaze_point[0],
+            left_gaze_point[1],
+            sample['left_gaze_point_validity'],
+            right_gaze_point[0],
+            right_gaze_point[1],
+            sample['right_gaze_point_validity'])
 
         # if no correct sample is available, data is missing
         if not (sample['left_gaze_point_validity'] or sample['right_gaze_point_validity']):  # not detected
@@ -1191,18 +1191,20 @@ class TobiiProTracker(BaseEyeTracker):
             ave = (int(round((left_gaze_point[0] + right_gaze_point[0]) / 2.0, 0)),
                    (int(round(left_gaze_point[1] + right_gaze_point[1]) / 2.0)))
 
-        # write gaze position to the datafile, based on the selected sample(s)
-        self.datafile.write('\t%d\t%d' % ave)
+        # write gaze position, based on the selected sample(s)
+        _write_buffer += '\t%d\t%d' % ave
 
         left_pupil = sample['left_pupil_diameter'] if sample['left_pupil_validity'] else -1
         right_pupil = sample['right_pupil_diameter'] if sample['right_pupil_validity'] else -1
 
-        self.datafile.write('\t%.4f\t%d\t%.4f\t%d' % (left_pupil,
-                            sample['left_pupil_validity'],
-                            right_pupil,
-                            sample['right_pupil_validity']))
+        _write_buffer += '\t%.4f\t%d\t%.4f\t%d' % (
+            left_pupil,
+            sample['left_pupil_validity'],
+            right_pupil,
+            sample['right_pupil_validity'])
 
-        self.datafile.write('\n')
+        # Write buffer to the datafile
+        self.log(_write_buffer)
 
     def close(self):
         """Closes the currently used log file.
