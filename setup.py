@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 """
-This file is part of qnotero.
+This file is part of PyGaze.
 
-qnotero is free software: you can redistribute it and/or modify
+PyGaze is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-qnotero is distributed in the hope that it will be useful,
+PyGaze is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
@@ -66,7 +66,7 @@ setup(
 	version=pygaze.__version__,
 	description="A Python library for eye tracking",
 	author="Edwin Dalmaijer",
-	author_email="edwin.dalmaijer@psy.ox.ac.uk",
+	author_email="edwin.dalmaijer@gmail.com",
 	url="http://www.pygaze.org/",
 	classifiers=[
 		'Development Status :: 4 - Beta',
