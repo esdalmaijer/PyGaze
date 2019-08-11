@@ -197,9 +197,14 @@ class AleaTracker(BaseEyeTracker):
 		while not calibration_approved:
 			# Wait for the calibration to finish.
 			status, improve = self.alea.calibrate()
-			# Construct a string message.
-			calib_str = "Calibration:\n- status = %s\n- improve=%s\n\n\nPress R to retry, or Space to continue." \
-				% (status, improve)
+			# Construct a message string.
+			if status == 0:
+				calib_str = "Calibration completed!"
+			else:
+				calib_str = "Calibration failed!"
+			if improve:
+				calib_str += "\n\nWARNING: IntelliGaze recommends repeating the calibration to improve accuracy."
+			calib_str += "\n\n\nPress R to retry, or Space to continue."
 			# Show calibration results.
 			self.screen.clear()
 			self.screen.draw_text(text=calib_str, fontsize=20)
