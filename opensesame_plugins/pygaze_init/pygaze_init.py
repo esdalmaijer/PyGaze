@@ -164,6 +164,8 @@ class pygaze_init(item):
 			tracker_type = u'eyetribe'
 		elif self.var.tracker_type == u'OpenGaze':
 			tracker_type = u'opengaze'
+		elif self.var.tracker_type == u'Alea':
+			tracker_type = u'alea'
 		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 		elif self.var.tracker_type == u'Tobii-legacy':

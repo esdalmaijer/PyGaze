@@ -13,6 +13,7 @@ controls:
       - SMI
       - EyeTribe
       - OpenGaze
+      - Alea
       - Tobii
       - Tobii-legacy
       - Tobii Pro Glasses 2
