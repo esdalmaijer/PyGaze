@@ -196,7 +196,7 @@ class AleaTracker(BaseEyeTracker):
 		calibration_approved = False
 		while not calibration_approved:
 			# Wait for the calibration to finish.
-			status, improve = self.alea.calibration()
+			status, improve = self.alea.calibrate()
 			# Construct a string message.
 			calib_str = "Calibration:\n- status = %s\n- improve=%s\n\n\nPress R to retry, or Space to continue." \
 				% (status, improve)
