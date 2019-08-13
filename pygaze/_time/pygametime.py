@@ -84,7 +84,7 @@ class PyGameTime(BaseTime):
 
 		# see pygaze._time.basetime.BaseTime
 
-		realpause = pygame.time.delay(pausetime)
+		realpause = pygame.time.delay(int(pausetime))
 
 		return realpause
 
