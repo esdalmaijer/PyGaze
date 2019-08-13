@@ -264,7 +264,7 @@ class AleaTracker(BaseEyeTracker):
 				err["RY"].append(abs(float(y) - float(gy)))
 				for k in var.keys():
 					var[k].append(err[k][-1]**2)
-				clock.pause(self.sampletime)
+				clock.pause(int(self.sampletime))
 		# Stop streaming.
 		self.log("noise_calibration_stop")
 		self.stop_recording()
