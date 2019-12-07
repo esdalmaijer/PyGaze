@@ -67,8 +67,6 @@ class pygaze_init(item):
 		self.var.tobiiglasses_address = u'192.168.71.50'
 		self.var.tobiiglasses_udpport = 49152
 
-
-
 	def close(self):
 
 		"""
@@ -251,6 +249,11 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 
 		pygaze_init.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
+
+	def init_edit_widget(self):
+
+		qtautoplugin.init_edit_widget(self)
+		self.custom_interactions()
 		self.text_pygaze_version.setText(
 			u'<small>PyGaze version %s</small>' % pygaze.version)
 
@@ -312,4 +315,3 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 				self.text_eyelink_pylink_check.hide()
 		else:
 			self.text_eyelink_pylink_check.hide()
-
