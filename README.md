@@ -1,7 +1,7 @@
 [PyGaze - the open-source toolbox for eye tracking](http://www.pygaze.org/)
 ===========================================================================
 
-version 0.6.1 (2019-08-11)
+version 0.6.5 (2019-12-29)
 
 
 IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
@@ -25,7 +25,7 @@ should have received a copy of together with the software:
 
     PyGaze is a Python package for easily creating gaze contingent experiments
     or other software (as well as non-gaze contingent experiments/software)
-    Copyright (C) 2012-2014 Edwin S. Dalmaijer
+    Copyright (C) 2012-2020 Edwin S. Dalmaijer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
