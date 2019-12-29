@@ -45,7 +45,7 @@ class PsychoPyDisplay:
 		bgc=settings.BGC, screennr=settings.SCREENNR, monitor = None, screen=None, **args):
 
 		# See _display.basedisplay.BaseDisplay for documentation
-		
+
 		# try to import copy docstring (but ignore it if it fails, as we do
 		# not need it for actual functioning of the code)
 		try:
@@ -61,12 +61,12 @@ class PsychoPyDisplay:
 		self.bgc = bgc
 		self.screennr = screennr
 		self.mousevis = False
-  		self.monitor = monitor
+		self.monitor = monitor
 
 		# create window
 		pygaze.expdisplay = Window(size=self.dispsize, pos=None,
 			color=rgb2psychorgb(self.bgc), colorSpace='rgb',
-			fullscr=settings.FULLSCREEN, monitor=self.monitor, 
+			fullscr=settings.FULLSCREEN, monitor=self.monitor,
 			screen=self.screennr, units='pix')
 		# set mouse visibility
 		pygaze.expdisplay.setMouseVisible(self.mousevis)
@@ -89,7 +89,7 @@ class PsychoPyDisplay:
 		self.fill(screen)
 		self.show()
 		print("WARNING! screen.Display.show_part not available for PsychoPy display type; fill() and show() are used instead")
-		
+
 		return clock.get_time()
 
 
