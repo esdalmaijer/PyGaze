@@ -113,6 +113,10 @@ class qtpygaze_drift_correct(pygaze_drift_correct, qtautoplugin):
 
 		pygaze_drift_correct.__init__(self, name, experiment, script)
 		qtautoplugin.__init__(self, __file__)
+
+	def init_edit_widget(self):
+
+		qtautoplugin.init_edit_widget(self)
 		self.custom_interactions()
 
 	def apply_edit_changes(self):
