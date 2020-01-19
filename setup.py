@@ -22,6 +22,8 @@ import glob
 import pygaze
 from setuptools import setup
 
+print("Running setup for PyGaze version {}".format(pygaze.__version__))
+
 
 def files(path):
 
