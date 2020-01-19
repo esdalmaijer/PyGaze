@@ -404,6 +404,7 @@ class OpenGazeTracker:
             timeout = False
             try:
                 instring = self._sock.recv(self._maxrecvsize)
+                instring = instring.decode("utf-8")
             except socket.timeout:
                 timeout = True
             # Get a received timestamp.
@@ -500,7 +501,7 @@ class OpenGazeTracker:
             self._socklock.acquire()
             # Send the command to the OpenGaze Server.
             t = time.time()
-            self._sock.send(msg)
+            self._sock.send(msg.encode("utf-8"))
             # Unlock the socket again.
             self._socklock.release()
             

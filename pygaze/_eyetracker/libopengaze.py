@@ -38,7 +38,7 @@ import math
 import random
 
 # external imports
-from opengaze import OpenGazeTracker as OpenGaze
+from pygaze._eyetracker.opengaze import OpenGazeTracker as OpenGaze
 
 
 def deg2pix(cmdist, angle, pixpercm):

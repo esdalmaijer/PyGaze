@@ -663,7 +663,7 @@ class connection:
 
         # Send the JSON-formatted message over the connection.
         self._request_lock.acquire()
-        self.sock.send(msg)
+        self.sock.send(msg.encode("utf-8"))
         self._request_lock.release()
 
         # Store request in DEBUG mode.
@@ -830,6 +830,7 @@ class connection:
             # Try to get a response from the connection.
             try:
                 responses = self.sock.recv(32768)
+                responses = responses.decode("utf-8")
             # If it fails, revive the connection and register a
             # connection error.
             except socket.error:
