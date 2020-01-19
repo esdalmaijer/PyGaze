@@ -56,6 +56,9 @@ class pygaze_init(item):
 		self.var.sacc_vel_thr = 35
 		self.var.sacc_acc_thr = 9500
 		self.var._logfile = u'automatic'
+		# Alea-specific settings
+		self.var.alea_api_key = u'Contact Alea for an API key'
+		self.var.alea_animated_calibration = u'no'
 		# EyeLink-specific settings
 		self.var.eyelink_force_drift_correct = u'yes'
 		self.var.eyelink_pupil_size_mode = u'area'
@@ -124,11 +127,17 @@ class pygaze_init(item):
 		settings.DISPSIZE = self.resolution()
 		settings.BGC = self.var.background
 		settings.FGC = self.var.foreground
+		settings.ALEAKEY = self.var.alea_api_key
 
 		if self.var.calbeep == u'yes':
 			settings.EYELINKCALBEEP = True
 		else:
 			settings.EYELINKCALBEEP = False
+
+		if self.var.alea_animated_calibration == u'yes':
+			settings.ALEAANIMATEDCALIBRATION = True
+		else:
+			settings.ALEAANIMATEDCALIBRATION = False
 
 	def run(self):
 
@@ -164,6 +173,9 @@ class pygaze_init(item):
 			tracker_type = u'opengaze'
 		elif self.var.tracker_type == u'Alea':
 			tracker_type = u'alea'
+			kwdict[u'alea_key'] = self.var.alea_api_key
+			kwdict[u'animated_calibration'] = \
+				self.var.alea_animated_calibration == u'yes'
 		elif self.var.tracker_type == u'Tobii':
 			tracker_type = u'tobii'
 		elif self.var.tracker_type == u'Tobii-legacy':
@@ -292,6 +304,9 @@ class qtpygaze_init(pygaze_init, qtautoplugin):
 			Activates the relevant controls for each tracker.
 		"""
 
+		alea = self.var.tracker_type == u'Alea'
+		self.line_edit_alea_api_key.setEnabled(alea)
+		self.checkbox_alea_animated_calibration.setEnabled(alea)
 		smi = self.var.tracker_type == u'SMI'
 		self.line_edit_smi_ip.setEnabled(smi)
 		self.spinbox_smi_send_port.setEnabled(smi)

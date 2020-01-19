@@ -53,6 +53,16 @@ controls:
   - type: text
     label: DUMMY
     name: text_pygaze_version
+  - type: line_edit
+    label: Alea API key
+    var: alea_api_key
+    name: line_edit_alea_api_key
+    tooltip: "The API key provided to you by Alea"
+  - type: checkbox
+    var: alea_animated_calibration
+    label: Animated calibration target
+    tooltip: Turn on child-friendly animated calibration targets
+    name: checkbox_alea_animated_calibration
   - type: checkbox
     var: eyelink_force_drift_correct
     label: Force drift correction (for EyeLink 1000)

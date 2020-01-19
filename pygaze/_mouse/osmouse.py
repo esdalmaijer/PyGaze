@@ -2,22 +2,22 @@
 #
 # This file is part of PyGaze - the open-source toolbox for eye tracking
 #
-#	PyGaze is a Python module for easily creating gaze contingent experiments
-#	or other software (as well as non-gaze contingent experiments/software)
-#	Copyright (C) 2012-2013  Edwin S. Dalmaijer
+#    PyGaze is a Python module for easily creating gaze contingent experiments
+#    or other software (as well as non-gaze contingent experiments/software)
+#    Copyright (C) 2012-2013  Edwin S. Dalmaijer
 #
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
 #
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from pygaze.py3compat import *
 from pygaze import settings
@@ -28,97 +28,97 @@ from pygaze._mouse.basemouse import BaseMouse
 # for a proper functioning of the code, we simply ignore it when it fails to
 # be imported correctly
 try:
-	from pygaze._misc.misc import copy_docstr
+    from pygaze._misc.misc import copy_docstr
 except:
-	pass
+    pass
 
 
 class OSMouse(BaseMouse):
 
-	# See _mouse.basemouse.BaseMouse
+    # See _mouse.basemouse.BaseMouse
 
-	def __init__(self, mousebuttonlist=settings.MOUSEBUTTONLIST,
-		timeout=settings.MOUSETIMEOUT, visible=False):
+    def __init__(self, mousebuttonlist=settings.MOUSEBUTTONLIST,
+        timeout=settings.MOUSETIMEOUT, visible=False):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		# try to copy docstring (but ignore it if it fails, as we do
-		# not need it for actual functioning of the code)
-		try:
-			copy_docstr(BaseMouse, OSMouse)
-		except:
-			# we're not even going to show a warning, since the copied
-			# docstring is useful for code editors; these load the docs
-			# in a non-verbose manner, so warning messages would be lost
-			pass
+        # try to copy docstring (but ignore it if it fails, as we do
+        # not need it for actual functioning of the code)
+        try:
+            copy_docstr(BaseMouse, OSMouse)
+        except:
+            # we're not even going to show a warning, since the copied
+            # docstring is useful for code editors; these load the docs
+            # in a non-verbose manner, so warning messages would be lost
+            pass
 
-		self.experiment = settings.osexperiment
-		self.uniform_coordinates = \
-			self.experiment.var.uniform_coordinates == u'yes'
-		self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
-			timeout=timeout)
+        self.experiment = settings.osexperiment
+        self.uniform_coordinates = \
+            self.experiment.var.uniform_coordinates == "yes"
+        self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
+            timeout=timeout)
 
-	def _from_pos(self, pos):
+    def _from_pos(self, pos):
 
-		"""Convert OpenSesame coordinates to PyGaze coordinates."""
+        """Convert OpenSesame coordinates to PyGaze coordinates."""
 
-		if pos is None or not self.uniform_coordinates:
-			return pos
-		return pos[0]+self.mouse._xcenter, pos[1]+self.mouse._ycenter
+        if pos is None or not self.uniform_coordinates:
+            return pos
+        return pos[0]+self.mouse._xcenter, pos[1]+self.mouse._ycenter
 
-	def _to_pos(self, pos):
+    def _to_pos(self, pos):
 
-		"""Convert PyGaze coordinates to OpenSesame coordinates."""
+        """Convert PyGaze coordinates to OpenSesame coordinates."""
 
-		if pos is None or not self.uniform_coordinates:
-			return pos
-		return pos[0]-self.mouse._xcenter, pos[1]-self.mouse._ycenter
+        if pos is None or not self.uniform_coordinates:
+            return pos
+        return pos[0]-self.mouse._xcenter, pos[1]-self.mouse._ycenter
 
-	def set_mousebuttonlist(self, mousebuttonlist=None):
+    def set_mousebuttonlist(self, mousebuttonlist=None):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		self.mouse.buttonlist = mousebuttonlist
+        self.mouse.buttonlist = mousebuttonlist
 
-	def set_timeout(self, timeout=None):
+    def set_timeout(self, timeout=None):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		self.mouse.timeout = timeout
+        self.mouse.timeout = timeout
 
-	def set_visible(self, visible=True):
+    def set_visible(self, visible=True):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		self.mouse.show_cursor(visible)
+        self.mouse.show_cursor(visible)
 
-	def set_pos(self, pos=(0,0)):
+    def set_pos(self, pos=(0,0)):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		self.mouse.set_pos(self._to_pos(pos))
+        self.mouse.set_pos(self._to_pos(pos))
 
-	def get_pos(self):
+    def get_pos(self):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		return self._from_pos(self.mouse.get_pos()[0])
+        return self._from_pos(self.mouse.get_pos()[0])
 
-	def get_clicked(self, mousebuttonlist=u'default', timeout=u'default'):
+    def get_clicked(self, mousebuttonlist="default", timeout="default"):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		# set buttonlist and timeout
-		kwdict = {}
-		if mousebuttonlist != u'default':
-			kwdict[u'buttonlist'] = mousebuttonlist
-		if timeout != u'default':
-			kwdict[u'buttonlist'] = timeout
-		button, pos, t = self.mouse.get_click(**kwdict)
-		return button, self._from_pos(pos), t
+        # set buttonlist and timeout
+        kwdict = {}
+        if mousebuttonlist != "default":
+            kwdict["buttonlist"] = mousebuttonlist
+        if timeout != "default":
+            kwdict["buttonlist"] = timeout
+        button, pos, t = self.mouse.get_click(**kwdict)
+        return button, self._from_pos(pos), t
 
-	def get_pressed(self):
+    def get_pressed(self):
 
-		# See _mouse.basemouse.BaseMouse
+        # See _mouse.basemouse.BaseMouse
 
-		return self.mouse.get_pressed()
+        return self.mouse.get_pressed()

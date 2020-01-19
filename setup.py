@@ -63,6 +63,7 @@ def data_files():
 
 setup(
 	name="python-pygaze",
+	python_requires=">=3",
 	version=pygaze.__version__,
 	description="A Python library for eye tracking",
 	author="Edwin Dalmaijer",
@@ -76,9 +77,10 @@ setup(
 		'Environment :: Win32 (MS Windows)',
 		'Environment :: X11 Applications',
 		'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-		'Programming Language :: Python :: 2',
+		'Programming Language :: Python :: 3',
 	],
-	include_package_data=False,
+	include_package_data=True,
+	package_data={"pygaze._eyetracker.alea":["*.dll"]},
 	packages = [
 		"pygaze",
 		"pygaze._display",

@@ -2,6 +2,7 @@ import os
 import sys
 import copy
 import time
+import datetime
 import ctypes
 from multiprocessing import Queue
 from threading import Event, Lock, Thread
@@ -9,7 +10,7 @@ from threading import Event, Lock, Thread
 # Auto-detect whether we're running 32 or 64 bit, and decide which DLL to load.
 if sys.maxsize > 2**32:
     dll_name = "CEtAPIx64.dll"
-    print("Python Alea: detected 64-bit application, loading '%s'" % (dll_name))
+    print("Python Alea: detected 64-bit application, loading '{}'".format(dll_name))
 else:
     dll_name = "CEtAPI.dll"
 
@@ -19,8 +20,7 @@ dll_path = os.path.join(dir_path, dll_name)
 
 # Check whether the DLL exists.
 if not os.path.isfile(dll_path):
-    raise Exception("WARNING: Could not find CEtAPI.dll in its expected location: '%s'" \
-        % (dll_path))
+    raise Exception("WARNING: Could not find CEtAPI.dll in its expected location: '{}'".format(dll_path))
 
 # Load the DLL.
 # Available functions in C-wrapped API:
@@ -42,11 +42,10 @@ if not os.path.isfile(dll_path):
 #    etapi.ExitServer
 etapi = None
 try:
-    print("Python Alea: loading '%s'" % (dll_name))
+    print("Python Alea: loading '{}'".format(dll_name))
     etapi = ctypes.windll.LoadLibrary(dll_path)
 except:
-    print("WARNING: Failed to load '%s'! Alea functionality not available!" \
-        % (dll_name))
+    print("WARNING: Failed to load '{}'! Alea functionality not available!".format(dll_name))
 
 # Define what errors mean.
 EtApiError = { \
@@ -303,8 +302,8 @@ class AleaTracker:
         # Open a new debug file if required.
         if debug:
             self._debug = True
-            self._debug_file_name = "pygaze_alea_debug_%s.txt" % \
-                time.strftime("%Y-%m-%d_%H-%M-%S")
+            self._debug_file_name = "pygaze_alea_debug_{}.txt".format( \
+                time.strftime("%Y-%m-%d_%H-%M-%S"))
             with open(self._debug_file_name, "w") as f:
                 f.write("time\tmessage")
             self._debug_file_lock = Lock()
@@ -320,8 +319,8 @@ class AleaTracker:
 
         # Open the connection to the API.
         if self._debug:
-            self._debug_log("Alea connection: opening with target IP=%s port=%s, listen IP=%s port=%s" \
-                % (target_ip, target_port, listen_ip, listen_port))
+            self._debug_log("Alea connection: opening with target IP={} port={}, listen IP={} port={}".format( \
+                target_ip, target_port, listen_ip, listen_port))
         self.api.Open(app_key, targetIP=target_ip, targetPort=target_port, \
             listenIP=listen_ip, listenPort=listen_port)
         
@@ -335,19 +334,19 @@ class AleaTracker:
         # "%d.%d.%d.%d" % (major, minor, build, device)
         version = self.api.Version()
         major, minor, build, device = version.split(".")
-        self.api_version = "%s.%s.%s" % (major, minor, build)
-        self.device = "device_code_%s" % (device)
+        self.api_version = "{}.{}.{}".format(major, minor, build)
+        self.device = "device_code_{}".format(device)
         if device == "0":
             self.device = "IG30"
         elif device == "1":
             self.device = "IG15"
         
         # Print a message to the terminal.
-        print("Successfully connected to Alea API, version=%s, device=%s" \
-            % (self.api_version, self.device))
+        print("Successfully connected to Alea API, version={}, device={}".format( \
+            self.api_version, self.device))
         if self._debug:
-            self._debug_log("Successfully connected to Alea API, version=%s, device=%s" \
-                % (self.api_version, self.device))
+            self._debug_log("Successfully connected to Alea API, version={}, device={}".format( \
+                self.api_version, self.device))
         
         # LOGGING
         # Parse the file path to find out what separator to use.
@@ -390,7 +389,7 @@ class AleaTracker:
             ]
         # Open a new log file.
         if self._debug:
-            self._debug_log("Opening new log file '%s'" % (self._log_file))
+            self._debug_log("Opening new log file '{}'".format(self._log_file))
         self._log_file = open(self._data_file_path, "w")
         # Write a header to the log.
         header = ["TYPE"]
@@ -451,7 +450,8 @@ class AleaTracker:
         if self._debug:
             self._debug_file_lock.acquire()
             with open(self._debug_file_name, "a") as f:
-                f.write("\n%s\t%s" % (time.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3], message))
+                f.write("\n{}\t{}".format(datetime.datetime.now().strftime( \
+                    "%Y-%m-%d_%H:%M:%S.%f")[:-3], message))
             self._debug_file_lock.release()
 
 
@@ -490,8 +490,8 @@ class AleaTracker:
                 elif type(sample) == CAleaData:
                     self._write_sample(sample)
                 else:
-                    print("WARNING: Unrecognised object in log queue: '%s'" \
-                        % (sample))
+                    print("WARNING: Unrecognised object in log queue: '{}'".format( \
+                        sample))
                 # Increment the log counter.
                 self._log_counter += 1
                 # Check if the log file needs to be consolidated.
@@ -510,8 +510,8 @@ class AleaTracker:
             # Check if there wasn't a timeout.
             if sample is not None:
                 if self._debug:
-                    self._debug_log("WaitForData: sample obtained with timestamp %s" \
-                        % (sample.rawDataTimeStamp))
+                    self._debug_log("WaitForData: sample obtained with timestamp {}".format( \
+                        sample.rawDataTimeStamp))
                 # Update the most recent sample.
                 self._recent_sample_lock.acquire()
                 self._recent_sample = copy.deepcopy(sample)
@@ -555,8 +555,9 @@ class AleaTracker:
     
     
     def calibrate(self, n_points=9, location=0, randomise=True, \
-            randomize=None, slow=False, audio=True, eye=0, automatic=True, \
-            bgc=(127,127,127), fgc=(0,0,0), image=""):
+            randomize=None, slow=False, audio=True, eye=0, \
+            skip_bad_points=False, automatic=True, bgc=(127,127,127), \
+            fgc=(0,0,0), image=""):
         
         """
         desc:
@@ -615,6 +616,12 @@ class AleaTracker:
                     eye"), or 4 (calibrate and track only the right eye, "left
                     pirate eye"). (Default = 0)
                 type: int
+            skip_bad_points:
+                desc:
+                    When set to True, IntelliGaze will not get stuck at
+                    uncalibratable points. It will skip them, and try to
+                    complete the calibration without them. (Default = False)
+                type: bool
             automatic:
                 desc:
                     Set to True to allow the tracker to detect fixations and
@@ -650,22 +657,22 @@ class AleaTracker:
         if n_points not in [1, 5, 9, 16]:
             # Close the connection and raise an Exception.
             self.api.Close()
-            raise Exception("User requested %d points, but only 1, 5, 9, or 16 are allowed." \
-                % (n_points))
+            raise Exception("User requested {} points, but only 1, 5, 9, or 16 are allowed.".format( \
+                n_points))
 
         if type(location) == int:
             if location not in [0, 1, 2, 3, 4]:
                 # Close the connection and raise an Exception.
                 self.api.Close()
-                raise Exception("User requested location %d, but only 0, 1, 2, 3 or 4 are allowed." \
-                    % (location))
-        elif type(location) in [str, unicode]:
+                raise Exception("User requested location {}, but only 0, 1, 2, 3 or 4 are allowed.".format( \
+                    location))
+        elif type(location) == str:
             location = location.lower()
             if location not in ["full", "centre", "center", "bottom", "horizontal", "vertical"]:
                 # Close the connection and raise an Exception.
                 self.api.Close()
-                raise Exception('User requested location %s, but only "full", "centre", "center", "bottom", "horizontal", "vertical" are allowed.' \
-                    % (location))
+                raise Exception('User requested location {}, but only "full", "centre", "center", "bottom", "horizontal", "vertical" are allowed.'.format( \
+                    location))
             if location == "full":
                 location = 0
             elif location in ["centre", "center"]:
@@ -679,8 +686,8 @@ class AleaTracker:
         else:
             # Close the connection and raise an Exception.
             self.api.Close()
-            raise Exception('User requested location "%s" (type=%s), but only "full", "centre", "center", "bottom", "horizontal", "vertical" are allowed.' \
-                % (location, type(location)))
+            raise Exception('User requested location "{}" (type={}), but only "full", "centre", "center", "bottom", "horizontal", "vertical" are allowed.'.format( \
+                location, type(location)))
         
         if randomize is not None:
             randomise = randomize
@@ -693,12 +700,13 @@ class AleaTracker:
         
         # Run the calibration.
         if self._debug:
-            self._debug_log("PerformCalibration: n_points=%s, location=%s, randomise=%s, slow=%s, audio=%s, automatic=%s, bgc=%s, fgc=%s, image=%s" \
-                % (n_points, location, randomise, slow, audio, automatic, bgc, fgc, image))
+            self._debug_log("PerformCalibration: n_points={}, location={}, randomise={}, slow={}, audio={}, automatic={}, bgc={}, fgc={}, image={}".format( \
+                n_points, location, randomise, slow, audio, automatic, bgc, fgc, image))
         self.api.PerformCalibration(noPoints=n_points, location=location, \
             randomizePoints=randomise, slowMode=slow, audioFeedback=audio, \
-            eye=eye, calibrationImprovement=False, skipBadPoints=True, \
-            autoCalibration=automatic, backColor=bgc, pointColor=fgc, \
+            eye=eye, calibrationImprovement=False, \
+            skipBadPoints=skip_bad_points, autoCalibration=automatic, \
+            backColor=bgc, pointColor=fgc, \
             imageName=image)
 
         # Wait until the running calibration has finished.
@@ -706,8 +714,8 @@ class AleaTracker:
             self._debug_log("WaitForCalibrationResult: waiting...")
         status, improve = self.api.WaitForCalibrationResult()
         if self._debug:
-            self._debug_log("WaitForCalibrationResult: status=%s, improve=%s" \
-                % (status, improve))
+            self._debug_log("WaitForCalibrationResult: status={}, improve={}".format( \
+                status, improve))
         
         return status, improve
 
@@ -874,7 +882,7 @@ class AleaAPI:
             print("WARNING: Failed to close the connection to the API!")
         
         # Throw an Exception.
-        raise Exception("Alea EtAPI error: %s" % (EtApiError[code]))
+        raise Exception("Alea EtAPI error: {}".format(EtApiError[code]))
 
     
     def Open(self, appKey, targetIP=None, targetPort=None, listenIP=None, \
@@ -916,12 +924,12 @@ class AleaAPI:
         # Check whether all keyword arguments are None.
         if (targetIP is None) or (targetPort is None) or (listenIP is None) or (listenPort is None):
             # Use the default values as set in the API.
-            r = etapi.Open(ctypes.c_char_p(appKey))
+            r = etapi.Open(ctypes.c_char_p(appKey.encode("utf-8")))
         else:
             # Use the user-defined values.
-            r = etapi.Open(ctypes.c_char_p(appKey), \
-                ctypes.c_char_p(targetIP), ctypes.c_int32(targetPort), \
-                ctypes.c_char_p(listenIP), ctypes.c_int32(listenPort))
+            r = etapi.Open(ctypes.c_char_p(appKey.encode("utf-8")), \
+                ctypes.c_char_p(targetIP.encode("utf-8")), ctypes.c_int32(targetPort), \
+                ctypes.c_char_p(listenIP.encode("utf-8")), ctypes.c_int32(listenPort))
         # Check the result.
         if not check_result(r):
             self._error(r)
@@ -1031,9 +1039,15 @@ class AleaAPI:
         device = ctypes.c_int32()
         r = etapi.Version(ctypes.byref(major), ctypes.byref(minor), \
             ctypes.byref(build), ctypes.byref(device))
+        # DEBUG #
+        print(major.value)
+        print(minor.value)
+        print(build.value)
+        print(device.value)
+        # # # # #
         # Convert to string.
-        version = "%d.%d.%d.%d" % \
-            (major.value, minor.value, build.value, device.value)
+        version = "{}.{}.{}.{}".format( \
+            major.value, minor.value, build.value, device.value)
         
         # Check the result.
         if check_result(r):
@@ -1044,7 +1058,7 @@ class AleaAPI:
     
     def PerformCalibration(self, noPoints=9, location=0, \
         randomizePoints=True, slowMode=False, audioFeedback=True, eye=0, \
-        calibrationImprovement=False, skipBadPoints=True, \
+        calibrationImprovement=False, skipBadPoints=False, \
         autoCalibration=True, backColor=(127,127,127), pointColor=(0,0,0), \
         imageName=""):
         
@@ -1112,7 +1126,7 @@ class AleaAPI:
                 desc:
                     When set to True, IntelliGaze will not get stuck at
                     uncalibratable points. It will skip them, and try to
-                    complete the calibration without them. (Default = True)
+                    complete the calibration without them. (Default = False)
                 type: bool
             autoCalibration:
                 desc:
@@ -1159,7 +1173,7 @@ class AleaAPI:
             ctypes.c_int32(eye), ctypes.c_bool(calibrationImprovement), \
             ctypes.c_bool(skipBadPoints), ctypes.c_bool(autoCalibration), \
             ctypes.c_int32(backColor), ctypes.c_int32(pointColor), \
-            ctypes.c_char_p(imageName))
+            ctypes.c_char_p(imageName.encode("utf-8")))
         # Check the result.
         if not check_result(r):
             self._error(r)
@@ -1466,7 +1480,7 @@ class AleaAPI:
 #        """
 #
 #        # Make a call to the API, and save the result in a variable.
-#        r = etapi.LoadCalibration(ctypes.c_char_p(profileName))
+#        r = etapi.LoadCalibration(ctypes.c_char_p(profileName.encode("utf-8")))
 #        # Check and return the result.
 #        return check_result(r)
     
@@ -1491,7 +1505,7 @@ class AleaAPI:
 #        """
 #
 #        # Make a call to the API, and save the result in a variable.
-#        r = etapi.SaveCalibration(ctypes.c_char_p(profileName))
+#        r = etapi.SaveCalibration(ctypes.c_char_p(profileName.encode("utf-8")))
 #        # Check and return the result.
 #        return check_result(r)
     
@@ -1704,7 +1718,7 @@ class AleaAPI:
 #        """
 #
 #        # Make a call to the API, and save the result in a variable.
-#        r = etapi.LoadCalibration(ctypes.c_char_p(profileName))
+#        r = etapi.LoadCalibration(ctypes.c_char_p(profileName.encode("utf-8")))
 #        # Check and return the result.
 #        return check_result(r)
     
@@ -1729,7 +1743,7 @@ class AleaAPI:
 #        """
 #
 #        # Make a call to the API, and save the result in a variable.
-#        r = etapi.SaveCalibration(ctypes.c_char_p(profileName))
+#        r = etapi.SaveCalibration(ctypes.c_char_p(profileName.encode("utf-8")))
 #        # Check and return the result.
 #        return check_result(r)
     

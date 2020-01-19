@@ -23,7 +23,7 @@ class Settings(object):
     
     def __init__(self):
         
-        object.__setattr__(self, u'config', {u'cfg_ver' : 0})
+        object.__setattr__(self, "config", {"cfg_ver" : 0})
         from pygaze import defaults
         self.read_module(defaults)
         try:
@@ -35,7 +35,7 @@ class Settings(object):
     def read_module(self, mod):
         
         for key in dir(mod):
-            if key.startswith(u'__') and key.endswith(u'__'):
+            if key.startswith("__") and key.endswith("__"):
                 continue
             if not hasattr(mod, key):
                 continue
@@ -48,12 +48,12 @@ class Settings(object):
     def __getattr__(self, setting):
 
         if setting not in self.config:
-            raise Exception(u'The setting "%s" does not exist' % setting)
+            raise Exception("The setting {} does not exist".format(setting))
         return self.config[setting]
 
     def __setattr__(self, setting, value):
 
         self.config[setting] = value
-        self.config[u'cfg_ver'] += 1
+        self.config["cfg_ver"] += 1
             
 settings = Settings()

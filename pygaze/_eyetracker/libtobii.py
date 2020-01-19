@@ -108,11 +108,16 @@ class TobiiProTracker(BaseEyeTracker):
 
         # initiation report
         self.datafile.write("pygaze initiation report start\n")
-        self.datafile.write("display resolution: %sx%s\n" % (self.disp.dispsize[0], self.disp.dispsize[1]))
-        self.datafile.write("display size in cm: %sx%s\n" % (self.screensize[0], self.screensize[1]))
-        self.datafile.write("fixation threshold: %s degrees\n" % self.fixtresh)
-        self.datafile.write("speed threshold: %s degrees/second\n" % self.spdtresh)
-        self.datafile.write("acceleration threshold: %s degrees/second**2\n" % self.accthresh)
+        self.datafile.write("display resolution: {}x{}\n".format( \
+            self.disp.dispsize[0], self.disp.dispsize[1]))
+        self.datafile.write("display size in cm: {}x{}\n".format( \
+            self.screensize[0], self.screensize[1]))
+        self.datafile.write("fixation threshold: {} degrees\n".format( \
+            self.fixtresh))
+        self.datafile.write("speed threshold: {} degrees/second\n".format( \
+            self.spdtresh))
+        self.datafile.write("acceleration threshold: {} degrees/second**2\n".format( \
+            self.accthresh))
         self.datafile.write("pygaze initiation report end\n")
 
     def _norm_2_px(self, normalized_point):
@@ -141,7 +146,7 @@ class TobiiProTracker(BaseEyeTracker):
         Nothing	-- uses native log function to include a line
                     in the log file in a "var NAME VALUE" layout
         """
-        self.log("var %s %s" % (var, val))
+        self.log("var {} {}".format(var, val))
 
     def set_eye_used(self):
         """Logs the eye_used variable, based on which eye was specified.
@@ -595,17 +600,23 @@ class TobiiProTracker(BaseEyeTracker):
 
             data_to_write = ''
             data_to_write += "pygaze calibration report start\n"
-            data_to_write += "samplerate: %s Hz\n" % self.samplerate
-            data_to_write += "sampletime: %s ms\n" % self.sampletime
-            data_to_write += "accuracy (in pixels): LX=%s, LY=%s, RX=%s, RY=%s\n" % (self.pxaccuracy[0][0],
-                                                                                     self.pxaccuracy[0][1],
-                                                                                     self.pxaccuracy[1][0],
-                                                                                     self.pxaccuracy[1][1])
-            data_to_write += "precision (RMS noise in pixels): X=%s, Y=%s\n" % (self.pxdsttresh[0], self.pxdsttresh[1])
-            data_to_write += "distance between participant and display: %s cm\n" % self.screendist
-            data_to_write += "fixation threshold: %s pixels\n" % self.pxfixtresh
-            data_to_write += "speed threshold: %s pixels/ms\n" % self.pxspdtresh
-            data_to_write += "accuracy threshold: %s pixels/ms**2\n" % self.pxacctresh
+            data_to_write += "samplerate: {} Hz\n".format(self.samplerate)
+            data_to_write += "sampletime: {} ms\n".format(self.sampletime)
+            data_to_write += "accuracy (in pixels): LX={}, LY={}, RX={}, RY={}\n".format( \
+                self.pxaccuracy[0][0],
+                self.pxaccuracy[0][1],
+                self.pxaccuracy[1][0],
+                self.pxaccuracy[1][1])
+            data_to_write += "precision (RMS noise in pixels): X={}, Y={}\n".format( \
+                self.pxdsttresh[0], self.pxdsttresh[1])
+            data_to_write += "distance between participant and display: {} cm\n".format( \
+                self.screendist)
+            data_to_write += "fixation threshold: {} pixels\n".format( \
+                self.pxfixtresh)
+            data_to_write += "speed threshold: {} pixels/ms\n".format( \
+                self.pxspdtresh)
+            data_to_write += "accuracy threshold: {} pixels/ms**2\n".format( \
+                self.pxacctresh)
             data_to_write += "pygaze calibration report end\n"
 
             # # # # write report to log
@@ -1139,7 +1150,7 @@ class TobiiProTracker(BaseEyeTracker):
             self.t0 = t
             self._write_header()
 
-        self.datafile.write('%.4f\t%s\n' % ((t - self.t0) / 1000.0, msg))
+        self.datafile.write("{}\t{}\n".format(round((t - self.t0) / 1000.0, ndigits=4), msg))
 
     def _flush_to_file(self):
         # write data to disk
@@ -1169,7 +1180,7 @@ class TobiiProTracker(BaseEyeTracker):
         # write timestamp and gaze position for both eyes
         left_gaze_point = self._norm_2_px(sample['left_gaze_point_on_display_area']) if sample['left_gaze_point_validity'] else (-1, -1)  # noqa: E501
         right_gaze_point = self._norm_2_px(sample['right_gaze_point_on_display_area']) if sample['right_gaze_point_validity'] else (-1, -1)  # noqa: E501
-        _write_buffer += '\t%d\t%d\t%d\t%d\t%d\t%d' % (
+        _write_buffer += '\t{}\t{}\t{}\t{}\t{}\t{}'.format(
             left_gaze_point[0],
             left_gaze_point[1],
             sample['left_gaze_point_validity'],
@@ -1192,15 +1203,15 @@ class TobiiProTracker(BaseEyeTracker):
                    (int(round(left_gaze_point[1] + right_gaze_point[1]) / 2.0)))
 
         # write gaze position, based on the selected sample(s)
-        _write_buffer += '\t%d\t%d' % ave
+        _write_buffer += '\t{}\t{}'.format(ave[0], ave[1])
 
         left_pupil = sample['left_pupil_diameter'] if sample['left_pupil_validity'] else -1
         right_pupil = sample['right_pupil_diameter'] if sample['right_pupil_validity'] else -1
 
-        _write_buffer += '\t%.4f\t%d\t%.4f\t%d' % (
-            left_pupil,
+        _write_buffer += '\t{}\t{}\t{}\t{}'.format(
+            round(left_pupil, ndigits=4),
             sample['left_pupil_validity'],
-            right_pupil,
+            round(right_pupil, ndigits=4),
             sample['right_pupil_validity'])
 
         # Write buffer to the datafile
