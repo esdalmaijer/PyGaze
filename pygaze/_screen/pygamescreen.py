@@ -550,7 +550,7 @@ class PyGameScreen(BaseScreen):
             pos = (self.dispsize[0]/2, self.dispsize[1]/2)
         
         # check if image is a path name
-        if type(image) in [str, unicode]:
+        if type(image) == str:
             # check if the image file exists
             if os.path.isfile(image):
                 # load image from file
