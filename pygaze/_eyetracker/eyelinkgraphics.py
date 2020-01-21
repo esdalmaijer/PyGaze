@@ -28,6 +28,7 @@ from pygaze.keyboard import Keyboard
 from pygaze.sound import Sound
 
 import os
+import sys
 import platform
 import array
 
@@ -92,7 +93,16 @@ class EyelinkGraphics(custom_display):
         self.title = ""
         self.display_open = True
         self.draw_menu_screen()
-        # beeps
+        # A crosshair is drawn onto the eye image. This should be scaled in
+        # pylink 1.1.0.5 (tested on Python 2.7) but not on pylink 1.11.0.0
+        # (tested on Python 3.6). I'm not sure when this change happened, so
+        # it's quite likely we'll have to update the minor version used here.
+        pl_version = pylink.__version__.split(".")
+        if int(pl_version[0]) > 1 or int(pl_version[1]) >= 11:
+            self.scale_lines_in_eye_image = False
+        else:
+            self.scale_lines_in_eye_image = True
+        # Beeps
         self.__target_beep__ = Sound(osc="sine", freq=440, length=50,
             attack=0, decay=0, soundfile=None)
         self.__target_beep__done__ = Sound(osc="sine", freq=880, length=200,
@@ -322,10 +332,11 @@ class EyelinkGraphics(custom_display):
         colorIndex    --    A color index.
         """
 
-        x1 = int(self.scale*x1)
-        y1 = int(self.scale*y1)
-        x2 = int(self.scale*x2)
-        y2 = int(self.scale*y2)
+        if self.scale_lines_in_eye_image:
+            x1 = int(self.scale*x1)
+            y1 = int(self.scale*y1)
+            x2 = int(self.scale*x2)
+            y2 = int(self.scale*y2)
         pygame.draw.line(self.cam_img, self.color[colorindex], (x1, y1),
             (x2, y2))
 
@@ -353,10 +364,11 @@ class EyelinkGraphics(custom_display):
                 type:    int
         """
 
-        x = int(self.scale*x)
-        y = int(self.scale*y)
-        w = int(self.scale*w)
-        h = int(self.scale*h)
+        if self.scale_lines_in_eye_image:
+                x = int(self.scale*x)
+                y = int(self.scale*y)
+                w = int(self.scale*w)
+                h = int(self.scale*h)
         pygame.draw.rect(self.cam_img, self.color[colorindex], (x, y, w, h), 2)
 
     def draw_title(self):
@@ -516,7 +528,7 @@ class EyelinkGraphics(custom_display):
                 pass
         # If the buffer is full, push it to the display.
         if line == totlines:
-            self.scale = totlines/320.
+            self.scale = totlines/320.0
             self._size = int(self.scale*self.size[0]), int(
                 self.scale*self.size[1])
             # Convert the image buffer to a pygame image, save it ...
@@ -533,7 +545,7 @@ class EyelinkGraphics(custom_display):
                     self.cam_img = pygame.image.fromstring(
                         self.imagebuffer.tostring(), self.size, 'RGBX'
                     )
-                    self.scale = 1.
+                    self.scale = 1.0
                 # In some cases, the conversion fails because the imagebuffer
                 # is too long to begin with. Therefore, we need to make sure
                 # that it's cleared.
