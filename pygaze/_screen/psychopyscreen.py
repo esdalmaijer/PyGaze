@@ -572,8 +572,16 @@ class PsychoPyScreen(BaseScreen):
             font=font, pos=pos, color=colour, height=fontsize, \
             antialias=antialias, alignHoriz=align, \
             fontFiles=pygaze.FONTFILES, wrapWidth=None))
-    
-    
+        # PsychoPy deprecated "alignHoriz", but in version 3.2.4 (and maybe
+        # also others, who knows?) its replacements "alignText" and
+        # "anchorHoriz" are unknown keyword arguments to __init__. Yet,
+        # "alignHoriz" does NOT work any longer. I guess alignment is just
+        # broken now? The ugly workaround below will NOT work for those broken
+        # versions of PsychoPy, but will at least not crash them.
+        self.screen[-1].anchorHoriz = align
+        self.screen[-1].alignText = align
+
+
     def draw_image(self, image, pos=None, scale=None):
         
         """Draws an image on the screen
