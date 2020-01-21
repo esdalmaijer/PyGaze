@@ -91,7 +91,7 @@ class PyGameSound(BaseSound):
             # cycles per sample
             cps = float(sps/freq)
             # number of samples
-            slen = settings.SOUNDSAMPLINGFREQUENCY * (length // 1000)
+            slen = (settings.SOUNDSAMPLINGFREQUENCY * length) // 1000
 
             for i in range(slen):
                 p = float((i % cps)) / cps * 2 * math.pi
