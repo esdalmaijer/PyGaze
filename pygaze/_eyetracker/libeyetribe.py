@@ -304,12 +304,12 @@ class EyeTribeTracker(BaseEyeTracker):
                 # draw result
                 if calibresult['result']:
                     self.screen.draw_text(text="Calibration successful",
-                        colour='green',
+                        colour=(0, 255, 0),
                         pos=(int(self.dispsize[0]*0.5), int(self.dispsize[1]*0.25)), 
                         fontsize=20)
                 else:
                     self.screen.draw_text(text="Calibration failed",
-                        colour='red',
+                        colour=(255, 0, 0),
                         pos=(int(self.dispsize[0]*0.5),int(self.dispsize[1]*0.25)),
                         fontsize=20)
                 # draw average accuracy
