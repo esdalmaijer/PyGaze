@@ -351,7 +351,7 @@ class EyeTribeTracker(BaseEyeTracker):
             # only draw the point if data was obtained
             if p['state'] > 0:
                 var.append(p['mepix'])
-        noise = sum(var) / float(len(var))
+        noise = sum(var) / float(len(var)) if var else float('inf')
         self.pxdsttresh = (noise, noise)
                 
         # AFTERMATH
