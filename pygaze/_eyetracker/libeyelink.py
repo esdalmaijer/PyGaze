@@ -396,8 +396,13 @@ class libeyelink(BaseEyeTracker):
         try:
             # The 0 parameters indicate that the display should not be cleared
             # and we should not be allowed to fall back to the set-up screen.
-            error = pylink.getEYELINK().doDriftCorrect(pos[0], pos[1], 0, 0)
-        except:
+            error = pylink.getEYELINK().doDriftCorrect(
+                int(pos[0]),
+                int(pos[1]),
+                0,
+                0
+            )
+        except Exception:
             error = -1
         # A 0 exit code means successful drift correction
         if error == 0:
