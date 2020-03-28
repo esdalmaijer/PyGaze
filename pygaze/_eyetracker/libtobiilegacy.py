@@ -1344,7 +1344,7 @@ class TobiiController:
         """
         
         eyetracker_info = self.eyetrackers[eyetracker]
-        print "Connecting to:", eyetracker_info
+        print("Connecting to:", eyetracker_info)
         tobii.eye_tracking_io.eyetracker.Eyetracker.create_async(self.mainloop_thread,
                                                      eyetracker_info,
                                                      lambda error, eyetracker: self.on_eyetracker_created(error, eyetracker, eyetracker_info))
@@ -1434,7 +1434,7 @@ class TobiiController:
         
         # start calibration
         self.initcalibration_completed = False
-        print "StartCalibration"
+        print("StartCalibration")
         self.eyetracker.StartCalibration(lambda error, r: self.on_calib_start(error, r))
         while not self.initcalibration_completed:
             pass
@@ -1643,7 +1643,7 @@ class TobiiController:
             print("WARNING! libtobii.TobiiController.on_calib_compute: Could not compute calibration because of a server error.\n\n<b>Details:</b>\n<i>{}</i>".format(error))
             raise Exception("Error in libtobii.TobiiController.on_calib.compute: CalibCompute failed because of a server error:", error)
         else:
-            print ""
+            print("")
             self.computeCalibration_succeeded = True
         
         self.computeCalibration_completed = True
@@ -1677,7 +1677,7 @@ class TobiiController:
             self.getcalibration_completed = True
             return False
         
-        print "On_calib_response: Success"
+        print("On_calib_response: Success")
         self.calib = calib
         self.getcalibration_completed = True
         return False    
@@ -1869,7 +1869,7 @@ class TobiiController:
         None        --    sets self.datafile to an open textfile
         """
         
-        print 'set datafile ' + filename
+        print('set datafile ' + filename)
         self.datafile = open(filename,'w')
         self.datafile.write('Recording date:\t'+datetime.datetime.now().strftime('%Y/%m/%d')+'\n')
         self.datafile.write('Recording time:\t'+datetime.datetime.now().strftime('%H:%M:%S')+'\n')
@@ -1892,7 +1892,7 @@ class TobiiController:
                     self.datafile and sets self.datafile to None
         """
         
-        print 'datafile closed'
+        print('datafile closed')
         if self.datafile != None:
             self.flushData()
             self.datafile.close()
