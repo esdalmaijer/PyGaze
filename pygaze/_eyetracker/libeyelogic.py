@@ -50,9 +50,8 @@ def errorstringConnect(returncode):
     codes = {
         ELApi.ReturnConnect.SUCCESS: "no error, successfully connected to server",
         ELApi.ReturnConnect.NOT_INITED: "library not correctly initialized",
-        ELApi.ReturnConnect.ALREADY_CONNECTED: "already connected to server",
         ELApi.ReturnConnect.VERSION_MISMATCH: "version mismatch, please upgrade your EyeLogicServer to the newest version",
-        ELApi.ReturnConnect.TIMEOUT: "cannot conncet to server, is the server running?",
+        ELApi.ReturnConnect.TIMEOUT: "cannot connect to server, is the server running?",
     }
 
     if returncode in codes.keys():

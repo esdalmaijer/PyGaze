@@ -153,13 +153,11 @@ class ELApi:
         SUCCESS = 0
         ## connection failed: library needs to be initialized first (constructor call missing)
         NOT_INITED = 1
-        ## connection failed: already connected
-        ALREADY_CONNECTED = 2
         ## connection failed: API is build on a newer version than the server.
         # Update the EyeLogicServer to the newest version.
-        VERSION_MISMATCH = 3
+        VERSION_MISMATCH = 2
         ## connection failed: the server can not be found or is not responding
-        TIMEOUT = 4
+        TIMEOUT = 3
 
 ## initialize connection to the server (method is blocking until connection
 # established)
