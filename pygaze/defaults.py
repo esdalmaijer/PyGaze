@@ -91,8 +91,8 @@ JOYBUTTONLIST = None
 JOYTIMEOUT = None
 
 # EYETRACKER
-# Tracker type. Choose from: "alea", "eyelink", "eyetribe", "opengaze", "smi",
-# "tobii", "tobii-legacy", "dummy", or "dumbdummy". (Note: if DUMMYMODE==True,
+# Tracker type. Choose from: "alea", "eyelink", "eyelogic", "eyetribe", "opengaze",
+# "smi", "tobii", "tobii-legacy", "dummy", or "dumbdummy". (Note: if DUMMYMODE==True,
 # TRACKERTYPE will be set to "dummy" automatically.)
 TRACKERTYPE = "eyelink"
 # Default saccade velocity threshold in degrees per second; used for PyGaze

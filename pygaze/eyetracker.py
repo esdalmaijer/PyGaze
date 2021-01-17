@@ -43,7 +43,7 @@ class EyeTracker(BaseEyeTracker):
         keyword arguments
 
         trackertype        --    the type of eye tracker; choose from:
-                        "dumbdummy", "dummy", "eyelink", "smi",
+                        "dumbdummy", "dummy", "eyelink", "eyelogic", "smi",
                         "tobii", "eyetribe" (default = TRACKERTYPE)
         **args        --    A keyword-argument dictionary that contains
                         eye-tracker-specific options
@@ -54,7 +54,7 @@ class EyeTracker(BaseEyeTracker):
             trackertype = "dummy"
 
         # correct wrong input
-        allowed_trackers = ["dumbdummy", "dummy", "eyelink", "smi", \
+        allowed_trackers = ["dumbdummy", "dummy", "eyelink", "eyelogic", "smi", \
             "eyetribe", "opengaze", "alea", "tobii", "tobii-legacy", \
             "tobiiglasses"]
         if trackertype not in allowed_trackers:
@@ -70,7 +70,16 @@ class EyeTracker(BaseEyeTracker):
             # initialize
             self.__class__.__init__(self, display, **args)
 
-        # SMI
+        # EyeLogic
+        elif trackertype == "eyelogic":
+            # import libraries
+            from pygaze._eyetracker.libeyelogic import EyeLogicTracker
+            # morph class
+            self.__class__ = EyeLogicTracker
+            # initialize
+            self.__class__.__init__(self, display, **args)
+
+		# SMI
         elif trackertype == "smi":
             # import libraries
             from pygaze._eyetracker.libsmi import SMItracker

@@ -162,6 +162,8 @@ class pygaze_init(item):
 			kwdict[u'eyelink_force_drift_correct'] = \
 				self.var.eyelink_force_drift_correct == u'yes'
 			kwdict[u'pupil_size_mode'] = self.var.eyelink_pupil_size_mode
+		elif self.var.tracker_type == u'EyeLogic':
+			tracker_type = u'eyelogic'
 		elif self.var.tracker_type == u'SMI':
 			tracker_type = u'smi'
 			kwdict[u'ip'] = self.var.smi_ip

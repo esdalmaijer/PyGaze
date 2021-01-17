@@ -10,6 +10,7 @@ controls:
       - Simple dummy
       - Advanced dummy (mouse simulation)
       - EyeLink
+      - EyeLogic
       - SMI
       - EyeTribe
       - OpenGaze
