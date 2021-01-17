@@ -505,7 +505,7 @@ class PsychoPyScreen(BaseScreen):
 
     def draw_text(self, text="text", colour=None, color=None, pos=None, \
             centre=None, center=None, font="mono", fontsize=12, \
-            antialias=True, wrapWidth=None):
+            antialias=True, wrap_width=None):
 
         """Draws a text on the screen
         
@@ -571,7 +571,7 @@ class PsychoPyScreen(BaseScreen):
         self.screen.append(TextStim(pygaze.expdisplay, text=str(text), \
             font=font, pos=pos, color=colour, height=fontsize, \
             antialias=antialias, alignHoriz=align, \
-            fontFiles=pygaze.FONTFILES, wrapWidth=self.dispsize[0] if wrapWidth is None else wrapWidth))
+            fontFiles=pygaze.FONTFILES, wrapWidth=wrap_width)
         # PsychoPy deprecated "alignHoriz", but in version 3.2.4 (and maybe
         # also others, who knows?) its replacements "alignText" and
         # "anchorHoriz" are unknown keyword arguments to __init__. Yet,
