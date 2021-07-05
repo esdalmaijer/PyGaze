@@ -53,7 +53,11 @@ class PyGameTime(BaseTime):
         
         # On Windows, time.clock() provides higher accuracy than time.time().
         if sys.platform == "win32":
-            self._cpu_time = time.clock
+            # DEPRECATED IN PYTHON 3
+            if sys.version_info[0] <= 2:
+                self._cpu_time = time.clock
+            else:
+                self._cpu_time = time.time
         else:
             self._cpu_time = time.time
 

@@ -135,7 +135,7 @@ class AleaTracker(BaseEyeTracker):
         self.disp.show()
         
         # output file properties
-        self.alea_logging = self.alea_logging
+        self.alea_logging = alea_logging
         self.outputfile = logfile + '.tsv'
         
         # calibration properties
