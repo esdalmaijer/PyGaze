@@ -10,9 +10,12 @@ from threading import Event, Lock, Thread
 # Auto-detect whether we're running 32 or 64 bit, and decide which DLL to load.
 if sys.maxsize > 2**32:
     dll_name = "CEtAPIx64.dll"
-    print("Python Alea: detected 64-bit application, loading '{}'".format(dll_name))
+    print("Python Alea: detected 64-bit application; will use '{}'".format( \
+        dll_name))
 else:
     dll_name = "CEtAPI.dll"
+    print("Python Alea: detected 32-bit application; will use '{}'".format( \
+        dll_name))
 
 # Auto-detect the current directory, and the place where CEtAPI.dll should be.
 dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +23,7 @@ dll_path = os.path.join(dir_path, dll_name)
 
 # Check whether the DLL exists.
 if not os.path.isfile(dll_path):
-    raise Exception("WARNING: Could not find CEtAPI.dll in its expected location: '{}'".format(dll_path))
+    print("WARNING: Could not find CEtAPI.dll in its expected location: '{}'".format(dll_path))
 
 # Load the DLL.
 # Available functions in C-wrapped API:
@@ -40,6 +43,9 @@ if not os.path.isfile(dll_path):
 #    etapi.WaitForData
 #    etapi.ClearDataBuffer
 #    etapi.ExitServer
+# New in IntelliGaze_SDK_v2.0.7370 (supported from PyAlea 0.0.9):
+#    etapi.RecordData
+#    etapi.SendTrigger
 etapi = None
 try:
     print("Python Alea: loading '{}'".format(dll_name))
@@ -252,7 +258,8 @@ class AleaTracker:
     """Python class for talking to Alea Technologies eye trackers"""
     
     def __init__(self, app_key, file_path="alea_default.csv", target_ip=None, \
-        target_port=None, listen_ip=None, listen_port=None, debug=False):
+        target_port=None, listen_ip=None, listen_port=None, alea_logging=True, \
+        debug=False):
         
         """
         desc:
@@ -349,74 +356,86 @@ class AleaTracker:
                 self.api_version, self.device))
         
         # LOGGING
-        # Parse the file path to find out what separator to use.
-        dir_name = os.path.dirname(file_path)
-        file_name = os.path.basename(file_path)
-        name, ext = os.path.splitext(file_name)
-        # If no file extension was included, default to TSV.
-        if ext == "":
-            ext = ".tsv"
-        # Choose a separator depending on the file extension.
-        if ext == ".csv":
-            self._sep = ","
-        elif ext == ".tsv":
-            self._sep = "\t"
+        # Set the alea_logging property.
+        self._alea_logging = alea_logging
+        # Use the Alea API functions to log.
+        if self._alea_logging:
+            pass
+        # Use the PyAlea functions to log.
         else:
-            self._sep = "\t"
-        # Construct the data file name.
-        self._data_file_path = os.path.join(dir_name, name+ext)
-        # Define the log-able variables.
-        self._log_vars = [ \
-            "rawDataTimeStamp", \
-            "intelliGazeX", \
-            "intelliGazeY", \
-            "gazePositionXLeftEye", \
-            "gazePositionYLeftEye", \
-            "gazePositionConfidenceLeftEye", \
-            "pupilDiameterLeftEye", \
-            "gazePositionXRightEye", \
-            "gazePositionYRightEye", \
-            "gazePositionConfidenceRightEye", \
-            "pupilDiameterRightEye", \
-            "eventID", \
-            "eventDataTimeStamp", \
-            "duration", \
-            "positionX", \
-            "positionY", \
-            "dispersionX", \
-            "dispersionY", \
-            "confidence", \
-            ]
-        # Open a new log file.
-        if self._debug:
-            self._debug_log("Opening new log file '{}'".format(self._log_file))
-        self._log_file = open(self._data_file_path, "w")
-        # Write a header to the log.
-        header = ["TYPE"]
-        header.extend(self._log_vars)
-        self._log_file.write(self._sep.join(map(str, header)))
-        # Create a lock to prevent simultaneous access to the log file.
-        self._log_file_lock = Lock()
-        # Each log will be counted, and every N logs the file will be flushed.
-        # (This writes the data from the buffer to RAM and then to drive.)
-        self._log_counter = 0
-        self._log_consolidation_freq = 60
+            # Parse the file path to find out what separator to use.
+            dir_name = os.path.dirname(file_path)
+            file_name = os.path.basename(file_path)
+            name, ext = os.path.splitext(file_name)
+            # If no file extension was included, default to TSV.
+            if ext == "":
+                ext = ".tsv"
+            # Choose a separator depending on the file extension.
+            if ext == ".csv":
+                self._sep = ","
+            elif ext == ".tsv":
+                self._sep = "\t"
+            else:
+                self._sep = "\t"
+            # Construct the data file name.
+            self._data_file_path = os.path.join(dir_name, name+ext)
+            # Define the log-able variables.
+            self._log_vars = [ \
+                "rawDataTimeStamp", \
+                "intelliGazeX", \
+                "intelliGazeY", \
+                "gazePositionXLeftEye", \
+                "gazePositionYLeftEye", \
+                "gazePositionConfidenceLeftEye", \
+                "pupilDiameterLeftEye", \
+                "gazePositionXRightEye", \
+                "gazePositionYRightEye", \
+                "gazePositionConfidenceRightEye", \
+                "pupilDiameterRightEye", \
+                "eventID", \
+                "eventDataTimeStamp", \
+                "duration", \
+                "positionX", \
+                "positionY", \
+                "dispersionX", \
+                "dispersionY", \
+                "confidence", \
+                ]
+            # Open a new log file.
+            if self._debug:
+                self._debug_log("Opening new log file '{}'".format( \
+                    self._log_file))
+            self._log_file = open(self._data_file_path, "w")
+            # Write a header to the log.
+            header = ["TYPE"]
+            header.extend(self._log_vars)
+            self._log_file.write(self._sep.join(map(str, header)))
+            # Create a lock to prevent simultaneous access to the log file.
+            self._log_file_lock = Lock()
+            # Each log will be counted, and every N logs the file will be 
+            # flushed. (This writes the data from the buffer to RAM and then
+            # to drive.)
+            self._log_counter = 0
+            self._log_consolidation_freq = 60
+
         # LOGGING THREAD
         # Initialise a new Queue to push samples through.
         self._logging_queue = Queue()
-        # Set an event to signal when data SHOULD BE logged. This is set to
-        # signal to the logging Thread that it should log or not.
-        self._recording = Event()
-        self._recording.clear()
-        # Set an event that signals when DATA IS BEING logged. This is set by
-        # the logging Thread to signal that the Queue is empty.
+        # Set an event that signals when DATA IS BEING logged. This is set
+        # by the logging Thread to signal that the Queue is empty.
         self._logging_queue_empty = Event()
         self._logging_queue_empty.set()
-        # Initialise the logging Thread.
-        self._logging_thread = Thread( \
-            target=self._log_samples,
-            name='PyGaze_AleaTracker_logging', \
-            args=[])
+        # Set an event to signal when data SHOULD BE logged. This is set
+        # to signal to the logging Thread that it should log or not.
+        self._recording = Event()
+        self._recording.clear()
+        # Initialise the logging Thread, but only if we're using the PyAlea
+        # way of logging.
+        if not self._alea_logging:
+            self._logging_thread = Thread( \
+                target=self._log_samples,
+                name='PyGaze_AleaTracker_logging', \
+                args=[])
 
         # STREAMING THREAD
         # Create a placeholder for the most recent sample.
@@ -436,9 +455,10 @@ class AleaTracker:
             self._debug_log("DataStreaming: starting")
         self.api.DataStreaming(True)
         # Start the logging Thread.
-        if self._debug:
-            self._debug_log("Logging Thread: starting")
-        self._logging_thread.start()
+        if not self._alea_logging:
+            if self._debug:
+                self._debug_log("Logging Thread: starting")
+            self._logging_thread.start()
         # Start the streaming Thread.
         if self._debug:
             self._debug_log("Streaming Thread: starting")
@@ -517,7 +537,7 @@ class AleaTracker:
                 self._recent_sample = copy.deepcopy(sample)
                 self._recent_sample_lock.release()
                 # Add the sample to the Queue, but only during recording.
-                if self._recording.is_set():
+                if (not self._alea_logging) and self._recording.is_set():
                     self._logging_queue.put(sample)
             else:
                 if self._debug:
@@ -556,8 +576,8 @@ class AleaTracker:
     
     def calibrate(self, n_points=9, location=0, randomise=True, \
             randomize=None, slow=False, audio=True, eye=0, \
-            skip_bad_points=False, automatic=True, bgc=(127,127,127), \
-            fgc=(0,0,0), image=""):
+            calibration_improvement=False, skip_bad_points=False, \
+            automatic=True, bgc=(127,127,127), fgc=(0,0,0), image=""):
         
         """
         desc:
@@ -616,6 +636,13 @@ class AleaTracker:
                     eye"), or 4 (calibrate and track only the right eye, "left
                     pirate eye"). (Default = 0)
                 type: int
+            calibration_improvement:
+                desc:
+                    Set to True if outliers or skipped points from a previous
+                    calibrations should be re-calibrated. Can only be done
+                    when a previous calibration returned with an "Improvement"
+                    suggestion! (Default = False)
+                type: bool
             skip_bad_points:
                 desc:
                     When set to True, IntelliGaze will not get stuck at
@@ -704,7 +731,7 @@ class AleaTracker:
                 n_points, location, randomise, slow, audio, automatic, bgc, fgc, image))
         self.api.PerformCalibration(noPoints=n_points, location=location, \
             randomizePoints=randomise, slowMode=slow, audioFeedback=audio, \
-            eye=eye, calibrationImprovement=False, \
+            eye=eye, calibrationImprovement=calibration_improvement, \
             skipBadPoints=skip_bad_points, autoCalibration=automatic, \
             backColor=bgc, pointColor=fgc, \
             imageName=image)
@@ -733,14 +760,20 @@ class AleaTracker:
                     The message to be logged to the data file.
                 type: string
         """
+        
+        # Log a message to the Alea data file.
+        if self._alea_logging:
+            self.api.SendTrigger(message)
 
-        # Get current timestamp.
-        self._recent_sample_lock.acquire()
-        t = self._recent_sample.rawDataTimeStamp
-        self._recent_sample_lock.release()
-
-        # Construct a tuple, and add it to the queue.
-        self._logging_queue.put(("MSG", t, message))
+        # Log a message in the PyAlea format.
+        else:
+            # Get current timestamp.
+            self._recent_sample_lock.acquire()
+            t = self._recent_sample.rawDataTimeStamp
+            self._recent_sample_lock.release()
+    
+            # Construct a tuple, and add it to the queue.
+            self._logging_queue.put(("MSG", t, message))
 
     
     def start_recording(self):
@@ -753,7 +786,12 @@ class AleaTracker:
         if self._debug:
             self._debug_log("Starting recording")
 
-        # Signal to the sample processing Thread to queue samples for the
+        # Tell the Alea API to start recording.
+        if self._alea_logging:
+            self.api.RecordData(True)
+        
+        # Set the recording event. If PyAlea logging is used, this will also
+        # signal to the sample processing Thread to queue samples for the
         # logging Thread.
         self._recording.set()
     
@@ -768,7 +806,12 @@ class AleaTracker:
         if self._debug:
             self._debug_log("Stopping recording")
 
-        # Signal to the sample processing Thread to stop queueing samples
+        # Tell the Alea API to stop recording.
+        if self._alea_logging:
+            self.api.RecordData(False)
+            
+        # Unset the recording event. If PyAlea logging is used, this will also
+        # signal to the sample processing Thread to stop queueing samples
         # for the logging Thread.
         self._recording.clear()
     
@@ -826,17 +869,18 @@ class AleaTracker:
         self.api.DataStreaming(False)
         
         # Stop recording if it is still ongoing.
-        if self._recording:
+        if self._recording.is_set():
             self.stop_recording()
         
         # Wait until the Queue is empty, or until 60 seconds have passed.
-        if self._debug:
-            self._debug_log("Waiting for the logging Queue to empty")
-        queue_empty = self._logging_queue_empty.wait(timeout=60.0)
-        if not queue_empty:
-            print("WARNING: Logging Thread timeout occurred; something might have gone wrong!")
+        if not self._alea_logging:
             if self._debug:
-                self._debug_log("Logging Queue failed to empty within 60 seconds")
+                self._debug_log("Waiting for the logging Queue to empty")
+            queue_empty = self._logging_queue_empty.wait(timeout=60.0)
+            if not queue_empty:
+                print("WARNING: Logging Thread timeout occurred; something might have gone wrong!")
+                if self._debug:
+                    self._debug_log("Logging Queue failed to empty within 60 seconds")
         
         # Signal to the Threads to stop.
         if self._debug:
@@ -844,9 +888,10 @@ class AleaTracker:
         self._connected.clear()
         
         # Close the log file.
-        if self._debug:
-            self._debug_log("Closing the log file")
-        self._log_file.close()
+        if not self._alea_logging:
+            if self._debug:
+                self._debug_log("Closing the log file")
+            self._log_file.close()
         
         # Close the connection.
         if self._debug:
@@ -958,6 +1003,55 @@ class AleaAPI:
             self._error(r)
     
     
+    def RecordData(self, start):
+        
+        """
+        desc:
+            Starts or stops data recording. For the time being (2021-01-29), 
+            the location of the output data file is in user’s documents 
+            folder, e.g. 
+            C:\\User\\alea_technologies_gmbh\\IntelliGazeServer\\data\\Exp1\\User1\\
+        
+        arguments:
+            start:
+                desc:
+                    True if the recording to the Alea data file should start,
+                    and False if the recording should stop.
+                type: bool
+        """
+        
+        # Make a call to the API.
+        r = etapi.RecordData(ctypes.c_bool(start))
+
+        # Check the result.
+        if not check_result(r):
+            self._error(r)
+    
+    
+    def SendTrigger(self, message):
+        
+        """
+        desc:
+            Sends a trigger message. If data recording is in progress, the 
+            message will be recorded as well. Usually such messages are used
+            to separate trials within an experiment, and to record events such
+            as stimulus onsets/offsets, responses, etc.
+        
+        arguments:
+            start:
+                desc:
+                    The message that should be recorded in the data file.
+                type: str
+        """
+        
+        # Record the message to the data file.
+        r = etapi.SendTrigger(ctypes.c_char_p(message.encode("utf-8")))
+        
+        # Check the result.
+        if not check_result(r):
+            self._error(r)
+    
+    
     def WaitForData(self, timeOutMilliseconds):
         
         """
@@ -1039,12 +1133,6 @@ class AleaAPI:
         device = ctypes.c_int32()
         r = etapi.Version(ctypes.byref(major), ctypes.byref(minor), \
             ctypes.byref(build), ctypes.byref(device))
-        # DEBUG #
-        print(major.value)
-        print(minor.value)
-        print(build.value)
-        print(device.value)
-        # # # # #
         # Convert to string.
         version = "{}.{}.{}.{}".format( \
             major.value, minor.value, build.value, device.value)

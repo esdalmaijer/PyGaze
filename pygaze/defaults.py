@@ -141,4 +141,13 @@ SMIRECEIVEPORT = 5555
 # Alea only
 # SDK key. This is user-specific, so needs to be user defined.
 ALEAKEY = "Contact Alea for an API key"
+# Boolean that determines whether an animated calibration should be used. This
+# is a friendly parrot; ideal for children.
 ALEAALEAANIMATEDCALIBRATION = False
+# Alea offers their own specific type of logging with a specific output 
+# location and file layout. PyGaze offers a different way that relies on 
+# streaming data. Alea prefer their own way, which is why the default is set
+# to that. The PyGaze way of logging produces files that are more similar to
+# those of other trackers.
+ALEALOGGING = True
+

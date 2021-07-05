@@ -91,6 +91,7 @@ class AleaTracker(BaseEyeTracker):
     def __init__(self, display, logfile=settings.LOGFILE, \
         alea_key=settings.ALEAKEY, \
         animated_calibration=settings.ALEAANIMATEDCALIBRATION, \
+        alea_logging=settings.ALEALOGGING, \
         eventdetection=settings.EVENTDETECTION, \
         saccade_velocity_threshold=35, \
         saccade_acceleration_threshold=9500, \
@@ -134,6 +135,7 @@ class AleaTracker(BaseEyeTracker):
         self.disp.show()
         
         # output file properties
+        self.alea_logging = self.alea_logging
         self.outputfile = logfile + '.tsv'
         
         # calibration properties
@@ -159,7 +161,8 @@ class AleaTracker(BaseEyeTracker):
         self.weightdist = 10 # weighted distance, used for determining whether a movement is due to measurement error (1 is ok, higher is more conservative and will result in only larger saccades to be detected)
 
         # connect to the tracker
-        self.alea = OGAleaTracker(alea_key, file_path=self.outputfile)
+        self.alea = OGAleaTracker(alea_key, alea_logging=self.alea_logging, \
+            file_path=self.outputfile)
 
         # get info on the sample rate
         # TODO: Compute after streaming some samples?
