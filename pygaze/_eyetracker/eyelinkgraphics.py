@@ -101,7 +101,7 @@ class EyelinkGraphics(custom_display):
             pl_version = pylink.__version__.split(".")
         else:
             # in pylink 2.1 pylink.__version__ is a module
-            pl_version = pylink.__version__.__version__
+            pl_version = pylink.__version__.__version__.split(".")
             
         if int(pl_version[0]) > 1 or int(pl_version[1]) >= 11:
             self.scale_lines_in_eye_image = False
