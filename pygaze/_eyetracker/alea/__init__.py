@@ -11,4 +11,4 @@ except:
 if not alea_import:
     print("pygaze._eyetracker.alea.__init__: Could not import PyGaze or local version of Alea.")
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
