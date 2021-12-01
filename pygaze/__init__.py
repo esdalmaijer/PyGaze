@@ -25,7 +25,7 @@ from distutils.version import StrictVersion
 import sys
 import os
 
-__version__ = version = "0.7.3"
+__version__ = version = "0.7.4a3"
 strict_version = StrictVersion(__version__)
 # The version without the prerelease (if any): e.g. 3.0.0
 main_version = ".".join([str(i) for i in strict_version.version])
