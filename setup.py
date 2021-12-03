@@ -18,6 +18,7 @@ along with qnotero.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 import glob
 import pygaze
 from setuptools import setup
@@ -27,10 +28,11 @@ print("Running setup for PyGaze version {}".format(pygaze.__version__))
 
 def files(path):
 
-	l = [fname for fname in glob.glob(path) if os.path.isfile(fname) \
-		and not fname.endswith('.pyc')]
-	print(l)
-	return l
+	return [
+		fname
+		for fname in glob.glob(path) if os.path.isfile(fname)
+		and not fname.endswith('.pyc')
+	]
 
 
 def data_files():
@@ -61,10 +63,11 @@ def data_files():
 			files("opensesame_plugins/pygaze_stop_recording/*")),
 		("share/opensesame_plugins/pygaze_wait",
 			files("opensesame_plugins/pygaze_wait/*"))
-		]
+	]
+
 
 setup(
-	name="python-pygaze",
+	name='pygaze' if 'bdist_deb' in sys.argv else u'python-pygaze',
 	python_requires=">=3",
 	version=pygaze.__version__,
 	description="A Python library for eye tracking",
@@ -82,8 +85,11 @@ setup(
 		'Programming Language :: Python :: 3',
 	],
 	include_package_data=True,
-	package_data={"pygaze._eyetracker.alea":["*.dll"], "pygaze._eyetracker.eyelogic":["*.dll"]},
-	packages = [
+	package_data={
+		"pygaze._eyetracker.alea": ["*.dll"],
+		"pygaze._eyetracker.eyelogic": ["*.dll"]
+	},
+	packages=[
 		"pygaze",
 		"pygaze._display",
 		"pygaze._eyetracker",
@@ -99,6 +105,6 @@ setup(
 		"pygaze._sound",
 		"pygaze._time",
 		"pygaze.plugins",
-		],
+	],
 	data_files=data_files()
-	)
+)

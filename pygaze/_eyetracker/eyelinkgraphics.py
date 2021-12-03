@@ -97,7 +97,10 @@ class EyelinkGraphics(custom_display):
         # pylink 1.1.0.5 (tested on Python 2.7) but not on pylink 1.11.0.0
         # (tested on Python 3.6). I'm not sure when this change happened, so
         # it's quite likely we'll have to update the minor version used here.
-        pl_version = pylink.__version__.split(".")
+        if hasattr(pylink.__version__, 'split'):
+            pl_version = pylink.__version__.split(".")
+        else:
+            pl_version = pylink.__version__.__version__.split(".")
         if int(pl_version[0]) > 1 or int(pl_version[1]) >= 11:
             self.scale_lines_in_eye_image = False
         else:
@@ -142,8 +145,12 @@ class EyelinkGraphics(custom_display):
         self.menuscreen.draw_text(text="Eyelink calibration menu",
             pos=(self.xc,self.yc-6*self.ld), center=True, font='mono',
             fontsize=int(2*self.fontsize), antialias=True)
-        self.menuscreen.draw_text(text="{} (pygaze {}, pylink {})".format( \
-            self.libeyelink.eyelink_model, pygaze.version, pylink.__version__), 
+        if hasattr(pylink.__version__, 'split'):
+            pl_version = pylink.__version__
+        else:
+            pl_version = pylink.__version__.__version__
+        self.menuscreen.draw_text(text="{} (pygaze {}, pylink {})".format(
+            self.libeyelink.eyelink_model, pygaze.version, pl_version), 
             pos=(self.xc,self.yc-5*self.ld), center=True,
             font='mono', fontsize=int(.8*self.fontsize), antialias=True)
         self.menuscreen.draw_text(text="Press C to calibrate",
