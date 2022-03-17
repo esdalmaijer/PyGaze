@@ -304,7 +304,7 @@ class OpenGazeTracker:
 
     
     def _debug_print(self, msg):
-        
+
         if self._debug:
             self._debuglog.write('{}: {}\n'.format( \
                 datetime.datetime.now().strftime("%H:%M:%S.%f"), msg))
@@ -399,18 +399,19 @@ class OpenGazeTracker:
 
             # Lock the socket to prevent other Threads from simultaneously
             # accessing it.
-            self._socklock.acquire()
+            time.sleep(0.005)
             # Get new messages from the OpenGaze Server.
             timeout = False
-            try:
-                instring = self._sock.recv(self._maxrecvsize)
-                instring = instring.decode("utf-8")
-            except socket.timeout:
-                timeout = True
+            with self._socklock:
+                try:
+                    instring = self._sock.recv(self._maxrecvsize)
+                except socket.timeout:
+                    timeout = True
+                else:
+                    instring = instring.decode("utf-8")
             # Get a received timestamp.
             t = time.time()
             # Unlock the socket again.
-            self._socklock.release()
             
             # Skip further processing if no new message came in.
             if timeout:
@@ -480,12 +481,9 @@ class OpenGazeTracker:
     def _process_outgoing(self):
         
         self._debug_print("Outgoing Thread started.")
-        
         while not self._sock_ready_for_closing.is_set():
-
             # Get a new command from the Queue.
             msg = self._outqueue.get()
-            
             # Check if this is the shutdown signal.
             if msg == self._thread_shutdown_signal:
                 # Signal that we're done processing all the outgoing
@@ -493,85 +491,61 @@ class OpenGazeTracker:
                 self._sock_ready_for_closing.set()
                 # Break the while loop.
                 break
-            
             self._debug_print(r"Outgoing: {}".format(msg))
-
-            # Lock the socket to prevent other Threads from simultaneously
-            # accessing it.
-            self._socklock.acquire()
             # Send the command to the OpenGaze Server.
             t = time.time()
-            self._sock.send(msg.encode("utf-8"))
-            # Unlock the socket again.
-            self._socklock.release()
-            
+            with self._socklock:
+                self._sock.send(msg.encode("utf-8"))
             # Store a timestamp for the latest outgoing message.
-            self._outlock.acquire()
-            self._outlatest[msg] = copy.copy(t)
-            self._outlock.release()
-        
+            with self._outlock:
+                self._outlatest[msg] = copy.copy(t)
         self._debug_print("Outgoing Thread ended.")
         return
     
-    def _send_message(self, command, ID, values=None, \
-        wait_for_acknowledgement=True, resend_timeout=3.0, maxwait=9.0):
-        
+    def _send_message(self, command, ID, values=None,
+                      wait_for_acknowledgement=True, resend_timeout=3.0,
+                      maxwait=9.0):
         # Format a message in an XML format that the Open Gaze API needs.
         msg = self._format_msg(command, ID, values=values)
-
         # Run until the message is acknowledged or a timeout occurs (or
         # break if we're not supposed to wait for an acknowledgement.)
         timeout = False
         acknowledged = False
         t0 = time.time()
-        while (not acknowledged) and (not timeout):
-
+        while not acknowledged and not timeout:
             # Add the command to the outgoing Queue.
             self._debug_print(r"Outqueue add: {}".format(msg))
             self._outqueue.put(msg)
-
+            if not wait_for_acknowledgement:
+                break
             # Wait until an acknowledgement comes in.
-            if wait_for_acknowledgement:
-                sent = False
-                t1 = time.time()
-                while (time.time() - t1 < resend_timeout) and \
-                    (not acknowledged):
-
-                    # Check the outgoing queue for the sent message to
-                    # appear.
-                    if not sent:
-                        self._outlock.acquire()
+            sent = False
+            t1 = time.time()
+            while time.time() - t1 < resend_timeout and not acknowledged:
+                # Check the outgoing queue for the sent message to
+                # appear.
+                if not sent:
+                    with self._outlock:
                         if msg in self._outlatest.keys():
                             t = copy.copy(self._outlatest[msg])
                             sent = True
                             self._debug_print(r"Outqueue sent: {}".format(msg))
-                        self._outlock.release()
-                        time.sleep(0.001)
-
-                    # Check the incoming queue for the expected
-                    # acknowledgement. (NOTE: This does not check
-                    # whether the values of the incoming acknowlement
-                    # match the sent message. Ideally, they should.)
-                    else:
-                        self._acklock.acquire()
+                    time.sleep(0.001)
+                # Check the incoming queue for the expected
+                # acknowledgement. (NOTE: This does not check
+                # whether the values of the incoming acknowlement
+                # match the sent message. Ideally, they should.)
+                else:
+                    with self._acklock:
                         if ID in self._acknowledgements.keys():
                             if self._acknowledgements[ID] >= t:
                                 acknowledged = True
                                 self._debug_print(r"Outqueue acknowledged: {}".format(msg))
-                        self._acklock.release()
-                        time.sleep(0.001)
-
-                    # Check if there is a timeout.
-                    if (not acknowledged) and \
-                        (time.time() - t0 > maxwait):
-                        timeout = True
-                        break
-
-            # If we're not supposed to wait for an acknowledgement, break
-            # the while loop.
-            else:
-                break
-        
+                    time.sleep(0.001)
+                # Check if there is a timeout.
+                if not acknowledged and time.time() - t0 > maxwait:
+                    timeout = True
+                    break
         return acknowledged, timeout
     
 
