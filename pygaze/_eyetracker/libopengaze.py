@@ -36,6 +36,11 @@ except:
 import copy
 import math
 import random
+try:
+    from statistics import mean
+except ImportError:  # Python 2 fallback
+    def mean(l):
+        return sum(l) / len(l)
 
 # external imports
 from pygaze._eyetracker.opengaze import OpenGazeTracker as OpenGaze
@@ -470,11 +475,18 @@ class OpenGazeTracker(BaseEyeTracker):
                         err['{}{}'.format(eye, dim)].append(abs(d))
                         # Store the squared distance.
                         var['{}{}'.format(eye, dim)].append(d**2)
-        # Compute the RMS noise for the calibration points.
-        xnoise = (math.sqrt(sum(var['LX']) / float(len(var['LX']))) + \
-            math.sqrt(sum(var['RX']) / float(len(var['RX'])))) / 2.0
-        ynoise = (math.sqrt(sum(var['LY']) / float(len(var['LY']))) + \
-            math.sqrt(sum(var['RY']) / float(len(var['RY'])))) / 2.0
+        # Compute the RMS noise for the calibration points, while taking into
+        # account that in monocular tracking we only have data from one eye.
+        xnoise = []
+        ynoise = []
+        if var['LX'] and var['LY']:
+            xnoise.append(math.sqrt(mean(var['LX'])))
+            ynoise.append(math.sqrt(mean(var['LY'])))
+        if var['RX'] and var['RY']:
+            xnoise.append(math.sqrt(mean(var['RX'])))
+            ynoise.append(math.sqrt(mean(var['RY'])))
+        xnoise = mean(xnoise)
+        ynoise = mean(ynoise)
         self.pxdsttresh = (xnoise, ynoise)
                 
         # AFTERMATH
@@ -483,18 +495,26 @@ class OpenGazeTracker(BaseEyeTracker):
             self.dispsize[1]/float(self.screensize[1])) / 2
         screendist = settings.SCREENDIST
         # calculate thresholds based on tracker settings
-        self.accuracy = ( \
-            (pix2deg(screendist, sum(err['LX']) / float(len(err['LX'])), pixpercm), \
-            pix2deg(screendist, sum(err['LY']) / float(len(err['LY'])), pixpercm)), \
-            (pix2deg(screendist, sum(err['RX']) / float(len(err['RX'])), pixpercm), \
-            pix2deg(screendist, sum(err['RY']) / float(len(err['RY'])), pixpercm)))
+        self.accuracy = []
+        self.pxaccuracy = []
+        if err['LX'] and err['LY']:
+            self.accuracy.append([
+                (pix2deg(screendist, mean(err['LX']), pixpercm)),
+                (pix2deg(screendist, mean(err['LY']), pixpercm))])
+            self.pxaccuracy.append([mean(err['LX']), mean(err['LY'])])
+        else:  # no data for left eye
+            self.accuracy.append([0, 0])
+            self.pxaccuracy.append([0, 0])
+        if err['RX'] and err['RY']:
+            self.accuracy.append([
+                (pix2deg(screendist, mean(err['RX']), pixpercm)),
+                (pix2deg(screendist, mean(err['RY']), pixpercm))])
+            self.pxaccuracy.append([mean(err['RX']), mean(err['RY'])])
+        else:  # no data for right eye
+            self.accuracy.append([0, 0])
+            self.pxaccuracy.append([0, 0])
         self.pxerrdist = deg2pix(screendist, self.errdist, pixpercm)
         self.pxfixtresh = deg2pix(screendist, self.fixtresh, pixpercm)
-        self.pxaccuracy = ( \
-            (sum(err['LX']) / float(len(err['LX'])), \
-            sum(err['LY']) / float(len(err['LY']))), \
-            (sum(err['RX']) / float(len(err['RX'])), \
-            sum(err['RY']) / float(len(err['RY']))))
         self.pxspdtresh = deg2pix(screendist, self.spdtresh/1000.0, pixpercm) # in pixels per millisecond
         self.pxacctresh = deg2pix(screendist, self.accthresh/1000.0, pixpercm) # in pixels per millisecond**2
 
@@ -1251,4 +1271,3 @@ class OpenGazeTracker(BaseEyeTracker):
         
         # in any other case, the sample is valid
         return True
-
