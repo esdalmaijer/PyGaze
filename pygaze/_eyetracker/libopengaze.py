@@ -237,6 +237,9 @@ class OpenGazeTracker(BaseEyeTracker):
         # wait for keyboard input
         key, keytime = self.kb.get_key(keylist=['q', 's', 'space'],
             timeout=None, flush=True)
+        self.screen.clear()
+        self.disp.fill(self.screen)
+        self.disp.show()
         if key == 's':
             return True
         if key == 'q':
