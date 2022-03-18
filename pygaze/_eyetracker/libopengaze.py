@@ -597,17 +597,13 @@ class OpenGazeTracker(BaseEyeTracker):
                        or 'escape' is pressed
         """
         
-        if pos == None:
+        self.opengaze.enable_send_data(True)
+        if pos is None:
             pos = self.dispsize[0] / 2, self.dispsize[1] / 2
         if fix_triggered:
             return self.fix_triggered_drift_correction(pos)
-        
-        # DEBUG #
-        print("Running drift correction, pos=({}, {})".format(pos[0], pos[1]))
-        # # # # #
-
-        self.draw_drift_correction_target(pos[0], pos[1])
-
+        refx, refy = pos
+        self.draw_drift_correction_target(refx, refy)
         pressed = False
         while not pressed:
             pressed, presstime = self.kb.get_key()
@@ -615,11 +611,15 @@ class OpenGazeTracker(BaseEyeTracker):
                 if pressed == 'escape' or pressed == 'q':
                     print("libopengaze.OpenGazeTracker.drift_correction: 'q' or 'escape' pressed")
                     return self.calibrate()
-                gazepos = self.sample()
-                if ((gazepos[0]-pos[0])**2  + (gazepos[1]-pos[1])**2)**0.5 < self.pxerrdist:
-                    return True
-                else:
+                x, y = self.sample()
+                if x is None or y is None:
                     self.errorbeep.play()
+                    continue
+                err = ((x - refx) ** 2 + (y - refy) ** 2) ** .5
+                print(x, y, err)
+                if err < self.pxerrdist:
+                    return True
+                self.errorbeep.play()
         return False
         
     def draw_drift_correction_target(self, x, y):
