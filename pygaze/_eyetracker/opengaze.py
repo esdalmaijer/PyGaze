@@ -218,60 +218,43 @@ class OpenGazeTracker:
         return result
     
     def sample(self):
-
-        # If there is no current record yet, return None.
-        self._inlock.acquire()
-        if 'REC' not in self._incoming.keys():
-            x = None
-            y = None
-        elif 'NO_ID' not in self._incoming['REC'].keys():
-            x = None
-            y = None
-        elif ('BPOGX' not in self._incoming['REC']['NO_ID'].keys()) or \
-            ('BPOGY' not in self._incoming['REC']['NO_ID'].keys()):
-            x = None
-            y = None
-        else:
-            x = float(self._incoming['REC']['NO_ID']['BPOGX'])
-            y = float(self._incoming['REC']['NO_ID']['BPOGY'])
-        self._inlock.release()
-
-        # Return the (x,y) coordinate.
-        return x, y
+        """Returns the current gaze position (x, y)."""
+        with self._inlock:
+            rec = self._incoming.get('REC', None)
+        # <REC BPOGX="0.47175" BPOGY="0.43360" BPOGV="1" />
+        if rec is None:
+            return None, None
+        no_id = rec.get('NO_ID', None)
+        if no_id is None:
+            return None, None
+        x = no_id.get('BPOGX', None)
+        y = no_id.get('BPOGY', None)
+        if x is None or y is None:
+            return None, None
+        return float(x), float(y)
     
     def pupil_size(self):
-        
-        """Return the current pupil size.
-        """
-
-        # If there is no current record yet, return None.
-        self._inlock.acquire()
-        if 'REC' not in self._incoming.keys():
-            psize =  None
-        elif 'NO_ID' not in self._incoming['REC'].keys():
-            psize = None
-        elif ('LPV' not in self._incoming['REC']['NO_ID'].keys()) or \
-            ('LPS' not in self._incoming['REC']['NO_ID'].keys()) or \
-            ('RPV' not in self._incoming['REC']['NO_ID'].keys()) or \
-            ('RPS' not in self._incoming['REC']['NO_ID'].keys()):
-            psize = None
-
-        # Compute the pupil size, and return it if there is valid data.
-        n = 0
-        psize = 0
-        if str(self._incoming['REC']['NO_ID']['LPV']) == '1':
-            psize += float(self._incoming['REC']['NO_ID']['LPS'])
-            n += 1
-        if str(self._incoming['REC']['NO_ID']['RPV']) == '1':
-            psize += float(self._incoming['REC']['NO_ID']['RPS'])
-            n += 1
-        self._inlock.release()
-        if n == 0:
-            psize = None
-        else:
-            psize = psize / float(n)
-
-        return psize
+        """Returns the current pupil size."""
+        with self._inlock:
+            rec = self._incoming.get('REC', None)
+        # <REC LPCX="0.40525" LPCY="0.32822" LPD="15.23866" LPS="1.04834" 
+        # LPV="1" />
+        if rec is None:
+            return None
+        no_id = rec.get('NO_ID', None)
+        if no_id is None:
+            return None
+        pupil_size = 0
+        n_eyes = 0.
+        if no_id.get('LPV', None) == '1':
+            pupil_size += float(no_id.get('LPD'))
+            n_eyes += 1
+        if no_id.get('RPV', None) == '1':
+            pupil_size += float(no_id.get('RPD'))
+            n_eyes += 1
+        if n_eyes == 0:
+            return None
+        return pupil_size / n_eyes
     
     def log(self, message):
         
