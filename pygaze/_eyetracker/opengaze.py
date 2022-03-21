@@ -192,8 +192,6 @@ class OpenGazeTracker:
         self.enable_send_time(True)
         self.enable_send_time_tick(True)
         self.enable_send_user_data(True)
-        # Reset the user-defined variable.
-        self.user_data("0")
 
     
     def calibrate(self):
@@ -262,14 +260,7 @@ class OpenGazeTracker:
         DATA!
         """
 
-        # Set the user-defined value.
-        i = copy.copy(self._logcounter)
         self.user_data(message)
-        # Wait until a single sample is logged.
-        while self._logcounter <= i:
-            time.sleep(0.0001)
-        # Reset the user-defined value.
-        self.user_data("0")
     
     def start_recording(self):
         
@@ -1154,15 +1145,11 @@ class OpenGazeTracker:
         """Set the value of the user data field for embedding custom data
         into the data stream. The user data value should be a string.
         """
-
-        # Send the message (returns after the Server acknowledges receipt).
-        acknowledged, timeout = self._send_message('SET', \
-            'USER_DATA', \
-            values=[('VALUE', str(value))], \
-            wait_for_acknowledgement=True)
         
-        # Return a success Boolean.
-        return acknowledged and (timeout==False)
+        acknowledged, timeout = self._send_message(
+            'SET', 'USER_DATA', values=[('VALUE', str(value)), ('DUR', 1)],
+            wait_for_acknowledgement=True)
+        return acknowledged and not timeout
     
     def tracker_display(self, state):
         
