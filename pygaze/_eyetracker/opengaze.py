@@ -371,9 +371,6 @@ class OpenGazeTracker:
         
         while self._connected.is_set():
 
-            # Lock the socket to prevent other Threads from simultaneously
-            # accessing it.
-            time.sleep(0.005)
             # Get new messages from the OpenGaze Server.
             timeout = False
             with self._socklock:
@@ -448,7 +445,7 @@ class OpenGazeTracker:
                         self._incoming[command][msgdict['ID']]))
                 # Unlock the incoming dict again.
                 self._inlock.release()
-        
+            time.sleep(0.005)  # throttle to allow outgoing thread to work
         self._debug_print("Incoming Thread ended.")
         return
 
