@@ -174,10 +174,10 @@ class OpenGazeTracker:
         self._inthread.start()
         self._debug_print("Starting the outgoing thread.")
         self._outthread.start()
-        
-        # SET UP LOGGING
         # Wait for a bit to allow the Threads to start.
-        time.sleep(0.5)
+        while (not self._logthread.is_alive() or not self._inthread.is_alive()
+               or not self._outthread.is_alive()):
+            time.sleep(.005)
         # Enable the tracker to send ALL the things.
         self.enable_send_counter(True)
         self.enable_send_cursor(True)
