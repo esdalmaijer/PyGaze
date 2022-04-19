@@ -246,7 +246,15 @@ class OpenGazeTracker(BaseEyeTracker):
             quited = True
         else:
             quited = False
-        
+        # Show an initial central dot to fill the time until the actual
+        # calibration begins
+        x = self.dispsize[0] // 2
+        y = self.dispsize[1] // 2
+        self.screen.draw_circle(colour=(255,255,255), pos=(x, y), r=30,
+                                fill=True)
+        self.screen.draw_circle(colour=(255,0,0), pos=(x, y), r=3, fill=True)
+        self.disp.fill(self.screen)
+        self.disp.show()
         # Run until the user is statisfied, or quits.
         calibrated = False
         while not quited and not calibrated:
@@ -271,8 +279,10 @@ class OpenGazeTracker(BaseEyeTracker):
             # NOTE: Somehow polling this results in no weird OpenGaze errors
             # on calibrations that occur after the first one.
             # (WTF, Gazepoint?!)
-            calibpoints = self.opengaze.get_calibration_points()
-
+            while True:
+                calibpoints = self.opengaze.get_calibration_points()
+                if calibpoints is not None:
+                    break
             # Show the calibration screen.
             # NOTE: THIS DOESN'T WORK IN FULL SCREEN MODE :(
             #self.opengaze.calibrate_show(True)
