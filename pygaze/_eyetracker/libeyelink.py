@@ -422,14 +422,9 @@ class libeyelink(BaseEyeTracker):
         # start collecting samples in drift correction mode
         self.send_command("heuristic_filter = ON")
         self.send_command("drift_correction_targets = {} {}".format(pos[0], pos[1]))
+        pylink.getEYELINK().dataSwitch(pylink.RECORD_LINK_SAMPLES)
         self.send_command("start_drift_correction data = 0 0 1 0")
-        pylink.msecDelay(50);
-        # wait for a bit until samples start coming in (again, not sure if this
-        # is indeed what's going on)
-        if not pylink.getEYELINK().waitForBlockStart(100, 1, 0):
-            print(
-                "WARNING libeyelink.libeyelink.prepare_drift_correction(): "
-                "Failed to perform drift correction (waitForBlockStart error)")
+        pylink.msecDelay(50)
 
     def fix_triggered_drift_correction(self, pos=None, min_samples=30,
         max_dev=60, reset_threshold=30):
