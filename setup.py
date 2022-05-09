@@ -66,11 +66,21 @@ def data_files():
 	]
 
 
+def get_readme():
+
+	if os.path.exists('README.md'):
+		with open('README.md') as fd:
+			return fd.read()
+	return 'No readme information'
+
+
 setup(
 	name='pygaze' if 'bdist_deb' in sys.argv else u'python-pygaze',
 	python_requires=">=3",
 	version=pygaze.__version__,
 	description="A Python library for eye tracking",
+	long_description=get_readme(),
+	long_description_content_type='text/markdown',
 	author="Edwin Dalmaijer",
 	author_email="edwin.dalmaijer@gmail.com",
 	url="http://www.pygaze.org/",
