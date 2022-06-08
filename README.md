@@ -1,18 +1,29 @@
-[PyGaze - the open-source toolbox for eye tracking](http://www.pygaze.org/)
-===========================================================================
+# PyGaze - the open-source toolbox for eye tracking
 
-version 0.7.1 (2020-01-19)
+*Copyright 2013 - 2022, Edwin Dalmaijer, Sebastiaan Mathôt, and contributors*
 
-
-IF YOU DECIDE TO PUBLISH RESULTS OBTAINED WITH THIS SOFTWARE, PLEASE INCLUDE IN YOUR REFERENCES:
-
-* Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (2013). PyGaze: an open-source,
-cross-platform toolbox for minimal-effort programming of eye tracking experiments.
-Behaviour Research Methods. doi:[10.3758/s13428-013-0422-2](http://link.springer.com/article/10.3758%2Fs13428-013-0422-2)
+For more information, see: <https://www.pygaze.org/contributors>
 
 
-This toolbox is developed by Edwin Dalmaijer and Sebastiaan Mathot. For more
-information on contributors, see: http://www.pygaze.org/contributors
+## Citation
+
+* Dalmaijer, E.S., Mathôt, S., & Van der Stigchel, S. (2013). PyGaze: an open-source, cross-platform toolbox for minimal-effort programming of eye tracking experiments. *Behaviour Research Methods*. doi:[10.3758/s13428-013-0422-2](http://link.springer.com/article/10.3758%2Fs13428-013-0422-2)
+
+
+## Documentation
+
+- <https://pygaze.org/>
+- <https://osdoc.cogsci.nl/manual/eyetracking/pygaze/>
+
+
+## Installation
+
+```
+pip install python-pygaze
+```
+
+
+## License
 
 PyGaze is open source software and therefore free to use and modify at will.
 Warranty, however, is NOT given. If this software fails, causes your computer

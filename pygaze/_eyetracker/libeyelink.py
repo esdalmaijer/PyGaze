@@ -427,7 +427,7 @@ class libeyelink(BaseEyeTracker):
         pylink.msecDelay(50)
 
     def fix_triggered_drift_correction(self, pos=None, min_samples=30,
-        max_dev=60, reset_threshold=10):
+        max_dev=60, reset_threshold=30):
 
         """See pygaze._eyetracker.baseeyetracker.BaseEyeTracker"""
 
@@ -475,6 +475,8 @@ class libeyelink(BaseEyeTracker):
                 return False
             # collect a sample
             x, y = self.sample()
+            if x < 0 or y < 0:
+                continue
             if len(lx) == 0 or x != lx[-1] or y != ly[-1]:
                 # if present sample deviates too much from previous sample,
                 # start from scratch.
