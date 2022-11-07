@@ -45,14 +45,15 @@ class TobiiProTracker(BaseEyeTracker):
         self.recording = False
 
         self.screendist = settings.SCREENDIST
-
-        if hasattr(settings, 'TRACKERSERIALNUMBER'):
-            # Search for a specific eye tracker
-            self.eyetrackers = [t for t in tr.find_all_eyetrackers() if t.serial_number == settings.TRACKERSERIALNUMBER]
-        else:
-            # Search for all eye trackers (The first one found will be selected)
-            self.eyetrackers = tr.find_all_eyetrackers()
-
+        try:
+            if hasattr(settings, 'TRACKERSERIALNUMBER'):
+                # Search for a specific eye tracker
+                self.eyetrackers = [t for t in tr.find_all_eyetrackers() if t.serial_number == settings.TRACKERSERIALNUMBER]
+            else:
+                # Search for all eye trackers (The first one found will be selected)
+                self.eyetrackers = tr.find_all_eyetrackers()
+        except Exception:
+                self.eyetrackers = tr.find_all_eyetrackers()
         if self.eyetrackers:
             self.eyetracker = self.eyetrackers[0]
         else:
@@ -1009,7 +1010,10 @@ class TobiiProTracker(BaseEyeTracker):
         # get starting time, intersample distance, and velocity
         t1 = clock.get_time()
         s = ((prevpos[0] - spos[0])**2 + (prevpos[1] - spos[1])**2)**0.5  # = intersample distance = speed in px/sample
-        v0 = s / (t1 - t0)
+        try:
+            v0 = s / (t1 - t0)
+        except ZeroDivisionError:
+            v0 = s / 1e-20
 
         # run until velocity and acceleration go below threshold
         saccadic = True
