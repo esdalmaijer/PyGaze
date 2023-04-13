@@ -391,8 +391,10 @@ class OpenGazeTracker:
 
             self._debug_print(r"Raw instring: {}".format(instring))
 
-            # Split the messages (they are separated by '\r\n').
-            messages = instring.split('\r\n')
+            # Split the messages. These should be are separated by '\r\n', but
+            # the safest way to split them is to split them by any newline
+            # character while ignoring the empty messages.
+            messages = [msg for msg in instring.splitlines() if msg.strip()]
 
             # Check if there is currently an unfinished message.
             if self._unfinished:
