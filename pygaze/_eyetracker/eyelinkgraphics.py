@@ -538,20 +538,43 @@ class EyelinkGraphics(custom_display):
             self.scale = totlines/320.0
             self._size = int(self.scale*self.size[0]), int(
                 self.scale*self.size[1])
+
+            # Get buffer as bytes. From Python 3.2, `tostring` was renamed 
+            # `tobytes`. Then, from Python 3.9, `tostring` was dropped 
+            # completely. While the newer function name makes more sense (as 
+            # it returns a byte representation), it simply does not exist if 
+            # we're on Python versions prior to 3.2. Hence the following 
+            # awkward way of checking if the function exists, and then to call
+            # it if it does. We call the function by its old name if the new
+            # name doesn't exist. This is awkward, but a lot less awkward than
+            # my previous solution of creating a child class of array.array 
+            # with the single purpose of defining `tostring` with a call to
+            # `tobytes`. (Decided against that as it would change the class,
+            # and that would break any code that checks whether a variable's 
+            # type is array.array.)
+            # Do you think this is insane, and that we should just use the 
+            # newer and more sensible `tobytes`? I've seen lab computers that 
+            # run Python 2.4 on Windows XP. I'm not ready to have the 
+            # conversation that they should consider upgrading. (Also, maybe
+            # they have an ancient EyeLink that requires such an old system.
+            # You don't know their life!)
+            if hasattr(self.imagebuffer, "tobytes"):
+                baby_b_buffer = self.imagebuffer.tobytes()
+            else:
+                baby_b_buffer = self.imagebuffer.tostring()
+
             # Convert the image buffer to a pygame image, save it ...
             try:
                 # This is based on PyLink >= 1.1
                 self.cam_img = pygame.image.fromstring(
-                    self.imagebuffer.tostring(), self._size, 'RGBX'
-                )
+                    baby_b_buffer, self._size, 'RGBX')
             except ValueError:
                 # This is for PyLink <= 1.0. This try ... except construction
                 # is a hack. It would be better to understand the difference
                 # between these two versions.
                 try:
                     self.cam_img = pygame.image.fromstring(
-                        self.imagebuffer.tostring(), self.size, 'RGBX'
-                    )
+                        baby_b_buffer, self.size, 'RGBX')
                     self.scale = 1.0
                 # In some cases, the conversion fails because the imagebuffer
                 # is too long to begin with. Therefore, we need to make sure
