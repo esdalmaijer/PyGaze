@@ -53,8 +53,6 @@ class OSMouse(BaseMouse):
             pass
 
         self.experiment = settings.osexperiment
-        self.uniform_coordinates = \
-            self.experiment.var.uniform_coordinates == "yes"
         self.mouse = mouse(self.experiment, buttonlist=mousebuttonlist,
             timeout=timeout)
 
@@ -62,7 +60,7 @@ class OSMouse(BaseMouse):
 
         """Convert OpenSesame coordinates to PyGaze coordinates."""
 
-        if pos is None or not self.uniform_coordinates:
+        if pos is None:
             return pos
         return pos[0]+self.mouse._xcenter, pos[1]+self.mouse._ycenter
 
@@ -70,7 +68,7 @@ class OSMouse(BaseMouse):
 
         """Convert PyGaze coordinates to OpenSesame coordinates."""
 
-        if pos is None or not self.uniform_coordinates:
+        if pos is None:
             return pos
         return pos[0]-self.mouse._xcenter, pos[1]-self.mouse._ycenter
 

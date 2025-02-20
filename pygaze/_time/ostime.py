@@ -63,18 +63,18 @@ class OSTime(BaseTime):
 
         # see pygaze._time.basetime.BaseTime
 
-        return settings.osexperiment.time()
+        return settings.osexperiment.clock.time()
 
 
     def pause(self, pausetime):
 
         # see pygaze._time.basetime.BaseTime
 
-        return settings.osexperiment.sleep(pausetime)
+        return settings.osexperiment.clock.sleep(pausetime)
 
 
     def expend(self):
 
         # see pygaze._time.basetime.BaseTime
 
-        return settings.osexperiment.time()
+        return settings.osexperiment.clock.time()

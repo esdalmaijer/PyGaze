@@ -52,8 +52,6 @@ class OSScreen(BaseScreen):
             pass
 
         self.experiment = settings.osexperiment
-        self.uniform_coordinates = \
-            self.experiment.var.uniform_coordinates == "yes"
         self.create(screen=screen)
 
     def _pos(self, pos):
@@ -63,9 +61,8 @@ class OSScreen(BaseScreen):
         if pos in (None, (None, None)):
             return None, None
         x, y = pos
-        if self.uniform_coordinates:
-            x -= self.canvas._xcenter
-            y -= self.canvas._ycenter
+        x -= self.canvas._xcenter
+        y -= self.canvas._ycenter
         return x, y
 
     def create(self, screen=None):

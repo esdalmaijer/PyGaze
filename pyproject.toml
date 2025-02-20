@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "pygaze"
+version = "0.8.7"
+description = "A Python library for eye tracking"
+authors = [
+    "Edwin Dalmaijer <edwin.dalmaijer@gmail.com>",
+    "Sebastiaan Mathôt <s.mathot@cogsci.nl>"
+]
+readme = "readme.md"
+license = "COPYING"
+packages = [
+    {include = "pygaze"},
+    {include = "opensesame_plugins"}
+]
+homepage = "https://pygaze.org"
+repository = "https://github.com/esdalmaijer/PyGaze/"
+
+[tool.poetry.dependencies]
+python = ">= 3.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

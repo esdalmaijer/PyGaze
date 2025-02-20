@@ -1,6 +1,6 @@
 # PyGaze - the open-source toolbox for eye tracking
 
-*Copyright 2013 - 2022, Edwin Dalmaijer, Sebastiaan Mathôt, and contributors*
+*Copyright 2013 - 2023, Edwin Dalmaijer, Sebastiaan Mathôt, and contributors*
 
 For more information, see: <https://www.pygaze.org/contributors>
 

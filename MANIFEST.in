@@ -1,5 +1,0 @@
-recursive-include opensesame_plugins *
-graft pygaze/_eyetracker/alea
-global-exclude *.pyc
-global-exclude *.pyo
-
