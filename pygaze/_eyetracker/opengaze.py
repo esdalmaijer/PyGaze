@@ -29,7 +29,7 @@ from threading import Event, Lock, Thread
 class OpenGazeTracker:
 
     def __init__(self, ip='127.0.0.1', port=4242, logfile='default.tsv', \
-        debug=False):
+        debug=False, data_stream=False):
         
         """The OpenGazeConnection class communicates to the GazePoint
         server through a TCP/IP socket. Incoming samples will be written
@@ -101,7 +101,13 @@ class OpenGazeTracker:
             'LEYEX', 'LEYEY', 'LEYEZ', 'LPUPILD', 'LPUPILV', \
             'REYEX', 'REYEY', 'REYEZ', 'RPUPILD', 'RPUPILV', \
             'CX', 'CY', 'CS', \
+            'BKID', 'BKDUR', 'BKPMIN', \
             'USER']
+        # Boolean to check whenever the user wants to save
+        # data samples
+        self.data_stream = data_stream
+        # List to store Eyetracker data samples
+        self._data_stream = []
         self._n_logvars = len(self._logheader)
         self._logfile.write('\t'.join(self._logheader) + '\n')
         # The log is consolidated (written to the disk) every N samples.
@@ -191,7 +197,9 @@ class OpenGazeTracker:
         self.enable_send_pupil_right(True)
         self.enable_send_time(True)
         self.enable_send_time_tick(True)
+        self.enable_send_blink(True)
         self.enable_send_user_data(True)
+        
 
     
     def calibrate(self):
@@ -319,6 +327,11 @@ class OpenGazeTracker:
                 # Find the appropriate index in the line
                 line[self._logheader.index(varname)] = sample[varname]
         self._logfile.write('\t'.join(line) + '\n')
+        # Store the sample in _data_stream:
+        # Only if user decided so in the data_stream
+        # Boolean variable at constructor 
+        if self.data_stream:
+            self._data_stream.append(line)
 
     def _parse_msg(self, xml):
         
@@ -821,6 +834,27 @@ class OpenGazeTracker:
             wait_for_acknowledgement=True)
         
         # Return a success Boolean.
+        return acknowledged and (timeout==False)
+
+    def enable_send_blink(self, state):		
+	    
+        """Enable (state=True) or disable (state=False) the inclusion of
+        Blink tracking, which has been added to the latest release of the 
+        Gazepoint software (V3.0.0). one can access the blink tracking data 
+        by enabling the ENABLE_SEND_BLINK setting which consists of the 
+        following data:
+        BKID:   A a blink counter.
+        BKDUR:   Blink duration for the last blink.
+        BKPMIN:   The average blink rate over the last minute.
+		"""
+
+		# Send the message (returns after the Server acknowledges receipt).
+        acknowledged, timeout = self._send_message('SET', \
+			'ENABLE_SEND_BLINK', \
+			values=[('STATE', int(state))], \
+			wait_for_acknowledgement=True)
+		
+		# Return a success Boolean.
         return acknowledged and (timeout==False)
 
     def enable_send_user_data(self, state):
@@ -1378,4 +1412,17 @@ class OpenGazeTracker:
         return value
 
     # TODO: Get sample method.
+    # My approach to sample method
+    def get_sample(self):
+        """Gets a sample from the list that stored all samples.
+        should be used when data_stream = TRUE.
+        Returns a data vector from the logged data, 1 at a time.
+        or
+        returns None if the are none vectors left.
+        """
+        if len(self._data_stream) > 0:
+            return self._data_stream.pop(0)
+        else:
+            return None
+        
     # TODO: Write sample method?
